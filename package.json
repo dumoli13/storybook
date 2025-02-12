@@ -17,7 +17,7 @@
     "lint:fix": "eslint src/ --fix"
   },
   "dependencies": {
-    "dumoli-ui": "^0.0.22",
+    "mis-design": "https://github.com/dumoli13/msiui.git",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

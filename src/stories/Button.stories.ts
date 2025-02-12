@@ -1,52 +1,108 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from '@storybook/test';
-import Button from 'dumoli-ui/Button';
+import { Button } from 'mis-design';
 
-// More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
-const meta = {
-  title: 'Example/Button',
+const meta: Meta<typeof Button> = {
+  title: 'Components/Inputs/Button',
   component: Button,
   parameters: {
-    // Optional parameter to center the component in the Canvas. More info: https://storybook.js.org/docs/configure/story-layout
     layout: 'centered',
   },
-  // This component will have an automatically generated Autodocs entry: https://storybook.js.org/docs/writing-docs/autodocs
   tags: ['autodocs'],
-  // More on argTypes: https://storybook.js.org/docs/api/argtypes
   argTypes: {
-    backgroundColor: { control: 'color' },
+    variant: {
+      control: 'select',
+      options: ['contained', 'secondary', 'outlined', 'text'],
+      description: 'Defines the button style',
+    },
+    color: {
+      control: 'select',
+      options: ['primary', 'success', 'danger', 'warning', 'info'],
+      description: 'Button color theme',
+    },
+    size: {
+      control: 'select',
+      options: ['small', 'default', 'large'],
+      description: 'Size of the button',
+    },
+    fullWidth: {
+      control: 'boolean',
+      description: 'Expands button to full width',
+    },
+    loading: {
+      control: 'boolean',
+      description: 'Displays a loading state',
+    },
+    startIcon: {
+      control: 'object',
+      description: 'Adds an icon at the start',
+    },
+    endIcon: {
+      control: 'object',
+      description: 'Adds an icon at the end',
+    },
   },
-  // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
-  args: { onClick: fn() },
-} satisfies Meta<typeof Button>;
+  args: {
+    onClick: fn(),
+  },
+};
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
-export const Primary: Story = {
+// Default Button Story
+export const Default: Story = {
   args: {
-    primary: true,
-    label: 'Button',
+    children: 'Default Button',
+    variant: 'contained',
+    color: 'primary',
+    size: 'default',
   },
 };
 
-export const Secondary: Story = {
+// Contained Button
+export const Contained: Story = {
   args: {
-    label: 'Button',
+    children: 'Contained Button',
+    variant: 'contained',
+    color: 'primary',
   },
 };
 
-export const Large: Story = {
+// Outlined Button
+export const Outlined: Story = {
   args: {
-    size: 'large',
-    label: 'Button',
+    children: 'Outlined Button',
+    variant: 'outlined',
+    color: 'danger',
   },
 };
 
-export const Small: Story = {
+// Text Button
+export const Text: Story = {
   args: {
-    size: 'small',
-    label: 'Button',
+    children: 'Text Button',
+    variant: 'text',
+    color: 'info',
+  },
+};
+
+// Button with Loading
+export const Loading: Story = {
+  args: {
+    children: 'Loading...',
+    variant: 'contained',
+    color: 'warning',
+    loading: true,
+  },
+};
+
+// Full-Width Button
+export const FullWidth: Story = {
+  args: {
+    children: 'Full Width Button',
+    variant: 'contained',
+    color: 'success',
+    fullWidth: true,
   },
 };
