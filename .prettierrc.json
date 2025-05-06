@@ -8,7 +8,6 @@
     "^react$",
     "<THIRD_PARTY_MODULES>",
     "^@?\\w",
-    "^@api/(.*)$",
     "^@components/(.*)$",
     "^@types/(.*)$",
     "^[./]"
