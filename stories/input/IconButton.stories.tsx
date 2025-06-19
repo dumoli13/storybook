@@ -1,6 +1,8 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Icon, IconButton, type IconButtonProps } from 'mis-design';
+import { Icon, IconButton, type IconButtonProps } from '../../src/components';
+import '../../src/output.css';
+import { fn } from '@storybook/test';
 
 const variantOption = ['contained', 'secondary', 'outlined', 'text'];
 const colorOption = ['primary', 'success', 'danger', 'warning', 'info'];
@@ -38,7 +40,7 @@ const meta: Meta<IconButtonProps> = {
         size: {
             control: { type: 'select' },
             options: sizeOption,
-            description: 'The size of the icon button',
+            description: 'The size of the icon button.',
             table: {
                 defaultValue: { summary: 'default' },
                 type: { summary: 'small | default | large' },
@@ -76,10 +78,19 @@ const meta: Meta<IconButtonProps> = {
         },
         title: {
             control: 'text',
-            description: 'The text of the button',
+            description: 'Tooltip text when hovering over the icon',
         },
-        onClick: { action: 'clicked' },
+        onClick: {
+            action: 'clicked',
+            description: 'Callback when the button is clicked',
+            table: {
+                type: { summary: '(e: MouseEvent<HTMLButtonElement>) => void' },
+            },
+        },
     },
+    args: {
+        onClick: fn(),
+    }
 };
 
 export default meta;
@@ -204,14 +215,13 @@ export const VariantText: Story = {
 }
 
 export const Sizes: Story = {
-    render: (args) => {
-        return (
-            <div className="flex gap-4">
-                <IconButton {...args} size='small' icon={<Icon name="bookmark" />} title='small size' />
-                <IconButton {...args} size='default' icon={<Icon name="bookmark" />} title='default size' />
-                <IconButton {...args} size='large' icon={<Icon name="bookmark" />} title='large size' />
-            </div>)
-    },
+    render: (args) => (
+        <div className="flex gap-4">
+            <IconButton {...args} size='small' icon={<Icon name="bookmark" />} title='small size' />
+            <IconButton {...args} size='default' icon={<Icon name="bookmark" />} title='default size' />
+            <IconButton {...args} size='large' icon={<Icon name="bookmark" />} title='large size' />
+        </div>
+    ),
     args: {
         children: 'Button',
         variant: 'contained',
@@ -220,8 +230,6 @@ export const Sizes: Story = {
         loading: false,
     },
     argTypes: {
-        size: {
-            control: false,
-        },
+        size: { control: false },
     },
 }

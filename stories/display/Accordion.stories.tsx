@@ -1,7 +1,8 @@
+import React from 'react';
 import { fn } from '@storybook/test';
-import React, { useState } from 'react';
-import { Accordion, type AccordionProps, Button } from 'mis-design';
 import type { Meta, StoryObj } from '@storybook/react';
+import { Accordion, AccordionProps, Button } from '../../src/components';
+import '../../src/output.css';
 
 const collapsibleOption = ['icon', 'header'];
 const sizeOption = ['default', 'large'];
@@ -11,8 +12,7 @@ const meta: Meta<AccordionProps> = {
   title: 'Display/Accordion',
   component: Accordion,
   parameters: {
-    // Optional parameter to center the component in the Canvas. More info: https://storybook.js.org/docs/configure/story-layout
-    layout: 'centered',
+      layout: 'centered', 
   },
   tags: ['autodocs'],
   // More on argTypes: https://storybook.js.org/docs/api/argtypes
@@ -40,6 +40,7 @@ const meta: Meta<AccordionProps> = {
       description: 'If true, only one accordion item can be open at a time.',
       table: {
         type: { summary: 'boolean' },
+        defaultValue: { summary: 'false' },
       },
     },
     defaultActiveKey: {
@@ -58,7 +59,7 @@ const meta: Meta<AccordionProps> = {
     },
     items: {
       control: { type: 'object' },
-      description: 'The items of the accordion.',
+      description: 'The items of the accordion to display.',
       table: {
         type: { summary: '{key: string, title: string, content: ReactNode}[]' },
       },
@@ -66,6 +67,9 @@ const meta: Meta<AccordionProps> = {
     onChangeActiveKey: {
       action: 'activeKeyChanged',
       description: 'Callback when active keys are changed.',
+      table: {
+          type: { summary: '(key: Array<string | number>) => void' },
+      },
     }
   },
   args: {
@@ -118,12 +122,12 @@ export const Sizes: Story = {
 };
 
 
-export const ControlledCollapse: Story = {
+export const ControlledAccordion: Story = {
   render: (args) => {
-    const [activeKey, setActiveKey] = useState<Array<string | number>>(['1']);
+    const [activeKey, setActiveKey] = React.useState<Array<string | number>>(['1']);
 
     return (
-      <div className="flex flex-col gap-4 w-full max-w-md">
+      <div className="flex flex-col gap-4 w-full ">
         <Accordion
           {...args}
           activeKey={activeKey}
@@ -141,10 +145,21 @@ export const ControlledCollapse: Story = {
             Open Second
           </Button>
           <Button
+            onClick={() => setActiveKey(['3'])}
+          >
+            Open Third
+          </Button>
+          <Button
             variant='secondary'
             onClick={() => setActiveKey([])}
           >
             Close All
+          </Button>
+          <Button
+            variant='secondary'
+            onClick={() => setActiveKey(['1','2','3'])}
+          >
+            Open All
           </Button>
         </div>
       </div>
@@ -154,9 +169,9 @@ export const ControlledCollapse: Story = {
     items: [
       { key: '1', title: 'Controlled First Item', content: 'This is the first controlled item.' },
       { key: '2', title: 'Controlled Second Item', content: 'This is the second controlled item.' },
+      { key: '3', title: 'Controlled Third Item', content: 'This is the third controlled item.' },
     ],
     collapsible: 'header',
-    singleCollapse: true,
-    size: 'default',
+     size: 'default',
   },
 };

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Skeleton, type SkeletonProps } from 'mis-design';
+import { Skeleton, SkeletonProps } from '../../src/components';
+import '../../src/output.css';
 
 const meta: Meta<SkeletonProps> = {
     title: 'Display/Skeleton',

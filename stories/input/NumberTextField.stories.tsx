@@ -1,9 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Icon, IconNames, NumberTextField, type NumberTextFieldProps } from 'mis-design'; // Update import path as needed
+import { Icon, IconNames, NumberTextField,  NumberTextFieldProps, NumberTextfieldRef} from '../../src/components';
+import '../../src/output.css';
 import { iconNames } from '../../const/icon';
-
-
+  
 const sizeOption = ['default', 'large'];
 const labelPositionOption = ['top', 'left'];
 
@@ -77,7 +77,7 @@ const meta: Meta<NumberTextFieldProps> = {
             },
         },
         className: {
-            control: 'text',
+            control: false,
             description: 'Additional class names to customize the component style.',
             table: {
                 type: { summary: 'string' }
@@ -94,6 +94,7 @@ const meta: Meta<NumberTextFieldProps> = {
             control: 'boolean',
             description: 'A flag to display success of input field if set to true.',
             table: {
+                defaultValue: { summary: 'false' },
                 type: { summary: 'boolean' },
             },
         },
@@ -130,7 +131,7 @@ const meta: Meta<NumberTextFieldProps> = {
         size: {
             control: 'select',
             options: sizeOption,
-            description: 'The size of the input field',
+            description: 'The size of the input field.',
             table: {
                 defaultValue: { summary: 'default' },
                 type: { summary: 'default | large' },
@@ -140,6 +141,7 @@ const meta: Meta<NumberTextFieldProps> = {
             control: 'boolean',
             description: 'A flag that expand to full container width if set to true.',
             table: {
+                defaultValue: { summary: 'false' },
                 type: { summary: 'boolean' },
             },
         },
@@ -158,6 +160,9 @@ const meta: Meta<NumberTextFieldProps> = {
             },
         },
     },
+    args:{
+        disabled: false,
+    },
 };
 
 export default meta;
@@ -165,9 +170,9 @@ type Story = StoryObj<NumberTextFieldProps>;
 
 export const Playground: Story = {
     args: {
-        label: 'This is Label',
-        placeholder: 'This is Placholder...',
-        helperText: 'This is a helper text',
+        label: 'Input Label',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
         size: 'default',
         clearable: false,
         fullWidth: false,
@@ -175,6 +180,105 @@ export const Playground: Story = {
         success: false,
         error: '',
         labelPosition: 'top',
+    },
+};
+
+export const DefaultValue: Story = {
+    args: {
+        label: 'Input Label',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
+        defaultValue: 888,
+    },
+    render: (args) => {
+        const InputRef = useRef<NumberTextfieldRef>(null);
+
+        const getValueByRef = () => {
+            return InputRef.current?.value; // number | null
+        }
+
+        return (
+            <NumberTextField {...args} inputRef={InputRef} />
+        );
+    },
+    argTypes: {
+        value: { control: false },
+        defaultValue: { control: false },
+    },
+    parameters: {
+        docs: {
+            description: {
+                story: 'This story demonstrates a uncontrolled NumberTextField. to access the input field and its value, use the inputRef.',
+            },
+            source: {
+                code: `
+import { useState } from 'react'; 
+
+const UncontrolledValue = () => {
+    const InputRef = useRef<NumberTextfieldRef>(null);
+
+    const getValueByRef = () => {
+        return InputRef.current?.value; // number | null
+    }
+
+    return (
+        <NumberTextField inputRef={InputRef} />
+    );
+};
+
+export default UncontrolledValue;
+          `.trim(),
+            },
+        },
+    },
+};
+
+export const ControlledValue: Story = {
+    args: {
+        label: 'Input Label',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
+    },
+    render: (args) => {
+        const [value, setValue] = useState<number | null>(null);
+
+        return (
+            <NumberTextField
+                {...args}
+                value={value}
+                onChange={setValue}
+            />
+        );
+    },
+    argTypes: {
+        value: { control: false },
+        defaultValue: { control: false },
+    },
+    parameters: {
+        docs: {
+            description: {
+                story: 'This story demonstrates a controlled NumberTextField with internal state using useState.',
+            },
+            source: {
+                code: `
+import { useState } from 'react';
+
+const ControlledValue = () => {
+    const [value, setValue] = useState<number | null>(null);
+
+    return (
+        <NumberTextField
+            {...args}
+            value={value}
+            onChange={setValue}
+        />
+    );
+};
+
+export default ControlledValue;
+          `.trim(),
+            },
+        },
     },
 };
 
@@ -186,49 +290,41 @@ export const Sizes: Story = {
                     key={size}
                     {...args}
                     size={size as NumberTextFieldProps['size']}
-                    label={`Number Text Field size ${size}`}
+                    label={`Size ${size}`}
                 />
             ))}
         </div >)
     },
     args: {
-        placeholder: 'This is Placholder...',
+        placeholder: 'Input Placeholder...',
     },
     argTypes: {
-        size: {
-            control: false,
-        },
-        label: {
-            control: false,
-        },
+        size: { control: false },
+        label: { control: false },
     },
 }
 
 export const LabelPosition: Story = {
-    render: (args) => {
-        return (<div className="flex gap-10 flex-wrap">
+    render: (args) => (
+        <div className="flex gap-10 flex-wrap">
             {labelPositionOption.map((position) => (
                 <NumberTextField
                     key={position}
                     {...args}
                     labelPosition={position as NumberTextFieldProps['labelPosition']}
-                    label={`Number Text Field size ${position}`}
-                    className='flex-1'
+                    label={`Number Text Field ${position}`}
+                    width={500}
                 />
             ))}
-        </div >)
-    },
+        </div >
+    ),
     args: {
-        placeholder: 'This is Placholder...',
-        helperText: 'This is a helper text',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
     },
     argTypes: {
-        size: {
-            control: false,
-        },
-        label: {
-            control: false,
-        },
+        size: { control: false },
+        label: { control: false },
     },
 }
 
@@ -261,16 +357,12 @@ export const SuccessAndError: Story = {
         </div >)
     },
     args: {
-        placeholder: 'This is Placholder...',
-        helperText: 'This is a helper text',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
     },
     argTypes: {
-        success: {
-            control: false,
-        },
-        error: {
-            control: false,
-        },
+        success: { control: false },
+        error: { control: false },
     },
 }
 
@@ -283,9 +375,9 @@ export const WithIcon: StoryObj<WithIconControls> = {
     args: {
         startIconName: 'arrow-up',
         endIconName: 'arrow-down',
-        label: 'This is Label',
-        placeholder: 'This is Placholder...',
-        helperText: 'This is a helper text',
+        label: 'Input Label',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
     },
     argTypes: {
         startIconName: {
@@ -307,10 +399,8 @@ export const WithIcon: StoryObj<WithIconControls> = {
     },
     render: (args) => {
         const { startIconName, endIconName, ...rest } = args;
-        console.log("startIconName", startIconName);
-
-        const start = useMemo(() => <Icon name={startIconName} size={20} color="currentColor" />, [startIconName]);
-        const end = useMemo(() => <Icon name={endIconName} size={20} color="currentColor" />, [endIconName]);
+        const start = useMemo(() => <Icon name={startIconName} color="currentColor" />, [startIconName]);
+        const end = useMemo(() => <Icon name={endIconName} color="currentColor" />, [endIconName]);
 
         return <NumberTextField {...rest} startIcon={start} endIcon={end} />;
     },

@@ -1,7 +1,8 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from '@storybook/test';
-import { Tag, type TagProps } from 'mis-design';
+import { Tag, TagProps } from '../../src/components';
+import '../../src/output.css';
 
 const colorOption = ['primary', 'success', 'danger', 'warning', 'info', 'neutral'];
 const sizeOption = ['small', 'default', 'large'];
@@ -34,7 +35,7 @@ const meta: Meta<TagProps> = {
             },
         },
         className: {
-            control: { type: 'text' },
+            control: false,
             description: 'Additional custom class names.',
             table: {
                 type: { summary: 'string' },

@@ -1,8 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Icon, IconNames, AutoComplete, type AutoCompleteProps } from 'mis-design'; // Update import path as needed
+import { AutoComplete, AutoCompleteProps, AutoCompleteRef, Icon, IconNames, SelectValue } from '../../src/components';
+import '../../src/output.css';
 import { iconNames } from '../../const/icon';
-
+import { options } from '../../src/const/select';
 
 const sizeOption = ['default', 'large'];
 const labelPositionOption = ['top', 'left'];
@@ -21,7 +22,7 @@ const meta: Meta<AutoCompleteProps<any>> = {
         },
         defaultValue: {
             control: 'text',
-            description: 'The initial value of the number input when the component is uncontrolled.',
+            description: 'The initial value of the input when the component is uncontrolled. only need to provide the key of the option',
             table: {
                 type: { summary: 'T' },
             },
@@ -77,7 +78,7 @@ const meta: Meta<AutoCompleteProps<any>> = {
             },
         },
         className: {
-            control: 'text',
+            control: false,
             description: 'Additional class names to customize the component style.',
             table: {
                 type: { summary: 'string' }
@@ -94,6 +95,7 @@ const meta: Meta<AutoCompleteProps<any>> = {
             control: 'boolean',
             description: 'A flag to display success of input field if set to true.',
             table: {
+                defaultValue: { summary: 'false' },
                 type: { summary: 'boolean' },
             },
         },
@@ -130,7 +132,7 @@ const meta: Meta<AutoCompleteProps<any>> = {
         size: {
             control: 'select',
             options: sizeOption,
-            description: 'The size of the input field',
+            description: 'The size of the input field.',
             table: {
                 defaultValue: { summary: 'default' },
                 type: { summary: 'default | large' },
@@ -140,6 +142,7 @@ const meta: Meta<AutoCompleteProps<any>> = {
             control: 'boolean',
             description: 'A flag that expand to full container width if set to true.',
             table: {
+                defaultValue: { summary: 'false' },
                 type: { summary: 'boolean' },
             },
         },
@@ -160,140 +163,257 @@ const meta: Meta<AutoCompleteProps<any>> = {
         },
         options: {
             control: 'object',
-            description: 'An array of option objects, each containing a value and a label.',
+            description: 'An array of option objects, each containing a value and a label. Component re-renders every time options change, so make sure manage options in the state or outside the component to prevent unnecessary re-renders.',
             table: {
                 type: { summary: '{ label: string, value: T }[]' },
             }
 
         }
     },
+    args:{
+        disabled: false,
+    }
 };
 
 export default meta;
-type Story = StoryObj<AutoCompleteProps<any>>;
 
-const options = [
-    { label: 'Apple', value: 'apple' },
-    { label: 'Orange', value: 'orange' },
-    { label: 'Banana', value: 'banana' },
-]
+type Story = StoryObj<AutoCompleteProps<any>>;
 
 export const Playground: Story = {
     args: {
-        label: 'This is Label',
-        placeholder: 'This is Placholder...',
-        helperText: 'This is a helper text',
+        label: 'Input Label',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
         size: 'default',
         clearable: false,
         fullWidth: false,
         loading: false,
         success: false,
-        error: '',
         labelPosition: 'top',
-        // defaultValue: 'apple',
         value: { label: 'Orange', value: 'orange' },
         options
     },
+    parameters: {
+        docs: {
+            description: {
+                story: 'The autocomplete is a normal text input enhanced by a panel of suggested options.',
+            },
+        },
+    },
 };
 
-export const Sizes: Story = {
+export const DefaultValue: Story = {
+    args: {
+        label: 'Input Label',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
+        defaultValue: 'apple',
+        options
+    },
     render: (args) => {
-        return (<div className="flex gap-10 flex-wrap">
+        const InputRef = useRef<AutoCompleteRef<string> | null>(null);
+
+        const getValueByRef = () => {
+            return InputRef.current?.value; // {value: T, label: string, detail?: D}
+        }
+
+        return (
+            <AutoComplete {...args} options={options} inputRef={InputRef} />
+        );
+    },
+    argTypes: {
+        value: { control: false },
+        defaultValue: { control: false },
+    },
+    parameters: {
+        docs: {
+            description: {
+                story: 'This story demonstrates a uncontrolled AutoComplete. to access the input field and its value, use the inputRef.',
+            },
+            source: {
+                code: `
+import { useState } from 'react';
+
+const options: SelectValue<string>[] = [
+    { label: 'Apple', value: 'apple' },
+    { label: 'Orange', value: 'orange' },
+    { label: 'Banana', value: 'banana' },
+];
+
+const UncontrolledValue = () => {
+    const InputRef = useRef<AutoCompleteRef<string> | null>(null);
+
+    const getValueByRef = () => {
+        return InputRef.current?.value; // {value: T, label: string, detail?: D}
+    }
+
+    return (
+        <AutoComplete
+            label="This is label"
+            placeholder="Input Placeholder..."
+            value={value}
+            onChange={setValue}
+            options={options}
+        />
+    );
+};
+
+export default UncontrolledValue;
+          `.trim(),
+            },
+        },
+    },
+};
+
+export const ControlledValue: Story = {
+    args: {
+        label: 'Input Label',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
+    },
+    render: (args) => {
+        const [value, setValue] = useState<SelectValue<string> | null>({
+            label: 'Orange',
+            value: 'orange',
+        });
+
+        return (
+            <AutoComplete
+                {...args}
+                value={value}
+                onChange={setValue}
+                options={options}
+            />
+        );
+    },
+    argTypes: {
+        value: { control: false },
+        defaultValue: { control: false },
+    },
+    parameters: {
+        docs: {
+            description: {
+                story: 'This story demonstrates a controlled AutoComplete with internal state using useState.',
+            },
+            source: {
+                code: `
+import { useState } from 'react';
+
+const options: SelectValue<string>[] = [
+    { label: 'Apple', value: 'apple' },
+    { label: 'Orange', value: 'orange' },
+    { label: 'Banana', value: 'banana' },
+];
+
+const ControlledValue = () => {
+    const [value, setValue] = useState<SelectValue<string> | null>({ label: 'Orange', value: 'orange' });
+
+    return (
+        <AutoComplete
+            label="This is label"
+            placeholder="Input Placeholder..."
+            value={value}
+            onChange={setValue}
+            options={options}
+        />
+    );
+};
+
+export default ControlledValue;
+          `.trim(),
+            },
+        },
+    },
+};
+
+
+export const Sizes: Story = {
+    render: (args) => (
+        <div className="flex gap-10 flex-wrap">
             {sizeOption.map((size) => (
                 <AutoComplete
                     key={size}
                     {...args}
                     size={size as AutoCompleteProps<any>['size']}
-                    label={`Number Text Field size ${size}`}
+                    label={`Size ${size}`}
+                    options={options}
                 />
             ))}
-        </div >)
-    },
+        </div >
+    ),
     args: {
-        placeholder: 'This is Placholder...',
+        placeholder: 'Input Placeholder...',
     },
     argTypes: {
-        size: {
-            control: false,
-        },
-        label: {
-            control: false,
-        },
+        size: { control: false },
+        label: { control: false },
     },
 }
 
 export const LabelPosition: Story = {
-    render: (args) => {
-        return (<div className="flex gap-10 flex-wrap">
+    render: (args) => (
+        <div className="flex flex-col w-full gap-4">
             {labelPositionOption.map((position) => (
                 <AutoComplete
                     key={position}
                     {...args}
                     labelPosition={position as AutoCompleteProps<any>['labelPosition']}
-                    label={`Number Text Field size ${position}`}
-                    className='flex-1'
+                    label={`Position ${position}`}
                     options={options}
+                    width={500}
                 />
             ))}
-        </div >)
-    },
+        </div >
+    ),
     args: {
-        placeholder: 'This is Placholder...',
-        helperText: 'This is a helper text',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
     },
     argTypes: {
-        size: {
-            control: false,
-        },
-        label: {
-            control: false,
-        },
+        size: { control: false },
+        label: { control: false },
     },
 }
 
 export const SuccessAndError: Story = {
-    render: (args) => {
-        return (<div className="flex flex-col gap-10">
+    render: (args) => (
+        <div className="flex flex-col gap-10">
             <AutoComplete
                 {...args}
-                label="Neutral Number Text Field size"
+                label="Neutral AutoComplete size"
                 className='flex-1'
                 options={options}
             />
             <AutoComplete
                 {...args}
-                label="Success Number Text Field size"
+                label="Success AutoComplete size"
                 className='flex-1'
                 success
                 options={options}
             />
             <AutoComplete
                 {...args}
-                label="Success Number Text Field size"
+                label="Success AutoComplete size"
                 className='flex-1'
                 error
                 options={options}
             />
             <AutoComplete
                 {...args}
-                label="Success Number Text Field size"
+                label="Success AutoComplete size"
                 className='flex-1'
                 error="Error with message"
                 options={options}
             />
-        </div >)
-    },
+        </div >
+    ),
     args: {
-        placeholder: 'This is Placholder...',
-        helperText: 'This is a helper text',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
     },
     argTypes: {
-        success: {
-            control: false,
-        },
-        error: {
-            control: false,
-        },
+        success: { control: false },
+        error: { control: false },
     },
 }
 
@@ -306,9 +426,9 @@ export const WithIcon: StoryObj<WithIconControls> = {
     args: {
         startIconName: 'arrow-up',
         endIconName: 'arrow-down',
-        label: 'This is Label',
-        placeholder: 'This is Placholder...',
-        helperText: 'This is a helper text',
+        label: 'Input Label',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
     },
     argTypes: {
         startIconName: {
@@ -331,8 +451,8 @@ export const WithIcon: StoryObj<WithIconControls> = {
     render: (args) => {
         const { startIconName, endIconName, ...rest } = args;
 
-        const start = useMemo(() => <Icon name={startIconName} size={20} color="currentColor" />, [startIconName]);
-        const end = useMemo(() => <Icon name={endIconName} size={20} color="currentColor" />, [endIconName]);
+        const start = useMemo(() => <Icon name={startIconName} color="currentColor" />, [startIconName]);
+        const end = useMemo(() => <Icon name={endIconName} color="currentColor" />, [endIconName]);
 
         return <AutoComplete {...rest} startIcon={start} endIcon={end} options={options} />;
     },

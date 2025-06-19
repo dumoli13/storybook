@@ -1,7 +1,8 @@
-import { fn } from '@storybook/test';
 import React, { useMemo } from 'react';
-import { Button, type ButtonProps, Icon, type IconNames } from 'mis-design';
-import type { ArgTypes, Meta, StoryObj } from '@storybook/react';
+import { fn } from '@storybook/test';
+import type { Meta, StoryObj } from '@storybook/react';
+import { Button, type ButtonProps, Icon, type IconNames } from '../../src/components';
+import '../../src/output.css';
 import { iconNames } from '../../const/icon';
 
 
@@ -14,11 +15,9 @@ const meta: Meta<ButtonProps> = {
   title: 'Input/Button',
   component: Button,
   parameters: {
-    // Optional parameter to center the component in the Canvas. More info: https://storybook.js.org/docs/configure/story-layout
     layout: 'centered',
   },
   tags: ['autodocs'],
-  // More on argTypes: https://storybook.js.org/docs/api/argtypes
   argTypes: {
     variant: {
       control: { type: 'select' },
@@ -54,6 +53,9 @@ const meta: Meta<ButtonProps> = {
     onClick: {
       action: 'clicked',
       description: 'Callback when the button is clicked',
+      table: {
+        type: { summary: '(e: MouseEvent<HTMLButtonElement>) => void' },
+      },
     },
     loading: {
       type: 'boolean',
@@ -75,7 +77,9 @@ const meta: Meta<ButtonProps> = {
       },
     },
   },
-  args: { onClick: fn() },
+  args: {
+    onClick: fn(),
+  }
 };
 
 
@@ -180,13 +184,14 @@ export const VariantText: Story = {
 }
 
 export const Sizes: Story = {
-  render: (args) => {
-    return (<div className="flex gap-2">
+  render: (args) =>
+  (
+    <div className="flex gap-2">
       <Button {...args} size='small' >small</Button>
       <Button {...args} size='default'>default</Button>
       <Button {...args} size='large'>large</Button>
-    </div >)
-  },
+    </div >
+  ),
   args: {
     children: 'Button',
     variant: 'contained',
@@ -239,10 +244,8 @@ export const WithIcon: StoryObj<WithIconControls> = {
   },
   render: (args) => {
     const { startIconName, endIconName, ...rest } = args;
-    console.log("startIconName", startIconName);
-
-    const start = useMemo(() => <Icon name={startIconName} size={20} color="currentColor" />, [startIconName]);
-    const end = useMemo(() => <Icon name={endIconName} size={20} color="currentColor" />, [endIconName]);
+    const start = useMemo(() => <Icon name={startIconName} color="currentColor" />, [startIconName]);
+    const end = useMemo(() => <Icon name={endIconName} color="currentColor" />, [endIconName]);
 
     return <Button {...rest} startIcon={start} endIcon={end} />;
   },

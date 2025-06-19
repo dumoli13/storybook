@@ -1,16 +1,17 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Skeleton, type SkeletonTableProps } from 'mis-design';
+import { Skeleton, SkeletonTableProps } from '../../src/components';
+import '../../src/output.css';
 
 const meta: Meta<SkeletonTableProps> = {
     title: 'Display/Skeleton.Table',
-    component: Skeleton,
+    component: Skeleton.Table,
     tags: ['autodocs'],
     parameters: {
         layout: 'centered',
         docs: {
             description: {
-                story: 'Predefined skeleton for table structure with configurable column count.',
+                story: 'Predefined skeleton for table structure with configurable column count. Skeleton size is based on the size of the container.',
             },
         },
     },

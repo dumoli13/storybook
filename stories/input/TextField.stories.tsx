@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Icon, IconNames, TextField, type TextFieldProps } from 'mis-design'; // Update import path as needed
+import { Icon, IconNames, TextField, TextfieldRef, type TextFieldProps } from '../../src/components';
+import '../../src/output.css';
 import { iconNames } from '../../const/icon';
 
 
@@ -77,7 +78,7 @@ const meta: Meta<TextFieldProps> = {
             },
         },
         className: {
-            control: 'text',
+            control: false,
             description: 'Additional class names to customize the component style.',
             table: {
                 type: { summary: 'string' }
@@ -94,6 +95,7 @@ const meta: Meta<TextFieldProps> = {
             control: 'boolean',
             description: 'A flag to display success of input field if set to true.',
             table: {
+                defaultValue: { summary: 'false' },
                 type: { summary: 'boolean' },
             },
         },
@@ -130,7 +132,7 @@ const meta: Meta<TextFieldProps> = {
         size: {
             control: 'select',
             options: sizeOption,
-            description: 'The size of the input field',
+            description: 'The size of the input field.',
             table: {
                 defaultValue: { summary: 'default' },
                 type: { summary: 'default | large' },
@@ -140,6 +142,7 @@ const meta: Meta<TextFieldProps> = {
             control: 'boolean',
             description: 'A flag that expand to full container width if set to true.',
             table: {
+                defaultValue: { summary: 'false' },
                 type: { summary: 'boolean' },
             },
         },
@@ -158,6 +161,9 @@ const meta: Meta<TextFieldProps> = {
             },
         },
     },
+    args: {
+        disabled: false,
+    },
 };
 
 export default meta;
@@ -165,9 +171,9 @@ type Story = StoryObj<TextFieldProps>;
 
 export const Playground: Story = {
     args: {
-        label: 'This is Label',
-        placeholder: 'This is Placholder...',
-        helperText: 'This is a helper text',
+        label: 'Input Label',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
         size: 'default',
         clearable: false,
         fullWidth: false,
@@ -175,6 +181,101 @@ export const Playground: Story = {
         success: false,
         error: '',
         labelPosition: 'top',
+    },
+};
+
+export const DefaultValue: Story = {
+    args: {
+        label: 'Input Label',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
+        defaultValue: 'lorem ipsum dolor sit amet',
+    },
+    render: (args) => {
+        const InputRef = useRef<TextfieldRef>(null);
+
+        const getValueByRef = () => {
+            return InputRef.current?.value; // string
+        }
+
+        return (
+            <TextField {...args} inputRef={InputRef} />
+        );
+    },
+    argTypes: {
+        value: { control: false },
+        defaultValue: { control: false },
+    },
+    parameters: {
+        docs: {
+            description: {
+                story: 'This story demonstrates a uncontrolled Textfield. to access the input field and its value, use the inputRef.',
+            },
+            source: {
+                code: `
+import { useState } from 'react'; 
+
+const UncontrolledValue = () => {
+    const InputRef = useRef<TextAreaRef>(null);
+
+    const getValueByRef = () => {
+        return InputRef.current?.value; // string
+    }
+
+    return (
+        <TextField inputRef={InputRef} />
+    );
+};
+
+export default UncontrolledValue;
+          `.trim(),
+            },
+        },
+    },
+};
+
+export const ControlledValue: Story = {
+    args: {
+        label: 'Input Label',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
+    },
+    render: (args) => {
+        const [value, setValue] = useState<string>('');
+
+        return (
+            <TextField
+                {...args}
+                value={value}
+                onChange={setValue}
+            />
+        );
+    },
+    argTypes: {
+        value: { control: false },
+        defaultValue: { control: false },
+    },
+    parameters: {
+        docs: {
+            description: {
+                story: 'This story demonstrates a controlled TextField with internal state using useState.',
+            },
+            source: {
+                code: `
+import { useState } from 'react';
+
+const ControlledValue = () => {
+    const [value, setValue] = useState<string>('');
+
+    return (
+        <TextField value={value} onChange={setValue}/>
+    );
+};
+
+export default ControlledValue;
+          `.trim(),
+            },
+        },
     },
 };
 
@@ -186,91 +287,79 @@ export const Sizes: Story = {
                     key={size}
                     {...args}
                     size={size as TextFieldProps['size']}
-                    label={`Number Text Field size ${size}`}
+                    label={`Size ${size}`}
                 />
             ))}
         </div >)
     },
     args: {
-        placeholder: 'This is Placholder...',
+        placeholder: 'Input Placeholder...',
     },
     argTypes: {
-        size: {
-            control: false,
-        },
-        label: {
-            control: false,
-        },
+        size: { control: false },
+        label: { control: false },
     },
 }
 
 export const LabelPosition: Story = {
-    render: (args) => {
-        return (<div className="flex gap-10 flex-wrap">
+    render: (args) => (
+        <div className="flex gap-10 flex-wrap">
             {labelPositionOption.map((position) => (
                 <TextField
                     key={position}
                     {...args}
                     labelPosition={position as TextFieldProps['labelPosition']}
-                    label={`Number Text Field size ${position}`}
-                    className='flex-1'
+                    label={`Position ${position}`}
+                    width={500}
                 />
             ))}
-        </div >)
-    },
+        </div >
+    ),
     args: {
-        placeholder: 'This is Placholder...',
-        helperText: 'This is a helper text',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
     },
     argTypes: {
-        size: {
-            control: false,
-        },
-        label: {
-            control: false,
-        },
+        size: { control: false },
+        label: { control: false },
     },
 }
 
 export const SuccessAndError: Story = {
-    render: (args) => {
-        return (<div className="flex flex-col gap-10">
+    render: (args) => (
+        <div className="flex flex-col gap-10">
             <TextField
                 {...args}
-                label="Neutral Number Text Field size"
+                label="Neutral Text Field size"
                 className='flex-1'
             />
             <TextField
                 {...args}
-                label="Success Number Text Field size"
+                label="Success Text Field size"
                 className='flex-1'
                 success
             />
             <TextField
                 {...args}
-                label="Success Number Text Field size"
+                label="Success Text Field size"
                 className='flex-1'
                 error
             />
             <TextField
                 {...args}
-                label="Success Number Text Field size"
+                label="Success Text Field size"
                 className='flex-1'
                 error="Error with message"
             />
-        </div >)
-    },
+        </div >
+    ),
     args: {
-        placeholder: 'This is Placholder...',
-        helperText: 'This is a helper text',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
     },
     argTypes: {
-        success: {
-            control: false,
-        },
-        error: {
-            control: false,
-        },
+        success: { control: false },
+        error: { control: false },
     },
 }
 
@@ -283,9 +372,9 @@ export const WithIcon: StoryObj<WithIconControls> = {
     args: {
         startIconName: 'arrow-up',
         endIconName: 'arrow-down',
-        label: 'This is Label',
-        placeholder: 'This is Placholder...',
-        helperText: 'This is a helper text',
+        label: 'Input Label',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
     },
     argTypes: {
         startIconName: {
@@ -307,10 +396,8 @@ export const WithIcon: StoryObj<WithIconControls> = {
     },
     render: (args) => {
         const { startIconName, endIconName, ...rest } = args;
-        console.log("startIconName", startIconName);
-
-        const start = useMemo(() => <Icon name={startIconName} size={20} color="currentColor" />, [startIconName]);
-        const end = useMemo(() => <Icon name={endIconName} size={20} color="currentColor" />, [endIconName]);
+        const start = useMemo(() => <Icon name={startIconName} color="currentColor" />, [startIconName]);
+        const end = useMemo(() => <Icon name={endIconName} color="currentColor" />, [endIconName]);
 
         return <TextField {...rest} startIcon={start} endIcon={end} />;
     },

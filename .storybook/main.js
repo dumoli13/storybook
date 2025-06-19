@@ -8,9 +8,9 @@ const config = {
   ],
     "addons": [
     "@storybook/addon-essentials",
-    "@storybook/addon-onboarding",
     "@chromatic-com/storybook",
-    "@storybook/experimental-addon-test"
+    "@storybook/experimental-addon-test",
+    "storybook-dark-mode"
   ],
   "framework": {
     "name": "@storybook/react-vite",
