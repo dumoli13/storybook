@@ -140,7 +140,7 @@ const Tooltip = ({
               transformOrigin: 'center center',
               transition: 'opacity 0.15s ease-out',
             }}
-            className="absolute z-[100] bg-neutral-90 dark:bg-neutral-90-dark text-neutral-10 dark:text-neutral-10-dark rounded-sm px-2 py-1.5 mt-1 text-14px"
+            className="absolute z-[2100] bg-neutral-90 dark:bg-neutral-90-dark text-neutral-10 dark:text-neutral-10-dark rounded-sm px-2 py-1.5 mt-1 text-14px"
           >
             {arrow && (
               <div

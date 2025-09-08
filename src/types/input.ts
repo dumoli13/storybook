@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   AutoCompleteMultipleRef,
   AutoCompleteRef,
@@ -13,7 +13,7 @@ import {
   TextAreaRef,
   TextfieldRef,
   TimerFieldRef,
-} from '../../components';
+} from "../components";
 
 export type InputPropsRefType =
   | AutoCompleteRef<any>
@@ -38,6 +38,7 @@ export interface InputProps<T> {
   error?: boolean | string;
   success?: boolean;
   disabled?: boolean;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   fullWidth?: boolean;
   value?: T;
   defaultValue?: T;

@@ -47,10 +47,21 @@ const FilterSelect = <T extends { [key: string]: any }, D>({
     }
   };
 
+  React.useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+
   return (
     <Popper
       open={open}
       onOpen={setOpen}
+      className="py-4 px-2"
       content={
         <>
           {type === 'select' && (
@@ -61,6 +72,7 @@ const FilterSelect = <T extends { [key: string]: any }, D>({
               options={option}
               placeholder={`Select ${label}`}
               width={280}
+              clearable
             />
           )}
           {type === 'autocomplete' && (
@@ -71,6 +83,7 @@ const FilterSelect = <T extends { [key: string]: any }, D>({
               options={option}
               placeholder={`Select ${label}`}
               width={280}
+              clearable
             />
           )}
         </>
@@ -91,7 +104,7 @@ const FilterSelect = <T extends { [key: string]: any }, D>({
           'border-primary-main dark:border-primary-main-dark bg-primary-surface dark:bg-primary-surface-dark':
             value,
         })}
-        title="Select Option"
+        title="Search by Option"
       />
     </Popper>
   );

@@ -67,6 +67,7 @@ const TextField = ({
   width,
   ...props
 }: TextFieldProps) => {
+  const parentRef = React.useRef<HTMLDivElement>(null);
   const elementRef = React.useRef<HTMLInputElement>(null);
   const [focused, setFocused] = React.useState(false);
   const [internalValue, setInternalValue] = React.useState(
@@ -87,10 +88,27 @@ const TextField = ({
       elementRef.current?.focus();
     },
     reset: () => {
-      setInternalValue(defaultValue?.toString() ?? '');
+      setInternalValue('');
     },
     disabled,
   }));
+
+  const handleFocus = () => {
+    if (disabled) return;
+    setFocused(true);
+  };
+
+  const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
+    const relatedTarget = event.relatedTarget as Node | null;
+
+    const selectElementContainsTarget =
+      parentRef.current?.contains(relatedTarget);
+    if (selectElementContainsTarget) {
+      return;
+    }
+
+    setFocused(false);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -132,7 +150,7 @@ const TextField = ({
               isError,
             'border-success-main dark:border-success-main-dark focus:ring-success-focus dark:focus:ring-success-focus-dark':
               !isError && successProp,
-            'border-neutral-50 dark:border-neutral-50-dark hover:border-primary-main dark:hover:border-primary-main-dark focus:ring-primary-main dark:focus:ring-primary-main-dark':
+            'border-neutral-50 dark:border-neutral-50-dark hover:border-primary-hover dark:hover:border-primary-hover-dark focus:ring-primary-main dark:focus:ring-primary-main-dark':
               !isError && !successProp && !disabled,
             'bg-neutral-20 dark:bg-neutral-30-dark cursor-not-allowed text-neutral-60 dark:text-neutral-60-dark':
               disabled,
@@ -145,6 +163,7 @@ const TextField = ({
           },
         )}
         style={width ? { width } : undefined}
+        ref={parentRef}
       >
         {!!startIcon && (
           <div className="text-neutral-70 dark:text-neutral-70-dark">
@@ -158,8 +177,8 @@ const TextField = ({
           value={value}
           onChange={handleChange}
           placeholder={focused ? '' : placeholder}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           className={cx(
             'w-full outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark text-neutral-90 dark:text-neutral-90-dark disabled:cursor-not-allowed',
             {

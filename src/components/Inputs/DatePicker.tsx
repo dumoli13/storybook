@@ -184,7 +184,7 @@ const DatePicker = ({
       elementRef.current?.focus();
     },
     reset: () => {
-      setInternalValue(defaultValue || null);
+      setInternalValue(null);
     },
     disabled,
   }));

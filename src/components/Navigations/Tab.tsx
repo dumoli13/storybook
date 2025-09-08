@@ -4,7 +4,7 @@ import Icon from '../Icon';
 
 export interface TabItem {
   key: string | number;
-  label: string;
+  label: React.ReactNode;
   disabled?: boolean;
   children: React.ReactNode;
 }

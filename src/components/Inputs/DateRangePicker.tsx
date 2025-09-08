@@ -58,7 +58,7 @@ export interface DateRangePickerProps
 }
 
 /**
- * The Date Range Picker lets the user select a range of dates. 
+ * The Date Range Picker lets the user select a range of dates.
  */
 const DateRangePicker = ({
   id,
@@ -185,7 +185,7 @@ const DateRangePicker = ({
     },
     reset: () => {
       setTempValue([null, null]);
-      setInternalValue(defaultValue || null);
+      setInternalValue(null);
     },
     disabled,
   }));

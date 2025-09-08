@@ -124,7 +124,6 @@ export const Playground: Story = {
         helperText: 'Input helper text',
         size: 'default',
         loading: false,
-        error: '',
         labelPosition: 'right',
     },
 };

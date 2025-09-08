@@ -1,4 +1,5 @@
 import React from 'react';
+import { useDebouncedCallback } from 'use-debounce';
 import { InputProps, InputPropsRefType } from '../../types/input';
 import { ButtonProps } from './Button';
 
@@ -49,13 +50,15 @@ const normalizeRule = (rule: FormRule) => {
 };
 
 export interface FormProps<T> {
-  onSubmit: (values: T) => Promise<void> | void;
+  onSubmit?: (values: T) => Promise<void> | void;
   onReset?: () => void;
   className?: string;
   children: React.ReactNode;
   rules?: FormRules;
   disabled?: boolean;
   formRef?: React.Ref<FormRef<T>>;
+  submitOnChange?: boolean;
+  focusOnLastFieldEnter?: boolean;
 }
 
 /**
@@ -96,6 +99,8 @@ const Form = <T,>({
   rules = {},
   disabled = false,
   formRef,
+  submitOnChange = false,
+  focusOnLastFieldEnter = false,
 }: FormProps<T>) => {
   const inputRefsRef = React.useRef<Record<string, InputPropsRefType>>({});
   const submitButtonRef = React.useRef<HTMLButtonElement>(null);
@@ -125,6 +130,40 @@ const Form = <T,>({
       .replace('{max}', String(rule.max));
   };
 
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    const isValid = validate();
+
+    if (isValid) {
+      const result = {} as T;
+      for (const key in inputRefsRef.current) {
+        // inputRefsRef.current[key] may be undefined if user remove it in the jsx
+        result[key as keyof T] = inputRefsRef.current[key]?.value as T[keyof T];
+      }
+
+      onSubmit?.(result);
+    } else {
+      for (const key of inputOrderRef.current) {
+        const input = inputRefsRef.current[key];
+        if (input && !input.disabled) {
+          input.focus?.();
+          break;
+        }
+      }
+    }
+    setIsSubmitting(false);
+  };
+
+  const handleReset = React.useCallback(() => {
+    Object.values(inputRefsRef.current).forEach((ref) => {
+      if (ref && typeof ref.reset === 'function') {
+        ref.reset();
+      }
+    });
+    setErrors({});
+    onReset?.();
+  }, []);
+
   const validate = React.useCallback(() => {
     const newErrors: Record<string, string> = {};
     const typedValues = {} as T;
@@ -148,7 +187,10 @@ const Form = <T,>({
             (Array.isArray(value) && value.length === 0) || // Check for empty array
             (value instanceof Date && isNaN(value.getTime()))) // Check for invalid Dayjs instance
         ) {
-          newErrors[fieldName] = getErrorMessage(rule, 'required');
+          // Do not show required error if submitOnChange is true since user need time to fill all fields
+          if (!submitOnChange) {
+            newErrors[fieldName] = getErrorMessage(rule, 'required');
+          }
           break;
         }
 
@@ -167,6 +209,7 @@ const Form = <T,>({
 
         if (
           normalizedRule.minLength !== undefined &&
+          (typeof value === 'number' || typeof value === 'string') &&
           String(value).length < normalizedRule.minLength
         ) {
           newErrors[fieldName] = getErrorMessage(rule, 'minLength');
@@ -175,6 +218,7 @@ const Form = <T,>({
 
         if (
           normalizedRule.maxLength !== undefined &&
+          (typeof value === 'number' || typeof value === 'string') &&
           String(value).length > normalizedRule.maxLength
         ) {
           newErrors[fieldName] = getErrorMessage(rule, 'maxLength');
@@ -183,6 +227,7 @@ const Form = <T,>({
 
         if (
           normalizedRule.exactLength !== undefined &&
+          (typeof value === 'number' || typeof value === 'string') &&
           String(value).length !== normalizedRule.exactLength
         ) {
           newErrors[fieldName] = getErrorMessage(rule, 'exactLength');
@@ -191,6 +236,7 @@ const Form = <T,>({
 
         if (
           normalizedRule.min !== undefined &&
+          typeof value === 'number' &&
           Number(value) < normalizedRule.min
         ) {
           newErrors[fieldName] = getErrorMessage(rule, 'min');
@@ -199,6 +245,7 @@ const Form = <T,>({
 
         if (
           normalizedRule.max !== undefined &&
+          typeof value === 'number' &&
           Number(value) > normalizedRule.max
         ) {
           newErrors[fieldName] = getErrorMessage(rule, 'max');
@@ -210,7 +257,11 @@ const Form = <T,>({
           break;
         }
 
-        if (normalizedRule.url && !urlRegex.test(String(value))) {
+        if (
+          normalizedRule.url &&
+          typeof value === 'string' &&
+          !urlRegex.test(String(value))
+        ) {
           newErrors[fieldName] = getErrorMessage(rule, 'url');
           break;
         }
@@ -247,28 +298,68 @@ const Form = <T,>({
       const order = inputOrderRef.current;
       const currentIndex = order.indexOf(currentKey);
 
+      if (currentIndex === -1) return;
+
+      // Find the next enabled input
+      let nextEnabledInputIndex = -1;
       for (let i = currentIndex + 1; i < order.length; i++) {
         const nextKey = order[i];
         const ref = inputRefsRef.current[nextKey];
 
-        // Skip disabled or unfocusable inputs
         if (ref && typeof ref.focus === 'function' && !ref.disabled) {
-          ref.focus();
-          return;
+          nextEnabledInputIndex = i;
+          break;
         }
       }
 
-      // No enabled input found, focus the submit button
-      submitButtonRef.current?.focus();
+      // If found, focus on the next enabled input
+      if (nextEnabledInputIndex > -1) {
+        const nextKey = order[nextEnabledInputIndex];
+        const ref = inputRefsRef.current[nextKey];
+        ref.focus?.();
+        return;
+      }
+
+      // No more enabled inputs found
+      if (focusOnLastFieldEnter) {
+        if (submitButtonRef.current && !submitButtonRef.current.disabled) {
+          submitButtonRef.current.focus();
+        }
+      } else {
+        handleSubmit();
+      }
     }
   };
 
+  const getValues = React.useCallback(() => {
+    const result = {} as T;
+    for (const key in inputRefsRef.current) {
+      result[key as keyof T] = inputRefsRef.current[key].value as T[keyof T];
+    }
+    return result;
+  }, []);
+
+  const errorsRef = React.useRef(errors);
+  errorsRef.current = errors;
+
+  const debounceSubmit = useDebouncedCallback(() => {
+    const isValid = validate();
+    if (isValid) {
+      const result = {} as T;
+      for (const key in inputRefsRef.current) {
+        result[key as keyof T] = inputRefsRef.current[key].value as T[keyof T];
+      }
+      onSubmit?.(result);
+    }
+  }, 2000);
+
   const enhanceChild = (child: React.ReactNode): React.ReactNode => {
     if (!React.isValidElement(child)) return child;
+
     if (isFormSubmitButton(child)) {
       return React.cloneElement(child as React.ReactElement<any>, {
         ...child.props,
-        ref: submitButtonRef,
+        ref: (child as any).ref || submitButtonRef,
       });
     }
 
@@ -293,6 +384,9 @@ const Form = <T,>({
           setErrors((prev) => ({ ...prev, [fieldName]: undefined }));
         }
         childOnChange?.(value);
+        if (submitOnChange) {
+          debounceSubmit();
+        }
       };
 
       // Preserve existing ref and props
@@ -301,9 +395,14 @@ const Form = <T,>({
         defaultValue,
         onChange: handleChange,
         error: errors[fieldName] ?? undefined,
-        disabled: formDisabled || childProps.disabled,
-        onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) =>
-          handleInputKeyDown(e, fieldName),
+        disabled: childProps.disabled ?? formDisabled,
+        onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
+          if (childProps.onKeyDown) {
+            childProps.onKeyDown(e);
+          } else {
+            handleInputKeyDown(e, fieldName);
+          }
+        },
         inputRef: (ref: InputPropsRefType) => {
           if (fieldName) {
             inputRefsRef.current[fieldName] = ref;
@@ -331,55 +430,18 @@ const Form = <T,>({
     return child;
   };
 
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-    const isValid = validate();
-
-    for (const key of inputOrderRef.current) {
-      const input = inputRefsRef.current[key];
-      if (input && !input.disabled) {
-        input.focus?.();
-        break;
-      }
-    }
-
-    if (isValid) {
-      const result = {} as T;
-      for (const key in inputRefsRef.current) {
-        result[key as keyof T] = inputRefsRef.current[key].value as T[keyof T];
-      }
-
-      onSubmit(result);
-    }
-    setIsSubmitting(false);
-  };
-
-  const handleReset = () => {
-    Object.values(inputRefsRef.current).forEach((ref) => {
-      if (ref && typeof ref.reset === 'function') {
-        ref.reset();
-      }
-    });
-    setErrors({});
-    onReset?.();
-  };
-
-  React.useImperativeHandle(formRef, () => ({
-    submit: handleSubmit,
-    reset: handleReset,
-    validate,
-    getValues: () => {
-      const result = {} as T;
-      for (const key in inputRefsRef.current) {
-        result[key as keyof T] = inputRefsRef.current[key].value as T[keyof T];
-      }
-      return result;
-    },
-    getErrors: () => errors,
-    setErrors: (errors) => {
-      setErrors(errors);
-    },
-  }));
+  React.useImperativeHandle(
+    formRef,
+    () => ({
+      submit: handleSubmit,
+      reset: handleReset,
+      validate,
+      getValues,
+      getErrors: () => errorsRef.current, // Use ref to avoid closure issues
+      setErrors,
+    }),
+    [handleSubmit, handleReset, validate, getValues, setErrors],
+  );
 
   return (
     <form

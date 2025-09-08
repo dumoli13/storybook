@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { SelectValue, Table, TableColumn, TableProps, TableSortingProps } from '../../src/components';
+import { Icon, IconButton, SelectValue, Table, TableColumn, TableProps, TableSortingProps } from '../../src/components';
 import '../../src/output.css';
- 
+
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export 
 const meta: Meta<TableProps<any>> = {
     title: 'Display/Table',
@@ -107,7 +107,7 @@ const meta: Meta<TableProps<any>> = {
         },
         size: {
             control: 'select',
-            options: ['default', 'large'],
+            options: ['small', 'default', 'large'],
             description: 'Determines the size of the table cells and typography.',
             table: {
                 defaultValue: { summary: 'default' },
@@ -123,7 +123,15 @@ const meta: Meta<TableProps<any>> = {
                 type: { summary: '"top" | "center" | "bottom"' },
             },
         },
-
+        style: {
+            control: 'select',
+            options: ['simple', 'default'],
+            description: 'Determines the style of the table.',
+            table: {
+                defaultValue: { summary: 'default' },
+                type: { summary: '"default" | "simple"' },
+            },
+        },
     },
 };
 
@@ -166,7 +174,7 @@ export const Playground: Story = {
         fullwidth: false,
         stickyHeader: true,
         maxHeight: '300px',
-
+        style: 'default',
     },
     render: (args) => {
         const [sort, setSort] = useState<TableSortingProps<DataType>>({
@@ -193,8 +201,8 @@ export const Playground: Story = {
             {
                 key: 'name',
                 label: 'Name',
+                subLabel: <div className='text-12px'>Sub Label</div>,
                 dataIndex: 'name',
-                sortable: true,
                 width: 200,
                 filter: 'textfield',
                 filterValue: filter.name,
@@ -217,6 +225,7 @@ export const Playground: Story = {
                 dataIndex: 'age',
                 sortable: true,
                 width: '25%',
+                align: 'right',
                 filter: 'textfield',
                 filterValue: filter.age,
                 onChange: (value) => setFilter({ ...filter, age: value }),
@@ -228,6 +237,7 @@ export const Playground: Story = {
                 dataIndex: 'gender',
                 sortable: true,
                 width: '20%',
+                align: 'right',
                 filter: 'select',
                 filterValue: filter.gender,
                 option: [{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }],
@@ -505,6 +515,12 @@ export const ShowSelection: Story = {
                 key: 'email',
                 label: 'Email',
                 dataIndex: 'email',
+                align: 'right',
+            },
+            {
+                key: 'action',
+                label: 'Action',
+                render: () => <IconButton icon={<Icon name="printer" size={24} />} title="Edit" color="primary" size='large' />
             },
 
         ];
@@ -523,7 +539,7 @@ export const ShowSelection: Story = {
         columns: { control: false },
     },
     parameters: {
-        docs: { 
+        docs: {
             source: {
                 code: `
 import { useState } from 'react';
@@ -579,7 +595,7 @@ export default Playground;
             },
         },
     },
-}; 
+};
 
 export const CustomRowStyle: Story = {
     args: {
@@ -612,11 +628,11 @@ export const CustomRowStyle: Story = {
         ];
 
         const handleRowClassName = (record: DataType) => {
-            if(record.age < 30){
-                return 'bg-danger-surface dark:bg-danger-surface-dark hover:bg-danger-border/20 dark:hover:bg-danger-border/20-dark'  
+            if (record.age < 30) {
+                return 'bg-danger-surface dark:bg-danger-surface-dark hover:bg-danger-border/20 dark:hover:bg-danger-border/20-dark'
             }
-            if(record.age > 40){
-                return 'bg-warning-surface dark:bg-warning-surface-dark hover:bg-warning-border/20 dark:hover:bg-warning-border/20-dark'  
+            if (record.age > 40) {
+                return 'bg-warning-surface dark:bg-warning-surface-dark hover:bg-warning-border/20 dark:hover:bg-warning-border/20-dark'
             }
             return ''
         }
@@ -627,7 +643,7 @@ export const CustomRowStyle: Story = {
                 <Table
                     {...args}
                     columns={columns}
-                    data={data} 
+                    data={data}
                     rowClassName={handleRowClassName}
                 />
             </div>
@@ -638,7 +654,7 @@ export const CustomRowStyle: Story = {
         showSelected: { control: false },
     },
     parameters: {
-        docs: { 
+        docs: {
             source: {
                 code: `
 import { useState } from 'react';

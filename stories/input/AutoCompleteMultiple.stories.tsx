@@ -4,7 +4,7 @@ import { AutoCompleteMultiple, AutoCompleteMultipleProps, AutoCompleteMultipleRe
 import '../../src/output.css';
 import { iconNames } from '../../const/icon';
 import { options } from '../../src/const/select';
- 
+
 
 const sizeOption = ['default', 'large'];
 const labelPositionOption = ['top', 'left'];
@@ -168,10 +168,23 @@ const meta: Meta<AutoCompleteMultipleProps<any>> = {
             table: {
                 type: { summary: '{ label: string, value: T }[]' },
             },
-
-        }
+        },
+        appendIfNotFound: {
+            control: 'boolean',
+            description: 'If true, the input will be appended with the first option if the user types a new value that is not in the options list.',
+            table: {
+                type: { summary: 'boolean' },
+            },
+        },
+        onAppend: {
+            control: 'object',
+            description: 'Callback function to handle appending options.',
+            table: {
+                type: { summary: '(input: string) => void' },
+            },
+        },
     },
-    args:{
+    args: {
         disabled: false,
     },
     parameters: {
@@ -202,6 +215,75 @@ export const Playground: Story = {
         docs: {
             description: {
                 story: 'The AutoCompleteMultiple is a normal text input enhanced by a panel of suggested options.',
+            },
+        },
+    },
+};
+
+export const AppendableOption: Story = {
+    args: {
+        label: 'Input Label',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
+        defaultValue: ['apple'],
+        options,
+        appendIfNotFound: true,
+    },
+    render: (args) => {
+        const InputRef = useRef<AutoCompleteMultipleRef<string>>(null);
+
+        const getValueByRef = () => {
+            return InputRef.current?.value; // {value: T, label: string, detail?: D}[]
+        }
+
+        const handleAppend = (input: SelectValue<string>) => {
+            console.log("handleAppend", input);
+        }
+
+        return (
+            <AutoCompleteMultiple {...args} options={options} inputRef={InputRef} onAppend={handleAppend} />
+        );
+    },
+    argTypes: {
+        value: { control: false },
+        defaultValue: { control: false },
+    },
+    parameters: {
+        docs: {
+            description: {
+                story: 'This story demonstrates a uncontrolled AutoCompleteMultiple. to access the input field and its value, use the inputRef.',
+            },
+            source: {
+                code: `
+import { useState } from 'react';
+
+const options: SelectValue<string>[] = [
+    { label: 'Apple', value: 'apple' },
+    { label: 'Orange', value: 'orange' },
+    { label: 'Banana', value: 'banana' },
+];
+
+const UncontrolledValue = () => {
+    const InputRef = useRef<AutoCompleteMultipleRef<string>>(null);
+
+    const getValueByRef = () => {
+        return InputRef.current?.value; // {value: T, label: string, detail?: D}[]
+    }
+
+    return (
+        <AutoCompleteMultiple
+            label="This is label"
+            placeholder="Input Placeholder..."
+            value={value}
+            onChange={setValue}
+            options={options}
+            onAppend={handleAppend}
+        />
+    );
+};
+
+export default UncontrolledValue;
+          `.trim(),
             },
         },
     },

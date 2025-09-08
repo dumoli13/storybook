@@ -19,10 +19,30 @@ const meta: Meta<SkeletonTableProps> = {
         column: {
             control: { type: 'number' },
             description: 'Total number of columns in the table.',
+            table: {
+                defaultValue: { summary: '2' },
+            },
+        },
+        row: {
+            control: { type: 'number' },
+            description: 'Total number of rows in the table.',
+            table: {
+                defaultValue: { summary: '3' },
+            },
+        },
+        size: {
+            control: { type: 'select' },
+            options: ['small', 'default', 'large'],
+            description: 'Skeleton size.',
+            table: {
+                defaultValue: { summary: 'default' },
+            },
         },
     },
     args: {
         column: 3,
+        row: 5,
+        size: 'default',
     },
 };
 export default meta;

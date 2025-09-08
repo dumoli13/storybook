@@ -1,6 +1,130 @@
 import React from 'react';
 import cx from 'classnames';
-import icon from '../assets/icon.svg';
+import iconOutline from '../assets/icon-outline.svg';
+import iconFilled from '../assets/icon-filled.svg';
+
+// Base props that all icons share
+type BaseIconProps = {
+  name: IconNames;
+  size?: number;
+  className?: string;
+  onClick?: React.MouseEventHandler<HTMLSpanElement>;
+  disabled?: boolean;
+  animation?: 'spin' | 'pulse' | 'bounce' | 'ping';
+  strokeWidth?: number;
+  color?: string;
+};
+
+// Props for solid variant (only has color)
+type OutlineIconProps = BaseIconProps & {
+  variant?: 'outline';
+  fillColor?: never;
+};
+
+// Props for outline variant (has both color and fillColor)
+type SolidIconProps = BaseIconProps & {
+  variant?: 'solid';
+  fillColor?: string;
+};
+
+export type IconProps = OutlineIconProps | SolidIconProps;
+
+/**
+ * ready-to-use icons from the MisDesign icon library
+ */
+const Icon = React.forwardRef<HTMLSpanElement, IconProps>((props, ref) => {
+  const {
+    name,
+    color = 'currentColor',
+    fillColor = color,
+    size = '1em',
+    variant = 'outline',
+    strokeWidth = variant === 'outline' ? 1 : 0,
+    className,
+    onClick,
+    disabled = false,
+    animation,
+  } = props;
+
+  const animationStyle = React.useMemo(() => {
+    const baseStyle: React.CSSProperties = {
+      display: 'block',
+      verticalAlign: 'middle',
+    };
+
+    switch (animation) {
+      case 'spin':
+        return { ...baseStyle, animation: 'spin 1s linear infinite' };
+      case 'pulse':
+        return {
+          ...baseStyle,
+          animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        };
+      case 'bounce':
+        return { ...baseStyle, animation: 'bounce 1s infinite' };
+      case 'ping':
+        return {
+          ...baseStyle,
+          animation: 'ping 1s cubic-bezier(0, 0, 0.2, 1) infinite',
+        };
+      default:
+        return baseStyle;
+    }
+  }, [animation]);
+
+  return (
+    <span
+      ref={ref}
+      aria-label={name}
+      className={cx(
+        'flex items-center justify-center',
+        className,
+        {
+          'cursor-pointer': !!onClick && !disabled,
+        },
+      )}
+      {...(onClick && !disabled && { onClick, role: 'button', tabIndex: 0 })}
+    >
+      <svg
+        width={size}
+        height={size}
+        stroke={color}
+        fill={variant === 'solid' ? fillColor : 'none'}
+        strokeWidth={variant === 'outline' && strokeWidth === 0 ? 1 : strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={animationStyle}
+        aria-hidden="true"
+      >
+        <use
+          xlinkHref={`${variant === 'outline' ? iconOutline : iconFilled}#${name}`}
+        />
+      </svg>
+
+      {/* Add global keyframes */}
+      <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+          }
+          @keyframes bounce {
+            0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8,0,1,1); }
+            50% { transform: none; animation-timing-function: cubic-bezier(0,0,0.2,1); }
+          }
+          @keyframes ping {
+            75%, 100% { transform: scale(2); opacity: 0; }
+          }
+        `}</style>
+    </span>
+  );
+});
+Icon.displayName = 'Icon';
+
+export default Icon;
+
 
 export type IconNames =
   | 'academic-cap'
@@ -321,105 +445,3 @@ export type IconNames =
   | 'wrench'
   | 'x-circle'
   | 'x-mark';
-
-export interface IconProps {
-  name: IconNames;
-  color?: string;
-  size?: number;
-  strokeWidth?: number;
-  className?: string;
-  onClick?: React.MouseEventHandler<HTMLSpanElement>;
-  disabled?: boolean;
-  animation?: 'spin' | 'pulse' | 'bounce' | 'ping';
-}
-
-/**
- * ready-to-use icons from the MisDesign icon library
- */
-const Icon = React.forwardRef<HTMLSpanElement, IconProps>((props, ref) => {
-  const {
-    name,
-    color = 'currentColor',
-    size = '1em',
-    strokeWidth = 1,
-    className,
-    onClick,
-    disabled = false,
-    animation,
-  } = props;
-
-  const animationStyle = React.useMemo(() => {
-    const baseStyle: React.CSSProperties = {
-      display: 'inline-block',
-      verticalAlign: 'middle',
-    };
-
-    switch (animation) {
-      case 'spin':
-        return { ...baseStyle, animation: 'spin 1s linear infinite' };
-      case 'pulse':
-        return {
-          ...baseStyle,
-          animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        };
-      case 'bounce':
-        return { ...baseStyle, animation: 'bounce 1s infinite' };
-      case 'ping':
-        return {
-          ...baseStyle,
-          animation: 'ping 1s cubic-bezier(0, 0, 0.2, 1) infinite',
-        };
-      default:
-        return baseStyle;
-    }
-  }, [animation]);
-
-  return (
-    <span
-      ref={ref}
-      aria-label={name}
-      className={cx(
-        'flex items-center justify-center',
-        className,
-        {
-          'cursor-pointer': !!onClick && !disabled,
-        },
-      )}
-      {...(onClick && !disabled && { onClick, role: 'button', tabIndex: 0 })}
-    >
-      <svg
-        viewBox="0 0 24 24" // Maintain aspect ratio
-        width={size}
-        height={size}
-        stroke={color}
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        style={animationStyle}
-      >
-        <use xlinkHref={`${icon}#${name}`} />
-      </svg>
-
-      {/* Add global keyframes */}
-      <style>{`
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-          @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: .5; }
-          }
-          @keyframes bounce {
-            0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8,0,1,1); }
-            50% { transform: none; animation-timing-function: cubic-bezier(0,0,0.2,1); }
-          }
-          @keyframes ping {
-            75%, 100% { transform: scale(2); opacity: 0; }
-          }
-        `}</style>
-    </span>
-  );
-});
-Icon.displayName = 'Icon';
-
-export default Icon;

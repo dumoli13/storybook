@@ -68,10 +68,11 @@ const NextButton = ({ onClick, disabled }: PaginationButtonProps) => {
 const Pagination = ({
   total,
   currentPage,
-  itemPerPage = DEFAULT_ITEMS_PER_PAGE,
+  itemPerPage: itempPerPageProp = DEFAULT_ITEMS_PER_PAGE,
   pageSize,
   onPageChange,
 }: PaginationProps) => {
+  const itemPerPage = itempPerPageProp.some(item => item === pageSize) ? [...itempPerPageProp, pageSize] : itempPerPageProp;
   const [itemsPerPage, setItemsPerPage] = React.useState(
     pageSize ?? itemPerPage[0],
   );
@@ -250,9 +251,9 @@ const Pagination = ({
     </div>
   );
 };
- 
+
 Pagination.Prev = PrevButton;
- 
+
 Pagination.Next = NextButton;
 
 export default Pagination;

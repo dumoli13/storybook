@@ -116,7 +116,7 @@ const TimerField = ({
       valueRef.current?.focus();
     },
     reset: () => {
-      setInternalValue(defaultValue !== undefined ? defaultValue : null);
+      setInternalValue(null);
     },
     disabled,
   }));
@@ -304,7 +304,7 @@ const TimerField = ({
               isError,
             'border-success-main dark:border-success-main-dark focus:ring-success-focus dark:focus:ring-success-focus-dark':
               !isError && successProp,
-            'border-neutral-50 dark:border-neutral-50-dark hover:border-primary-main dark:hover:border-primary-main-dark focus:ring-primary-main dark:focus:ring-primary-main-dark':
+            'border-neutral-50 dark:border-neutral-50-dark hover:border-primary-hover dark:hover:border-primary-hover-dark focus:ring-primary-main dark:focus:ring-primary-main-dark':
               !isError && !successProp && !disabled,
             'bg-neutral-20 dark:bg-neutral-30-dark cursor-not-allowed text-neutral-60 dark:text-neutral-60-dark':
               disabled,

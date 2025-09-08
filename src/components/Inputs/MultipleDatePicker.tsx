@@ -51,9 +51,9 @@ export interface MultipleDatePickerProps
 }
 
 /**
- * The Multiple Date Picker component lets users select multiple date. 
+ * The Multiple Date Picker component lets users select multiple date.
  * This component is similar to the Date Picker component but can not set a time of the date.
- * 
+ *
  */
 const MultipleDatePicker = ({
   id,
@@ -120,7 +120,7 @@ const MultipleDatePicker = ({
       elementRef.current?.focus();
     },
     reset: () => {
-      setInternalValue(defaultValue || []);
+      setInternalValue([]);
     },
     disabled,
   }));

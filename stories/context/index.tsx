@@ -1,11 +1,4 @@
-import React, {
-  ReactNode,
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React from 'react';
 import { NotificationStack } from '../../src/components/Notification';
 
 export enum Theme {
@@ -18,10 +11,10 @@ interface LibraryContextType {
   toggleTheme?: () => void;
 }
 
-const LibraryContext = createContext<LibraryContextType | undefined>(undefined);
+const LibraryContext = React.createContext<LibraryContextType | undefined>(undefined);
 
 export const useMisDesignContext = (): LibraryContextType => {
-  const context = useContext(LibraryContext);
+  const context = React.useContext(LibraryContext);
   if (context === undefined) {
     // throw new Error('UseContext must be used within a LibraryContext');
     const theme = document.documentElement.classList.contains('dark')
@@ -34,8 +27,8 @@ export const useMisDesignContext = (): LibraryContextType => {
   return context;
 };
 
-export const MisDesignProvider = ({ children }: { children: ReactNode }) => {
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+export const MisDesignProvider = ({ children }: { children: React.ReactNode }) => {
+  const [isDarkMode, setIsDarkMode] = React.useState<boolean>(() => {
     const storedTheme = localStorage.getItem('theme');
     if (storedTheme) {
       return storedTheme === 'dark';
@@ -43,7 +36,7 @@ export const MisDesignProvider = ({ children }: { children: ReactNode }) => {
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
-  useEffect(() => {
+  React.useEffect(() => {
     const root = document.documentElement;
     if (isDarkMode) {
       root.classList.add('dark');
@@ -53,7 +46,7 @@ export const MisDesignProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
   }, [isDarkMode]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         if (
@@ -74,7 +67,7 @@ export const MisDesignProvider = ({ children }: { children: ReactNode }) => {
     return () => observer.disconnect();
   }, []);
 
-  const value = useMemo(
+  const value = React.useMemo(
     () => ({
       theme: isDarkMode ? Theme.DARK : Theme.LIGHT,
       toggleTheme: () => setIsDarkMode((prev) => !prev),

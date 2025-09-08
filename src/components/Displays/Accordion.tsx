@@ -87,7 +87,7 @@ const Accordion = ({
     }
     onChangeActiveKey?.(newOpenIndex);
   };
- 
+
   return (
     <div
       className={cx(

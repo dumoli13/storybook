@@ -6,7 +6,7 @@ export interface InputDropdownProps {
   open: boolean;
   children: React.ReactNode;
   elementRef: React.RefObject<HTMLDivElement | null>;
-  dropdownRef: React.RefObject<HTMLDivElement | null>;
+  dropdownRef: React.RefObject<HTMLDivElement>;
   fullWidth?: boolean;
   maxHeight?: number;
 }
@@ -32,71 +32,125 @@ const InputDropdown = ({
   fullWidth,
   maxHeight = 300,
 }: InputDropdownProps) => {
-  const [dropdownStyles, setDropdownStyles] = React.useState<{
+  const [position, setPosition] = React.useState<{
     top: number;
     left: number;
     width?: number;
     direction: 'down' | 'up';
-  } | null>(null);
+  }>({ top: 0, left: 0, width: 0, direction: 'down' });
 
   const calculateDropdownPosition = React.useCallback(() => {
-    if (elementRef.current) {
-      const rect = elementRef.current.getBoundingClientRect();
-      const dropdownHeight = dropdownRef.current?.offsetHeight || 0;
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const spaceAbove = rect.top;
+    if (!elementRef.current || !dropdownRef.current) return;
 
-      setDropdownStyles({
-        top:
-          spaceBelow >= dropdownHeight || spaceBelow > spaceAbove
-            ? rect.bottom + window.scrollY
-            : rect.top - dropdownHeight - 10 + window.scrollY,
-        left: rect.left + window.scrollX,
-        width: fullWidth ? rect.width : undefined,
-        direction:
-          spaceBelow >= dropdownHeight || spaceBelow > spaceAbove
-            ? 'down'
-            : 'up',
+    const anchorRect = elementRef.current.getBoundingClientRect();
+    const dropdownRect = dropdownRef.current.getBoundingClientRect();
+    const dropdownHeight = dropdownRect.height;
+
+    const spaceBelow = window.innerHeight - anchorRect.bottom;
+    const spaceAbove = anchorRect.top;
+
+    let top: number;
+    let direction: 'up' | 'down';
+
+    if (spaceBelow >= dropdownHeight || spaceBelow > spaceAbove) {
+      top = anchorRect.height;
+      direction = 'down';
+    } else {
+      top = anchorRect.top - dropdownHeight;
+      direction = 'up';
+    }
+
+    setPosition({
+      top,
+      left: anchorRect.left,
+      width: fullWidth ? anchorRect.width : undefined,
+      direction,
+    });
+  }, [elementRef, dropdownRef, fullWidth]);
+
+  const findScrollContainer = (element: HTMLElement): HTMLElement | null => {
+    let parent = element.parentElement;
+    while (parent) {
+      const style = window.getComputedStyle(parent);
+      if (
+        style.overflow === 'auto' ||
+        style.overflow === 'scroll' ||
+        style.overflowX === 'auto' ||
+        style.overflowX === 'scroll' ||
+        style.overflowY === 'auto' ||
+        style.overflowY === 'scroll'
+      ) {
+        return parent;
+      }
+      parent = parent.parentElement;
+    }
+    return null;
+  };
+
+  React.useEffect(() => {
+    if (!elementRef.current || !open) return;
+
+    // Find the scroll container of the elementRef
+    const scrollContainer = findScrollContainer(elementRef.current);
+
+    const handleScroll = () => calculateDropdownPosition();
+
+    // Listen to scroll events on the container (if found) or window
+    const scrollTarget = scrollContainer || window;
+    scrollTarget.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Also listen for resize and element changes
+    const resizeObserver = new ResizeObserver(calculateDropdownPosition);
+    const mutationObserver = new MutationObserver(calculateDropdownPosition);
+
+    if (elementRef.current) {
+      resizeObserver.observe(elementRef.current);
+      mutationObserver.observe(elementRef.current, {
+        attributes: true,
+        attributeFilter: ['style', 'class'],
+        childList: false,
+        subtree: false,
       });
     }
-  }, [elementRef, dropdownRef, fullWidth]);
+
+    // Observe the scroll container too if it exists
+    if (scrollContainer) {
+      resizeObserver.observe(scrollContainer);
+    }
+
+    // Initial calculation
+    calculateDropdownPosition();
+
+    // Cleanup
+    return () => {
+      scrollTarget.removeEventListener('scroll', handleScroll);
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, [elementRef, open, calculateDropdownPosition]);
 
   React.useEffect(() => {
     if (open) {
       calculateDropdownPosition();
-      const handleScrollOrResize = () => calculateDropdownPosition();
-      window.addEventListener('scroll', handleScrollOrResize);
-      window.addEventListener('resize', handleScrollOrResize);
-      return () => {
-        window.removeEventListener('scroll', handleScrollOrResize);
-        window.removeEventListener('resize', handleScrollOrResize);
-      };
-    } else {
-      setDropdownStyles(null); // Reset styles when closed
     }
-  }, [open, calculateDropdownPosition]);
+  }, [open, children, calculateDropdownPosition]);
 
-  // Don't render until position is calculated
-  if (!open || !dropdownStyles) return null;
-
-  return createPortal(
+  return (
     <div
-      role="button"
-      tabIndex={0}
-      onMouseDown={(e) => e.stopPropagation()}
+      role="listbox"
       ref={dropdownRef}
       style={{
-        position: 'absolute',
-        top: dropdownStyles.top,
-        left: dropdownStyles.left,
-        width: dropdownStyles.width,
+        transform: `translate(${0}px, ${position.top}px)`,
+        width: position.width,
         maxHeight,
       }}
       className={cx(
-        'bg-neutral-10 dark:bg-neutral-10-dark shadow-box-2 rounded-lg py-1.5 text-neutral-100 dark:text-neutral-100-dark overflow-y-auto z-[1999] cursor-default',
+        'top-0 left-0 absolute bg-neutral-10 dark:bg-neutral-10-dark shadow-box-2 rounded-lg py-1.5 text-neutral-100 dark:text-neutral-100-dark overflow-y-auto cursor-default border border-neutral-30 dark:border-neutral-30-dark',
         {
-          'mt-1': dropdownStyles.direction === 'down',
-          'mb-1': dropdownStyles.direction === 'up',
+          'mt-1': position.direction === 'down',
+          'mb-1': position.direction === 'up',
+          'block z-[10]': open,
+          hidden: !open,
         },
       )}
       onKeyDown={(e) => {
@@ -105,9 +159,8 @@ const InputDropdown = ({
         }
       }}
     >
-      {children}
-    </div>,
-    document.body,
+      {open ? children : null}
+    </div>
   );
 };
 

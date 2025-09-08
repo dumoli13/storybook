@@ -72,7 +72,7 @@ const Switch = ({
       elementRef.current?.focus();
     },
     reset: () => {
-      setInternalChecked(defaultChecked || false);
+      setInternalChecked(false);
     },
     disabled,
   }));

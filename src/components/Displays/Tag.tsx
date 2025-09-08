@@ -7,6 +7,8 @@ export interface TagProps {
   children: string;
   color: 'primary' | 'success' | 'danger' | 'warning' | 'info' | 'neutral';
   size?: 'small' | 'default' | 'large';
+  startIcon?: React.ReactNode;
+  endIcon?: React.ReactNode;
   onRemove?: () => void;
 }
 
@@ -20,12 +22,14 @@ function Tag({
   children,
   color = 'primary',
   size = 'default',
+  startIcon,
+  endIcon,
   onRemove,
 }: Readonly<TagProps>) {
   return (
     <div
       className={cx(
-        'ring-[1.5px] border-box truncate flex items-center justify-center w-fit h-fit py-0.5 px-2 rounded-lg font-medium',
+        'ring-[1.5px] border-box truncate flex items-center justify-center w-fit h-fit py-0.5 px-2 rounded-lg font-medium gap-1',
         {
           'ring-primary-border dark:ring-primary-border-dark text-primary-main dark:text-primary-main-dark bg-primary-surface dark:bg-primary-surface-dark':
             color === 'primary',
@@ -46,7 +50,9 @@ function Tag({
         className,
       )}
     >
+      {startIcon}
       {children}
+      {endIcon}
       {onRemove && (
         <Icon
           name="x-mark"

@@ -167,10 +167,23 @@ const meta: Meta<AutoCompleteProps<any>> = {
             table: {
                 type: { summary: '{ label: string, value: T }[]' },
             }
-
-        }
+        },
+        appendIfNotFound: {
+            control: 'boolean',
+            description: 'If true, the input will be appended with the first option if the user types a new value that is not in the options list.',
+            table: {
+                type: { summary: 'boolean' },
+            },
+        },
+        onAppend: {
+            control: 'object',
+            description: 'Callback function to handle appending options.',
+            table: {
+                type: { summary: '(input: string) => void' },
+            },
+        },
     },
-    args:{
+    args: {
         disabled: false,
     }
 };
@@ -197,6 +210,81 @@ export const Playground: Story = {
         docs: {
             description: {
                 story: 'The autocomplete is a normal text input enhanced by a panel of suggested options.',
+            },
+        },
+    },
+};
+
+export const AppendableOption: Story = {
+    args: {
+        label: 'Input Label',
+        placeholder: 'Input Placeholder...',
+        helperText: 'Input helper text',
+        size: 'default',
+        clearable: false,
+        fullWidth: false,
+        loading: false,
+        success: false,
+        labelPosition: 'top',
+        options,
+        appendIfNotFound: true,
+    },
+    render: (args) => {
+        const InputRef = useRef<AutoCompleteRef<string> | null>(null);
+        const [options, setOptions] = useState<SelectValue<string>[]>(args.options);
+
+        const getValueByRef = () => {
+            return InputRef.current?.value; // {value: T, label: string, detail?: D}
+        }
+
+        const handleAppend = (input: SelectValue<string>) => {
+            console.log("handleAppend", input);
+        }
+
+        return (
+            <AutoComplete {...args} options={options} inputRef={InputRef} onAppend={handleAppend} />
+        )
+    },
+    parameters: {
+        docs: {
+            description: {
+                story: 'The autocomplete is a normal text input enhanced by a panel of suggested options.',
+            },
+            source: {
+                code: `
+import { useState } from 'react';
+
+const options: SelectValue<string>[] = [
+    { label: 'Apple', value: 'apple' },
+    { label: 'Orange', value: 'orange' },
+    { label: 'Banana', value: 'banana' },
+];
+
+const UncontrolledValue = () => {
+    const InputRef = useRef<AutoCompleteRef<string> | null>(null);
+
+    const getValueByRef = () => {
+        return InputRef.current?.value; // {value: T, label: string, detail?: D}
+    }
+
+    const handleAppend = (input: SelectValue<string>) => {
+        console.log("handleAppend", input);
+    }
+
+    return (
+        <AutoComplete
+            label="This is label"
+            placeholder="Input Placeholder..."
+            value={value}
+            onChange={setValue}
+            options={options}
+            onAppend={handleAppend}
+        />
+    );
+};
+
+export default UncontrolledValue;
+          `.trim(),
             },
         },
     },

@@ -8,16 +8,30 @@ const meta: Meta<PopperProps> = {
     title: 'Display/Popper',
     component: Popper,
     parameters: {
-        layout: 'centered', 
+        layout: 'centered',
     },
     tags: ['autodocs'],
     argTypes: {
+        disabled: {
+            control: 'boolean',
+            description: 'A flag that disables popper if set to true.',
+            table: {
+                defaultValue: { summary: 'false' },
+                type: { summary: 'boolean' },
+            },
+        },
+        content: {
+            control: 'text',
+            description: 'Content that appears when popper is opened.',
+            table: {
+                type: { summary: 'ReactNode' },
+            },
+        },
         children: {
             control: false,
             description: 'Content that triggers the popper.',
             table: {
                 type: { summary: 'ReactNode' },
-                defaultValue: { summary: 'Sample Popper' },
             },
         },
         open: {
@@ -35,34 +49,30 @@ const meta: Meta<PopperProps> = {
                 type: { summary: '(open: boolean) => void' },
             },
         },
-        verticalAlign: {
+        placement: {
             control: 'select',
-            options: ['top', 'bottom'],
-            description: 'Vertical alignment of the popper.',
+            description: 'Placement of the popper.',
             table: {
-                defaultValue: { summary: 'bottom' },
-                type: { summary: '"top" | "bottom"' },
+                type: { summary: '"top" | "top-left" | "top-right" | "bottom" | "bottom-left" | "bottom-right" | "left" | "left-top" | "left-bottom" | "right" | "right-top" | "right-bottom"' },
+                defaultValue: { summary: 'bottom-left' },
             },
         },
-        horizontalAlign: {
-            control: 'select',
-            options: ['left', 'center', 'right'],
-            description: 'Horizontal alignment of the popper.',
+        className: {
+            control: 'text',
+            description: 'Additional class names to be applied to the popper.',
             table: {
-                defaultValue: { summary: 'center' },
-                type: { summary: '"left" | "center" | "right"' },
+                type: { summary: 'string' },
             },
         },
-        disabled: {
-            control: 'boolean',
-            description: 'A flag that disables popper if set to true.',
+        style: {
+            control: 'object',
+            description: 'Additional styles to be applied to the popper.',
             table: {
-                defaultValue: { summary: 'false' },
-                type: { summary: 'boolean' },
+                type: { summary: 'React.CSSProperties' },
             },
         },
     },
-    args:{
+    args: {
         disabled: false,
     }
 };
@@ -73,9 +83,9 @@ type Story = StoryObj<PopperProps>;
 export const Playground: Story = {
     args: {
         children: <Icon name="camera" color="currentColor" size={24} />,
-        verticalAlign: 'bottom',
-        horizontalAlign: 'center',
         content: 'Sample Popper',
+        placement: 'bottom-left',
+        offset: 8,
     },
 };
 

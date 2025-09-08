@@ -1,7 +1,8 @@
 /* eslint-disable no-undef */
 /* eslint-disable @typescript-eslint/no-require-imports */
 export const content = [
-  './stories/**/*.{js,ts,jsx,tsx,mdx}', // ✅ Match your files
+  './src/**/*.{js,ts,jsx,tsx,mdx}',  
+  './stories/**/*.{js,ts,jsx,tsx,mdx}',  
   './.storybook/**/*.{js,ts}',    
 ];
 export const theme = {

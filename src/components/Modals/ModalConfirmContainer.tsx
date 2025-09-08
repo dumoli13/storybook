@@ -69,7 +69,7 @@ const ModalConfirmContainer = ({
   confirmText = 'Confirm',
   confirmButtonColor = 'primary',
   customAction,
-  size = "default",
+  size = 'default',
 }: ModalProps) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Escape' && onClose) {
@@ -98,7 +98,6 @@ const ModalConfirmContainer = ({
   }, [open]);
 
   if (!open) return null;
-  console.log("Icon", icon)
 
   return (
     <div

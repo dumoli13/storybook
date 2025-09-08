@@ -37,7 +37,11 @@ const FilterSearch = ({ value, label, onChange }: FilterSearchProps) => {
 
   React.useEffect(() => {
     if (open) {
-      inputRef.current?.focus();
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+
+      return () => clearTimeout(timer);
     }
   }, [open]);
 
@@ -45,6 +49,7 @@ const FilterSearch = ({ value, label, onChange }: FilterSearchProps) => {
     <Popper
       open={open}
       onOpen={setOpen}
+      className="py-4 px-2"
       content={
         <TextField
           id={`search_${label}`}
@@ -64,7 +69,7 @@ const FilterSearch = ({ value, label, onChange }: FilterSearchProps) => {
             name="magnifying-glass"
             size={16}
             className={cx({
-              'text-primary-main dark:text-parimary-main-dark p-10': value,
+              'text-primary-main dark:text-parimary-main-dark': value,
             })}
           />
         }

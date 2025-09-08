@@ -2,123 +2,199 @@ import React from 'react';
 import cx from 'classnames';
 import { createPortal } from 'react-dom';
 
+export type Placement =
+  | 'top'
+  | 'top-left'
+  | 'top-right'
+  | 'bottom'
+  | 'bottom-left'
+  | 'bottom-right'
+  | 'left'
+  | 'left-top'
+  | 'left-bottom'
+  | 'right'
+  | 'right-top'
+  | 'right-bottom';
+
 export interface PopperProps {
-  className?: string;
   disabled?: boolean;
   content: React.ReactNode;
-  children: React.ReactNode;
+  children: React.ReactElement;
   open?: boolean;
   onOpen?: (open: boolean) => void;
-  verticalAlign?: 'top' | 'center' | 'bottom'; // Vertical position on the anchor element
-  horizontalAlign?: 'left' | 'center' | 'right'; // Horizontal position on the anchor element
+  placement?: Placement;
+  offset?: number; // Distance between popper and anchor
+  className?: string;
+  style?: React.CSSProperties;
 }
 
-/**
- *
- * A flexible and customizable popper component designed to display a floating or dropdown-like content relative to a target element. 
- * It can handle positioning and alignment adjustments, including dynamic changes due to screen resizing or scrolling. 
- * The popper can also be toggled open or closed, and it supports detecting clicks outside the popper to close it automatically.
- * 
- */
 const Popper = ({
-  className,
   disabled = false,
   content,
   children,
   open: openProp,
-  onOpen = () => {},
-  verticalAlign = 'bottom',
-  horizontalAlign = 'left',
+  onOpen,
+  placement = 'bottom-left',
+  offset = 8,
+  className,
+  style,
 }: PopperProps) => {
-  const elementRef = React.useRef<HTMLDivElement>(null);
+  const elementRef = React.useRef<HTMLElement>(null);
   const popperRef = React.useRef<HTMLDivElement>(null);
   const [open, setOpen] = React.useState(openProp ?? false);
-  const [positionReady, setPositionReady] = React.useState(false);
-  const [dropdownPosition, setDropdownPosition] = React.useState({
+  const [position, setPosition] = React.useState<{
+    top: number;
+    left: number;
+  }>({
     top: 0,
     left: 0,
-    width: 0,
   });
 
   const isDropdownOpen = openProp ?? open;
 
-  const calculateDropdownPosition = React.useCallback(() => {
-    if (elementRef.current && popperRef.current) {
-      const rect = elementRef.current.getBoundingClientRect();
-      const dropdownRect = popperRef.current.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      const viewportWidth = window.innerWidth;
+  const calculatePosition = React.useCallback(() => {
+    if (!elementRef.current || !popperRef.current) return;
 
-      let top = rect.top + window.scrollY;
-      let left = rect.left + window.scrollX;
+    const anchorRect = elementRef.current.getBoundingClientRect();
+    const popperRect = popperRef.current.getBoundingClientRect();
+    const scrollY = window.scrollY;
+    const scrollX = window.scrollX;
 
-      // Check and adjust for vertical alignment
-      if (verticalAlign === 'top') {
-        top = rect.top + window.scrollY - dropdownRect.height;
-        if (top < 0) {
-          // If overflow at top, flip to bottom
-          top = rect.bottom + window.scrollY;
-        }
-      } else if (verticalAlign === 'bottom') {
-        top = rect.bottom + window.scrollY;
-        if (top + dropdownRect.height > viewportHeight) {
-          // If overflow at bottom, flip to top
-          top = rect.top + window.scrollY - dropdownRect.height;
-        }
-      } else if (verticalAlign === 'center') {
-        top =
-          rect.top + window.scrollY + rect.height / 2 - dropdownRect.height / 2;
-      }
+    let newPosition = { top: 0, left: 0 };
+    let fixPlacement = placement;
 
-      // Check and adjust for horizontal alignment
-      if (horizontalAlign === 'left') {
-        left = rect.left + window.scrollX;
-        if (left + dropdownRect.width > viewportWidth) {
-          // If overflow on right, flip to left
-          left = rect.right + window.scrollX - dropdownRect.width;
-        }
-      } else if (horizontalAlign === 'right') {
-        left = rect.right + window.scrollX - dropdownRect.width;
-        if (left < 0) {
-          // If overflow on left, flip to right
-          left = rect.left + window.scrollX;
-        }
-      } else if (horizontalAlign === 'center') {
-        left =
-          rect.left + window.scrollX + rect.width / 2 - dropdownRect.width / 2;
-      }
+    const { top, bottom, left, right } = anchorRect;
+    const { width, height } = popperRect;
 
-      setDropdownPosition({
-        top,
-        left,
-        width: rect.width,
-      });
-      setPositionReady(true);
+    if (top - height - offset < 0) {
+      fixPlacement = fixPlacement.replace('top', 'bottom') as Placement;
+    } else if (bottom + height + offset > window.innerHeight) {
+      fixPlacement = fixPlacement.replace('bottom', 'top') as Placement;
     }
-  }, [verticalAlign, horizontalAlign]);
+    if (left + width + offset > window.innerWidth) {
+      fixPlacement = fixPlacement.replace('left', 'right') as Placement;
+    } else if (right - width - offset < 0) {
+      fixPlacement = fixPlacement.replace('right', 'left') as Placement;
+    }
+
+    // Calculate position based on effective placement
+    switch (fixPlacement) {
+      case 'top':
+        newPosition = {
+          top: anchorRect.top + scrollY - popperRect.height - offset,
+          left:
+            anchorRect.left +
+            scrollX +
+            anchorRect.width / 2 -
+            popperRect.width / 2,
+        };
+        break;
+      case 'top-left':
+        newPosition = {
+          top: anchorRect.top + scrollY - popperRect.height - offset,
+          left: anchorRect.left + scrollX,
+        };
+        break;
+      case 'top-right':
+        newPosition = {
+          top: anchorRect.top + scrollY - popperRect.height - offset,
+          left: anchorRect.right + scrollX - popperRect.width,
+        };
+        break;
+      case 'bottom':
+        newPosition = {
+          top: anchorRect.bottom + scrollY + offset,
+          left:
+            anchorRect.left +
+            scrollX +
+            anchorRect.width / 2 -
+            popperRect.width / 2,
+        };
+        break;
+      case 'bottom-left':
+        newPosition = {
+          top: anchorRect.bottom + scrollY + offset,
+          left: anchorRect.left + scrollX,
+        };
+        break;
+      case 'bottom-right':
+        newPosition = {
+          top: anchorRect.bottom + scrollY + offset,
+          left: anchorRect.right + scrollX - popperRect.width,
+        };
+        break;
+      case 'left':
+        newPosition = {
+          top:
+            anchorRect.top +
+            scrollY +
+            anchorRect.height / 2 -
+            popperRect.height / 2,
+          left: anchorRect.left + scrollX - popperRect.width - offset,
+        };
+        break;
+      case 'left-top':
+        newPosition = {
+          top: anchorRect.top + scrollY,
+          left: anchorRect.left + scrollX - popperRect.width - offset,
+        };
+        break;
+      case 'left-bottom':
+        newPosition = {
+          top: anchorRect.bottom + scrollY - popperRect.height,
+          left: anchorRect.left + scrollX - popperRect.width - offset,
+        };
+        break;
+      case 'right':
+        newPosition = {
+          top:
+            anchorRect.top +
+            scrollY +
+            anchorRect.height / 2 -
+            popperRect.height / 2,
+          left: anchorRect.right + scrollX + offset,
+        };
+        break;
+      case 'right-top':
+        newPosition = {
+          top: anchorRect.top + scrollY,
+          left: anchorRect.right + scrollX + offset,
+        };
+        break;
+      case 'right-bottom':
+        newPosition = {
+          top: anchorRect.bottom + scrollY - popperRect.height,
+          left: anchorRect.right + scrollX + offset,
+        };
+        break;
+    }
+
+    setPosition({
+      top: newPosition.top,
+      left: newPosition.left,
+    });
+  }, [placement, offset]);
 
   React.useEffect(() => {
     if (isDropdownOpen) {
-      setPositionReady(false);
-      requestAnimationFrame(() => {
-        calculateDropdownPosition();
-      });
+      calculatePosition();
     }
-  }, [isDropdownOpen, calculateDropdownPosition]);
+  }, [isDropdownOpen, calculatePosition]);
 
   React.useEffect(() => {
     const handleScrollOrResize = () => {
       if (isDropdownOpen) {
-        calculateDropdownPosition();
+        calculatePosition();
       }
     };
-    window.addEventListener('scroll', handleScrollOrResize);
+
+    window.addEventListener('scroll', handleScrollOrResize, true);
     window.addEventListener('resize', handleScrollOrResize);
     return () => {
-      window.removeEventListener('scroll', handleScrollOrResize);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
       window.removeEventListener('resize', handleScrollOrResize);
     };
-  }, [isDropdownOpen, calculateDropdownPosition]);
+  }, [isDropdownOpen, calculatePosition]);
 
   React.useEffect(() => {
     if (openProp !== undefined) {
@@ -127,7 +203,7 @@ const Popper = ({
   }, [openProp]);
 
   React.useEffect(() => {
-    onOpen(open);
+    onOpen?.(open);
   }, [open, onOpen]);
 
   const handleDropdownToggle = () => {
@@ -145,6 +221,12 @@ const Popper = ({
       setOpen(false);
     }
   };
+  const handleContentClick = (e: React.MouseEvent) => {
+    // Prevent event from bubbling to document
+    e.stopPropagation();
+    // Close when any content is clicked
+    setOpen(false);
+  };
 
   React.useEffect(() => {
     document.addEventListener('mousedown', handleClickOutside);
@@ -153,39 +235,65 @@ const Popper = ({
     };
   }, []);
 
+  const anchorElement = React.cloneElement(children, {
+    ['ref' as string]: (node: HTMLElement | null) => {
+      elementRef.current = node;
+
+      // Handle original ref if exists
+      const childRef = (children as any).ref;
+
+      if (childRef) {
+        if (typeof childRef === 'function') {
+          childRef(node);
+        } else {
+          childRef.current = node;
+        }
+      }
+    },
+    ['onClick' as string]: (e: React.MouseEvent) => {
+      // Call original onClick handler if it exists
+      const childProps = (children as any).props;
+      if (childProps.onClick) {
+        childProps.onClick(e);
+      }
+
+      if (!e.isPropagationStopped() && !disabled) {
+        handleDropdownToggle();
+      }
+    },
+    ['aria-expanded' as string]: isDropdownOpen ? 'true' : 'false',
+    ['aria-haspopup' as string]: 'dialog',
+    ['role' as string]: 'button',
+  });
+
+  if (disabled) {
+    return children;
+  }
+
   return (
-    <div className={cx('relative', className)}>
-      <div ref={elementRef}>
-        {disabled ? (
-          <div>{children}</div>
-        ) : (
-          <div
-            role="button"
-            tabIndex={-1}
-            aria-pressed={isDropdownOpen ? 'true' : 'false'}
-            onClick={handleDropdownToggle}
-          >
-            {children}
-          </div>
-        )}
-      </div>
+    <>
+      {anchorElement}
       {!disabled &&
         isDropdownOpen &&
         createPortal(
           <div
             ref={popperRef}
             style={{
-              top: dropdownPosition.top,
-              left: dropdownPosition.left,
-              visibility: positionReady ? 'visible' : 'hidden',
+              top: `${position.top}px`,
+              left: `${position.left}px`,
+              ...style,
             }}
-            className="text-neutral-100 dark:text-neutral-100-dark bg-neutral-10 dark:bg-neutral-30-dark shadow-box-2 rounded-lg p-4 mt-1 absolute z-[100]"
+            onClick={handleContentClick}
+            className={cx(
+              'absolute z-[2100] bg-neutral-10 dark:bg-neutral-30-dark shadow-lg drop-shadow rounded-lg',
+              className,
+            )}
           >
             {content}
           </div>,
           document.body,
         )}
-    </div>
+    </>
   );
 };
 

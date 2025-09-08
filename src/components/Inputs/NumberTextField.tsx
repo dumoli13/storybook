@@ -54,7 +54,7 @@ export interface NumberTextFieldProps
   width?: number;
 }
 
-/** 
+/**
  * The Number Text Field component is used for collecting numeric data from users. This component will format thousand separator on blur.
  */
 const NumberTextField = ({
@@ -82,6 +82,7 @@ const NumberTextField = ({
   width,
   ...props
 }: NumberTextFieldProps) => {
+  const parentRef = React.useRef<HTMLDivElement>(null);
   const elementRef = React.useRef<HTMLInputElement>(null);
   const [focused, setFocused] = React.useState(false);
   const [internalValue, setInternalValue] = React.useState<number | null>(
@@ -118,18 +119,46 @@ const NumberTextField = ({
       elementRef.current?.focus();
     },
     reset: () => {
-      setInternalValue(defaultValue !== undefined ? defaultValue : null);
-      setInternalStringValue(defaultValue?.toString() ?? '');
-      onChange?.(defaultValue !== undefined ? defaultValue : null);
+      setInternalValue(null);
+      setInternalStringValue('');
     },
     disabled,
   }));
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      const selectElementContainsTarget = elementRef.current?.contains(target);
+
+      if (selectElementContainsTarget) {
+        elementRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleFocus = () => {
     if (isControlled) {
       setInternalStringValue(valueProp?.toString() ?? '');
     }
     setFocused(true);
+  };
+
+  const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
+    const relatedTarget = event.relatedTarget as Node | null;
+
+    const selectElementContainsTarget =
+      parentRef.current?.contains(relatedTarget);
+
+    if (selectElementContainsTarget) {
+      return;
+    }
+
+    setFocused(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -186,7 +215,7 @@ const NumberTextField = ({
               isError,
             'border-success-main dark:border-success-main-dark focus:ring-success-focus dark:focus:ring-success-focus-dark':
               !isError && successProp,
-            'border-neutral-50 dark:border-neutral-50-dark hover:border-primary-main dark:hover:border-primary-main-dark focus:ring-primary-main dark:focus:ring-primary-main-dark':
+            'border-neutral-50 dark:border-neutral-50-dark hover:border-primary-hover dark:hover:border-primary-hover-dark focus:ring-primary-main dark:focus:ring-primary-main-dark':
               !isError && !successProp && !disabled,
             'bg-neutral-20 dark:bg-neutral-30-dark cursor-not-allowed text-neutral-60 dark:text-neutral-60-dark':
               disabled,
@@ -199,6 +228,7 @@ const NumberTextField = ({
           },
         )}
         style={width ? { width } : undefined}
+        ref={parentRef}
       >
         {!!startIcon && (
           <div className="text-neutral-70 dark:text-neutral-70-dark">
@@ -213,8 +243,7 @@ const NumberTextField = ({
           onChange={handleChange}
           placeholder={focused ? '' : placeholder}
           onFocus={handleFocus}
-          onBlur={() => setFocused(false)}
-          ref={elementRef}
+          onBlur={handleBlur}
           className={cx(
             'w-full outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark text-neutral-90 dark:text-neutral-90-dark disabled:cursor-not-allowed',
             {
@@ -224,6 +253,7 @@ const NumberTextField = ({
           )}
           disabled={disabled}
           autoComplete="off"
+          ref={elementRef}
         />
         <InputEndIconWrapper
           loading={loading}

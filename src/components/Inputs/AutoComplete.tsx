@@ -15,7 +15,7 @@ export interface AutoCompleteRef<T, D = undefined> {
   disabled: boolean;
 }
 
-export interface AutoCompleteProps<T, D = undefined>
+interface BaseAutoCompleteProps<T, D = undefined>
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
     'onChange' | 'value' | 'defaultValue' | 'size' | 'required' | 'checked'
@@ -44,6 +44,22 @@ export interface AutoCompleteProps<T, D = undefined>
   width?: number;
 }
 
+interface AutoCompleteWithoutAppendProps<T, D = undefined>
+  extends BaseAutoCompleteProps<T, D> {
+  appendIfNotFound?: false;
+  onAppend?: (input: SelectValue<T, D>) => never;
+}
+
+interface AutoCompleteWithAppendProps<T, D = undefined>
+  extends BaseAutoCompleteProps<T, D> {
+  appendIfNotFound: true;
+  onAppend: (input: SelectValue<T, D>) => void;
+}
+
+export type AutoCompleteProps<T, D = undefined> =
+  | AutoCompleteWithoutAppendProps<T, D>
+  | AutoCompleteWithAppendProps<T, D>;
+
 /**
  * The autocomplete is a normal text input enhanced by a panel of suggested options.
  */
@@ -55,7 +71,7 @@ const AutoComplete = <T, D = undefined>({
   labelPosition = 'top',
   autoHideLabel = false,
   placeholder,
-  options,
+  options: optionsProp,
   onChange,
   className,
   helperText,
@@ -70,6 +86,8 @@ const AutoComplete = <T, D = undefined>({
   loading = false,
   clearable = false,
   width,
+  appendIfNotFound,
+  onAppend,
   ...props
 }: AutoCompleteProps<T, D>) => {
   const elementRef = React.useRef<HTMLDivElement>(null);
@@ -79,6 +97,24 @@ const AutoComplete = <T, D = undefined>({
   const [focused, setFocused] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
 
+  const [injectOptions, setInjectOptions] = React.useState<SelectValue<T, D>[]>(
+    [],
+  );
+
+  const options = React.useMemo(
+    () =>
+      Array.from(
+        new Map(
+          [...injectOptions, ...optionsProp].map((item) => [item.label, item]),
+        ).values(),
+      ),
+    [optionsProp, injectOptions],
+  );
+
+  const [filteredOptions, setFilteredOptions] = React.useState<
+    SelectValue<T, D>[]
+  >([]);
+
   const [internalValue, setInternalValue] = React.useState<SelectValue<
     T,
     D
@@ -86,9 +122,11 @@ const AutoComplete = <T, D = undefined>({
 
   React.useEffect(() => {
     setInternalValue(
-      options.find((item) => item.value === defaultValue) || null,
+      options.find(
+        (item) => item.value === (internalValue?.value ?? defaultValue),
+      ) || null,
     );
-  }, [options]);
+  }, [optionsProp]);
 
   const isControlled = valueProp !== undefined;
   const value = isControlled ? valueProp : internalValue;
@@ -105,24 +143,20 @@ const AutoComplete = <T, D = undefined>({
       valueRef.current?.focus();
     },
     reset: () => {
-      setInternalValue(
-        options.find((item) => item.value === defaultValue) || null,
-      );
+      setInternalValue(null);
     },
     disabled,
   }));
-
-  const [filteredOptions, setFilteredOptions] = React.useState<
-    SelectValue<T, D>[]
-  >([]);
 
   React.useEffect(() => {
     setInputValue(value?.label ?? '');
   }, [value]);
 
   React.useEffect(() => {
-    const filtered = options.filter((option) =>
-      option.label.toLowerCase().includes(inputValue.toLowerCase()),
+    const filtered = options.filter(
+      (option) =>
+        !inputValue ||
+        option.label.toLowerCase().includes(inputValue.toLowerCase()),
     );
     setFilteredOptions(filtered);
   }, [inputValue, options]);
@@ -188,6 +222,17 @@ const AutoComplete = <T, D = undefined>({
     setInputValue(newValue);
     if (newValue.length === 0) {
       handleClearValue();
+    } else {
+      const filtered = options.find(
+        (option) => option.label.toLowerCase() === newValue.toLowerCase(),
+      );
+
+      if (filtered) {
+        onChange?.(filtered);
+        if (!isControlled) {
+          setInternalValue(filtered);
+        }
+      }
     }
   };
 
@@ -202,8 +247,42 @@ const AutoComplete = <T, D = undefined>({
     setDropdownOpen(false);
   };
 
+  const handleAppend = () => {
+    if (inputValue.length === 0 || !appendIfNotFound) return;
+
+    const newValue = {
+      label: inputValue,
+      value: inputValue as T,
+    };
+    setInjectOptions((prev) => [...prev, newValue]);
+    if (!isControlled) {
+      setInternalValue(newValue);
+    }
+
+    setFocused(false);
+    setDropdownOpen(false);
+    onAppend(newValue);
+  };
+
   const dropdownContent = (
     <>
+      {appendIfNotFound &&
+        inputValue &&
+        !options.find((option) => option.label === inputValue) && (
+          <div
+            role="button"
+            onClick={handleAppend}
+            className={cx(
+              'py-1.5 px-4 text-left break-words cursor-pointer bg-neutral-15 dark:bg-neutral-15-dark hover:bg-neutral-20 dark:hover:bg-neutral-20-dark',
+              {
+                'text-14px': size === 'default',
+                'text-18px': size === 'large',
+              },
+            )}
+          >
+            Create <b>{inputValue}</b>...
+          </div>
+        )}
       {filteredOptions.map((option) => (
         <div
           role="button"
@@ -221,7 +300,8 @@ const AutoComplete = <T, D = undefined>({
           {option.label}
         </div>
       ))}
-      {filteredOptions.length === 0 && (
+      {((optionsProp.length === 0 && !inputValue) ||
+        (!appendIfNotFound && filteredOptions.length === 0)) && (
         <div className="flex flex-col items-center gap-4 text center text-neutral-60 dark:text-neutral-60-dark text-16px">
           <div className="h-12 w-12 bg-neutral-60 dark:bg-neutral-60-dark flex items-center justify-center rounded-full text-neutral-10 dark:text-neutral-10-dark text-36px font-semibold mt-1">
             !

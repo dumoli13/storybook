@@ -16,7 +16,7 @@ export interface AutoCompleteMultipleRef<T, D = undefined> {
   disabled: boolean;
 }
 
-export interface AutoCompleteMultipleProps<T, D = undefined>
+interface BaseAutoCompleteMultipleProps<T, D = undefined>
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
     'onChange' | 'value' | 'defaultValue' | 'size' | 'required' | 'checked'
@@ -45,6 +45,21 @@ export interface AutoCompleteMultipleProps<T, D = undefined>
   width?: number;
 }
 
+interface AutoCompleteMultipleWithoutAppendProps<T, D = undefined>
+  extends BaseAutoCompleteMultipleProps<T, D> {
+  appendIfNotFound?: false;
+  onAppend?: (input: SelectValue<T, D>) => never;
+}
+interface AutoCompleteMultipleWithAppendProps<T, D = undefined>
+  extends BaseAutoCompleteMultipleProps<T, D> {
+  appendIfNotFound: true;
+  onAppend: (input: SelectValue<T>) => void;
+}
+
+export type AutoCompleteMultipleProps<T, D = undefined> =
+  | AutoCompleteMultipleWithoutAppendProps<T, D>
+  | AutoCompleteMultipleWithAppendProps<T, D>;
+
 /**
  * An autocomplete where multiple options can be selected
  */
@@ -56,7 +71,7 @@ const AutoCompleteMultiple = <T, D = undefined>({
   labelPosition = 'top',
   autoHideLabel = false,
   placeholder = '',
-  options,
+  options: optionsProp,
   onChange,
   className,
   helperText,
@@ -71,6 +86,8 @@ const AutoCompleteMultiple = <T, D = undefined>({
   loading = false,
   clearable = false,
   width,
+  appendIfNotFound,
+  onAppend,
   ...props
 }: AutoCompleteMultipleProps<T, D>) => {
   const elementRef = React.useRef<HTMLDivElement>(null);
@@ -79,15 +96,36 @@ const AutoCompleteMultiple = <T, D = undefined>({
 
   const [focused, setFocused] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
+
+  const [injectOptions, setInjectOptions] = React.useState<SelectValue<T, D>[]>(
+    [],
+  );
+
+  const options = React.useMemo(
+    () =>
+      Array.from(
+        new Map(
+          [...injectOptions, ...optionsProp].map((item) => [item.label, item]),
+        ).values(),
+      ),
+    [optionsProp, injectOptions],
+  );
+
+  const [filteredOptions, setFilteredOptions] = React.useState<
+    SelectValue<T, D>[]
+  >([]);
+
   const [internalValue, setInternalValue] = React.useState<SelectValue<T, D>[]>(
     options.filter((item) => defaultValue.includes(item.value)) || [],
   );
 
   React.useEffect(() => {
     setInternalValue(
-      options.filter((item) => defaultValue.includes(item.value)) || [],
+      options.filter((item) =>
+        defaultValue.map((v) => v).includes(item.value),
+      ) || [],
     );
-  }, [options]);
+  }, [optionsProp]);
 
   const isControlled = valueProp !== undefined;
   const value = valueProp ?? internalValue; // Default to internal state if undefined
@@ -104,23 +142,19 @@ const AutoCompleteMultiple = <T, D = undefined>({
       valueRef.current?.focus();
     },
     reset: () => {
-      setInternalValue(
-        options.filter((item) => defaultValue.includes(item.value)) || [],
-      );
+      setInternalValue([]);
     },
     disabled,
   }));
 
-  const [filteredOptions, setFilteredOptions] = React.useState<
-    SelectValue<T, D>[]
-  >([]);
-
   React.useEffect(() => {
-    const filtered = options.filter((option) =>
-      option.label.toLowerCase().includes(inputValue.toLowerCase()),
+    const filtered = options.filter(
+      (option) =>
+        !inputValue ||
+        option.label.toLowerCase().includes(inputValue.toLowerCase()),
     );
     setFilteredOptions(filtered);
-  }, [inputValue, options, value]);
+  }, [inputValue, optionsProp, value]);
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -178,27 +212,51 @@ const AutoCompleteMultiple = <T, D = undefined>({
     setInputValue(newValue);
   };
 
-  const handleOptionSelect =
-    (option: SelectValue<T, D>) => (e: React.MouseEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const newValue = [...(value || []), option];
-      setInputValue('');
-      if (!isControlled) setInternalValue(newValue); // Update internal state if uncontrolled
-      onChange?.(newValue);
-    };
+  const handleOptionSelect = (option: SelectValue<T, D>) => {
+    const newValue = [...(value || []), option];
+    setInputValue('');
+    if (!isControlled) setInternalValue(newValue); // Update internal state if uncontrolled
+    onChange?.(newValue);
+  };
 
-  const handleRemoveSelected =
-    (option: SelectValue<T, D>) => (e: React.MouseEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const newValue = value.filter((v) => v.value !== option.value);
-      if (!isControlled) setInternalValue(newValue);
-      onChange?.(newValue);
+  const handleRemoveSelected = (option: SelectValue<T, D>) => {
+    const newValue = value.filter((v) => v.value !== option.value);
+    setInputValue('');
+    if (!isControlled) setInternalValue(newValue);
+    onChange?.(newValue);
+  };
+
+  const handleAppend = () => {
+    if (inputValue.length === 0 || !appendIfNotFound) return;
+
+    const newValue = {
+      label: inputValue,
+      value: inputValue as T,
     };
+    setInjectOptions((prev) => [...prev, newValue]);
+    handleOptionSelect(newValue);
+    onAppend(newValue);
+  };
 
   const dropdownContent = (
     <>
+      {appendIfNotFound &&
+        inputValue &&
+        !options.find((option) => option.label === inputValue) && (
+          <div
+            role="button"
+            onClick={handleAppend}
+            className={cx(
+              'py-1.5 px-4 text-left break-words cursor-pointer bg-neutral-15 dark:bg-neutral-15-dark hover:bg-neutral-20 dark:hover:bg-neutral-20-dark',
+              {
+                'text-14px': size === 'default',
+                'text-18px': size === 'large',
+              },
+            )}
+          >
+            Create <b>{inputValue}</b>...
+          </div>
+        )}
       {filteredOptions.map((option) => {
         const selected = value?.some((v) => v.value === option.value);
 
@@ -206,7 +264,7 @@ const AutoCompleteMultiple = <T, D = undefined>({
           <div
             role="button"
             key={String(option.value)}
-            onMouseDown={handleRemoveSelected(option)}
+            onMouseDown={() => handleRemoveSelected(option)}
             className={cx(
               'cursor-pointer py-1.5 px-4 hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-left break-words flex items-center justify-between gap-2.5 bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark',
               {
@@ -227,7 +285,7 @@ const AutoCompleteMultiple = <T, D = undefined>({
           <div
             role="button"
             key={String(option.value)}
-            onMouseDown={handleOptionSelect(option)}
+            onMouseDown={() => handleOptionSelect(option)}
             className={cx(
               'cursor-pointer py-1.5 px-4 hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-left break-words text-neutral-100 dark:text-neutral-100-dark',
               {
@@ -240,7 +298,8 @@ const AutoCompleteMultiple = <T, D = undefined>({
           </div>
         );
       })}
-      {filteredOptions.length === 0 && (
+      {((optionsProp.length === 0 && !inputValue) ||
+        (!appendIfNotFound && filteredOptions.length === 0)) && (
         <div className="flex flex-col items-center gap-4 text center text-neutral-60 text-16px dark:text-neutral-60-dark">
           <div className="h-12 w-12 bg-neutral-60 dark:bg-neutral-60-dark flex items-center justify-center rounded-full text-neutral-10 dark:text-neutral-10-dark text-36px font-semibold mt-1">
             !

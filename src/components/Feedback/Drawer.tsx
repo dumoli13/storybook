@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import cx from 'classnames';
 
@@ -14,21 +14,17 @@ type BaseDrawerProps = {
 type LeftRightDrawerProps = BaseDrawerProps & {
     position: 'left' | 'right';
     width?: number | string;
-    height?: never; // Explicitly disallow height
+    height?: never;
 };
 
 type TopBottomDrawerProps = BaseDrawerProps & {
     position: 'top' | 'bottom';
     height?: number | string;
-    width?: never; // Explicitly disallow width
+    width?: never;
 };
 
 export type DrawerProps = LeftRightDrawerProps | TopBottomDrawerProps;
 
-/**
- * The navigation drawers (or "sidebars") provide ergonomic access to destinations 
- * in a site or app functionality such as switching accounts.
- */
 const Drawer = ({
     className,
     position = 'left',
@@ -40,11 +36,11 @@ const Drawer = ({
     disableBackdropClick = false,
     disableEscapeKeyDown = false
 }: DrawerProps) => {
-    const drawerRef = useRef<HTMLDivElement>(null);
-    const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+    const drawerRef = React.useRef<HTMLDivElement>(null);
+    const previouslyFocusedElement = React.useRef<HTMLElement | null>(null);
 
     // Handle escape key press
-    useEffect(() => {
+    React.useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape' && !disableEscapeKeyDown) {
                 onClose?.();
@@ -61,7 +57,7 @@ const Drawer = ({
     }, [open, onClose, disableEscapeKeyDown]);
 
     // Manage focus when drawer opens/closes
-    useEffect(() => {
+    React.useEffect(() => {
         if (open) {
             previouslyFocusedElement.current = document.activeElement as HTMLElement;
             drawerRef.current?.focus();
@@ -71,7 +67,7 @@ const Drawer = ({
     }, [open]);
 
     // Prevent body scroll when drawer is open
-    useEffect(() => {
+    React.useEffect(() => {
         if (open) {
             document.body.style.overflow = 'hidden';
         } else {
@@ -83,20 +79,35 @@ const Drawer = ({
         };
     }, [open]);
 
-    if (!open) return null;
-
     const drawerStyle = {
         width: position === 'left' || position === 'right' ? width : '100%',
         height: position === 'top' || position === 'bottom' ? height : '100%',
     };
 
+    // Calculate transform based on position
+    const getTransform = () => {
+        if (!open) {
+            switch (position) {
+                case 'left': return 'translateX(-100%)';
+                case 'right': return 'translateX(100%)';
+                case 'top': return 'translateY(-100%)';
+                case 'bottom': return 'translateY(100%)';
+                default: return '';
+            }
+        }
+        return '';
+    };
+
     return createPortal(
-        <div className=" fixed inset-0 z-[1300] bg-[#00000080]">
+        <div className={cx(
+            "fixed inset-0 z-[1300] transition-opacity duration-300",
+            open ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}>
             {/* Backdrop */}
             <div
                 className={cx(
-                    'fixed inset-0 bg-black/50 transition-opacity',
-                    open ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                    'fixed inset-0 bg-neutral-100/50 transition-opacity duration-300',
+                    open ? 'opacity-100' : 'opacity-0'
                 )}
                 aria-hidden="true"
                 onClick={disableBackdropClick ? undefined : onClose}
@@ -106,7 +117,8 @@ const Drawer = ({
             <div
                 ref={drawerRef}
                 className={cx(
-                    'bg-neutral-15 dark:bg-neutral-15-dark fixed bg-white dark:bg-gray-800 shadow-xl transition-transform duration-300 ease-in-out',
+                    'bg-neutral-15 dark:bg-neutral-15-dark fixed shadow-xl',
+                    'transition-all duration-300 ease-in-out transform',
                     'focus:outline-none', // for accessibility
                     {
                         'left-0 top-0': position === 'left',
@@ -116,7 +128,11 @@ const Drawer = ({
                     },
                     className
                 )}
-                style={drawerStyle}
+                style={{
+                    ...drawerStyle,
+                    transform: getTransform(),
+                    ...(open ? { transform: 'translateX(0)' } : {})
+                }}
                 role="dialog"
                 aria-modal="true"
                 tabIndex={-1}

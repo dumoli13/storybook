@@ -1,17 +1,25 @@
-import React, { useState } from 'react'
+import React from 'react'
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconProps, Icon, IconNames, TextField, Tag } from '../../src/components';
+import { IconProps, Icon, IconNames, TextField, Tag, Tab } from '../../src/components';
 import '../../src/output.css';
 import { fn } from '@storybook/test';
- 
+
 const meta: Meta<IconProps> = {
     title: 'Icon',
     component: Icon,
     parameters: {
-        layout: 'centered', 
+        layout: 'centered',
     },
     tags: ['autodocs'],
     argTypes: {
+        variant: {
+            control: 'radio',
+            options: ['outline', 'solid'],
+            description: 'The variant of the icon.',
+            table: {
+                type: { summary: 'outline | solid' },
+            },
+        },
         name: {
             control: 'select',
             description: 'The name of the icon.',
@@ -21,7 +29,14 @@ const meta: Meta<IconProps> = {
         },
         color: {
             control: 'color',
-            description: 'The color of the icon.',
+            description: 'The stroke color of the icon.',
+            table: {
+                type: { summary: 'string' },
+            },
+        },
+        fillColor: {
+            control: 'color',
+            description: 'The fill color of the icon. Only applicable to solid variant.',
             table: {
                 type: { summary: 'string' },
             },
@@ -64,13 +79,13 @@ const meta: Meta<IconProps> = {
         },
         animation: {
             control: 'select',
+            options: ['spin', 'pulse', 'bounce', 'ping'],
             description: 'The animation of the icon.',
+            table: {
+                type: { summary: 'spin | pulse | bounce | ping' },
+            },
         },
     },
-    args:{
-        onClick: fn(),
-        disabled: false,
-    }
 };
 
 export default meta;
@@ -400,7 +415,6 @@ const iconNames: { name: IconNames, tags: string }[] = [
 
 
 const IconCard = (props: IconProps) => {
-    console.log("Props", props)
     const { name, size, strokeWidth, disabled, color, animation } = props
     const [copied, setCopied] = React.useState(false);
 
@@ -408,24 +422,54 @@ const IconCard = (props: IconProps) => {
         const iconProps = [
             `name="${name}"`,
             size ? `size={${size}}` : '',
-            strokeWidth ? `strokeWidth={${strokeWidth}}` : '',
+            strokeWidth ? `strokeWidth="${strokeWidth}"` : '',
             disabled ? 'disabled' : '',
-            color ? `color={${color}}` : '',
-            animation ? `animation={${animation}}` : ''
-        ].filter(Boolean).join(' ');
+            color ? `color="${color}"` : '',
+            animation ? `animation="${animation}"` : '',
+        ]
+            .filter(Boolean)
+            .join(' ');
 
-        const icon = `<Icon ${iconProps}/>`;
-        navigator.clipboard.writeText(icon);
+        const icon = `<Icon ${iconProps} />`;
 
+        // ✅ Check for clipboard support first
+        if (navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(icon).catch((err) => {
+                console.warn('Clipboard writeText failed:', err);
+                fallbackCopy(icon);
+            });
+        } else {
+            fallbackCopy(icon);
+        }
 
         setCopied(true);
         setTimeout(() => {
             setCopied(false);
         }, 2000);
-    }
+    };
+
+    // ✅ Fallback function
+    const fallbackCopy = (text: string) => {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed'; // Avoid scrolling
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+
+        try {
+            document.execCommand('copy');
+            console.log('Fallback: Copy succeeded');
+        } catch (err) {
+            console.error('Fallback: Copy failed', err);
+        }
+
+        document.body.removeChild(textarea);
+    };
+
 
     return (
-        <div 
+        <div
             className='flex flex-col justify-between gap-4 text-14px rounded-md p-4 shadow-box-1'
             role="button"
             onClick={handleClickIcon}
@@ -443,16 +487,18 @@ const IconCard = (props: IconProps) => {
 
 export const Playground: Story = {
     args: {
+        variant: 'solid',
         size: 24,
-        strokeWidth: 1.5,
+        strokeWidth: 0,
+        onClick: fn(),
         disabled: false,
-    }, 
+    },
     render: (args) => {
         const [query, setQuery] = React.useState('');
         const filteredIcons =
             query || args.name
                 ? iconNames.filter((icon) =>
-                    icon.tags.toLowerCase().includes((query || args.name).toLowerCase()),
+                    icon.tags.toLowerCase().includes((query ?? args.name).toLowerCase()),
                 )
                 : iconNames;
 
@@ -461,26 +507,21 @@ export const Playground: Story = {
                 className="flex flex-col gap-4 items-start justify-start bg-neutral-10 overflow-auto px-1"
                 style={{
                     width: 921,
-                    maxHeight: '90vh',
+                    maxHeight: '800px',
                 }}
             >
-                <div className="flex flex-col sticky top-0 bg-neutral-10 w-full gap-4 p-1">
+                <div className="flex flex-col sticky top-0 bg-neutral-10 w-full gap-4 p-1 z-10">
                     <Tag color='info'>Click to copy icon</Tag>
                     <TextField
                         placeholder="Search icons..."
                         value={query} onChange={setQuery}
                         fullWidth
-                        size='large' 
+                        size='large'
                     />
                 </div>
+
                 {filteredIcons.length > 0 ? (
-                    <div
-                        style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
-                            gap: '16px',
-                        }}
-                    >
+                    <div className="p-1 grid grid-cols-6 gap-4" >
                         {filteredIcons.map((icon) => (
                             <IconCard key={icon.name} {...args} name={icon.name} />
                         ))}
@@ -499,8 +540,8 @@ export const Playground: Story = {
             </div>
         );
     },
-    parameters: { 
-        docs: { 
+    parameters: {
+        docs: {
             description: {
                 story: 'Browse and search through all available icons with their names.',
             },

@@ -3,7 +3,7 @@ import cx from 'classnames';
 
 interface InputHelperProps {
   message?: React.ReactNode;
-  error: boolean;
+  error?: boolean;
   size: 'default' | 'large';
 }
 

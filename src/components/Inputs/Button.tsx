@@ -31,12 +31,13 @@ const Button = React.forwardRef(
       endIcon,
       onClick,
       type = 'button',
-      ...rest
+      ...props
     }: ButtonProps,
     ref: React.Ref<HTMLButtonElement>,
   ) => {
     return (
       <button
+        {...props}
         ref={ref}
         disabled={disabled || loading}
         type={type}
@@ -106,7 +107,6 @@ const Button = React.forwardRef(
           className,
         )}
         tabIndex={disabled ? -1 : 0}
-        {...rest}
       >
         <span
           className={cx('flex justify-center items-center gap-1.5', {

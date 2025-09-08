@@ -1,5 +1,5 @@
 /* eslint-disable react/no-array-index-key */
-import React, { CSSProperties } from 'react';
+import React from 'react';
 import cx from 'classnames';
 import Checkbox from '../Inputs/Checkbox';
 import { SelectValue } from '../Inputs/Select';
@@ -9,10 +9,11 @@ import FilterSelect from './FilterSelect';
 type BaseColumnCommon = {
   key: string;
   label: string;
-  subLabel?: string;
+  subLabel?: React.ReactNode;
   sortable?: boolean;
   width?: number | string;
   minWidth?: number;
+  align?: 'left' | 'center' | 'right';
 };
 
 type ColumnWithDataIndex<T, K extends keyof T> = BaseColumnCommon & {
@@ -21,45 +22,45 @@ type ColumnWithDataIndex<T, K extends keyof T> = BaseColumnCommon & {
 };
 
 type ColumnWithoutDataIndex<T> = BaseColumnCommon & {
-  dataIndex: undefined;
+  dataIndex?: never;
   render?: (value: T[keyof T], record: T, index: number) => React.ReactNode;
 };
 
 type TextFieldColumn<T, K extends keyof T> =
   | (ColumnWithDataIndex<T, K> & {
-      filter: 'textfield';
-      filterValue: string;
-      onChange: (value: string) => void;
-    })
+    filter: 'textfield';
+    filterValue: string;
+    onChange: (value: string) => void;
+  })
   | (ColumnWithoutDataIndex<T> & {
-      filter: 'textfield';
-      filterValue: string;
-      onChange: (value: string) => void;
-    });
+    filter: 'textfield';
+    filterValue: string;
+    onChange: (value: string) => void;
+  });
 
 type SelectColumn<T, K extends keyof T, D = undefined> =
   | (ColumnWithDataIndex<T, K> & {
-      filter: 'select' | 'autocomplete';
-      filterValue: SelectValue<T[K], D> | null;
-      onChange: (value: SelectValue<T[K], D> | null) => void;
-      option: Array<SelectValue<T[K], D>>;
-    })
+    filter: 'select' | 'autocomplete';
+    filterValue: SelectValue<T[K], D> | null;
+    onChange: (value: SelectValue<T[K], D> | null) => void;
+    option: Array<SelectValue<T[K], D>>;
+  })
   | (ColumnWithoutDataIndex<T> & {
-      filter: 'select' | 'autocomplete';
-      filterValue: unknown;
-      onChange: (value: unknown) => void;
-      option: Array<SelectValue<any, D>>;
-    });
+    filter: 'select' | 'autocomplete';
+    filterValue: unknown;
+    onChange: (value: unknown) => void;
+    option: Array<SelectValue<any, D>>;
+  });
 
 type NoFilterColumn<T, K extends keyof T = keyof T> =
   | (ColumnWithDataIndex<T, K> & {
-      filter?: 'none';
-      filterValue?: T[K] | null;
-    })
+    filter?: 'none';
+    filterValue?: T[K] | null;
+  })
   | (ColumnWithoutDataIndex<T> & {
-      filter?: 'none';
-      filterValue?: unknown;
-    });
+    filter?: 'none';
+    filterValue?: unknown;
+  });
 
 export type TableColumn<T> =
   | { [K in keyof T]: TextFieldColumn<T, K> }[keyof T]
@@ -68,7 +69,7 @@ export type TableColumn<T> =
 
 export type TableSortingProps<T> = {
   direction: 'asc' | 'desc' | null;
-  key: keyof T;
+  key: keyof T | null;
 };
 
 export type TableFilterProps<T> = {
@@ -85,11 +86,12 @@ export interface TableProps<T> {
   sorting?: TableSortingProps<T> | null;
   onSort?: (sort: TableSortingProps<T>) => void;
   rowClassName?: (record: T) => string;
-  rowStyle?: (record: T) => CSSProperties;
+  rowStyle?: (record: T) => React.CSSProperties;
   fullwidth?: boolean;
   showSelected?: boolean;
-  size?: 'default' | 'large';
+  size?: 'small' | 'default' | 'large';
   verticalAlign?: 'top' | 'center' | 'bottom';
+  style?: 'default' | 'simple';
 }
 
 /**
@@ -111,9 +113,10 @@ const Table = <T extends { [key: string]: any }>({
   showSelected = false,
   size = 'default',
   verticalAlign,
+  style = 'default',
 }: TableProps<T>) => {
   const [sortConfig, setSortConfig] = React.useState<TableSortingProps<T>>(
-    sorting || { key: columns[0].key, direction: null },
+    sorting || { key: null, direction: null },
   );
 
   const [internalSelectedRows, setInternalSelectedRows] = React.useState<
@@ -185,10 +188,11 @@ const Table = <T extends { [key: string]: any }>({
               {showSelected && (
                 <th
                   className={cx(
-                    'font-medium text-left bg-neutral-20 dark:bg-neutral-20-dark px-4 py-3 border-r border-neutral-30 dark:border-neutral-30-dark last:border-none',
+                    'font-medium text-left bg-neutral-20 dark:bg-neutral-20-dark border-r border-neutral-30 dark:border-neutral-30-dark last:border-none',
                     {
-                      'text-18px': size === 'large',
-                      'text-14px': size === 'default',
+                      'px-4 py-3 text-18px': size === 'large',
+                      'px-4 py-3 text-14px': size === 'default',
+                      'px-4 py-2 text-14px': size === 'small',
                     },
                   )}
                 >
@@ -199,10 +203,14 @@ const Table = <T extends { [key: string]: any }>({
                 <th
                   key={col.key.toString()}
                   className={cx(
-                    'font-medium text-left bg-neutral-20 dark:bg-neutral-20-dark px-4 py-3 border-r border-neutral-30 dark:border-neutral-30-dark last:border-none',
+                    'font-medium bg-neutral-20 dark:bg-neutral-20-dark border-r border-neutral-30 dark:border-neutral-30-dark last:border-none',
                     {
-                      'text-18px': size === 'large',
-                      'text-14px': size === 'default',
+                      'px-4 py-3 text-18px': size === 'large',
+                      'px-4 py-3 text-14px': size === 'default',
+                      'px-4 py-2 text-14px': size === 'small',
+                      'text-left': col.align === 'left',
+                      'text-right': col.align === 'right',
+                      'text-center': col.align === 'center',
                     },
                   )}
                   style={{
@@ -218,55 +226,77 @@ const Table = <T extends { [key: string]: any }>({
                       )}px`,
                   }}
                 >
-                  <div className="flex gap-4 items-center justify-between">
-                    {col.sortable ? (
+                  <div
+                    className={cx(
+                      'flex gap-4 items-center justify-between',
+                      {},
+                    )}
+                  >
+                    {col.sortable && (
                       <div
                         role="button"
-                        className="w-full flex items-center gap-2.5"
-                        onClick={() => col.sortable && handleSort(col.key)}
+                        className={cx('flex gap-2.5 items-center w-full', {
+                          'justify-start': !col.align || col.align === 'left',
+                          'justify-end': col.align === 'right',
+                          'justify-center': col.align === 'center',
+                        })}
+                        onClick={() => handleSort(col.key)}
                       >
                         {col.subLabel ? (
-                          <div className="flex flex-col items-center">
-                            {col.label}
-                            <span className="text-16px">{col.subLabel}</span>
+                          <div
+                            className={cx('flex flex-col', {
+                              'items-start': !col.align || col.align === 'left',
+                              'items-end': col.align === 'right',
+                              'items-center': col.align === 'center',
+                            })}
+                          >
+                            <div>{col.label}</div>
+                            <div>{col.subLabel}</div>
                           </div>
                         ) : (
                           col.label
                         )}
-                        {col.sortable && (
-                          <div className="flex flex-col gap-0.5">
-                            <span
-                              className={`w-0 h-0 border-l-4 border-l-transparent dark:border-l-transparent border-r-4 border-r-transparent dark:border-r-transparent border-b-8 transition-colors duration-300 ${
-                                col.key === sortConfig.key &&
-                                sortConfig.direction === 'asc'
-                                  ? 'border-primary-main dark:border-primary-main-dark'
-                                  : 'border-neutral-60 dark:border-neutral-60-dark'
+                        <div className="flex flex-col gap-0.5">
+                          <span
+                            className={`w-0 h-0 border-l-4 border-l-transparent dark:border-l-transparent border-r-4 border-r-transparent dark:border-r-transparent border-b-8 transition-colors duration-300 ${col.key === sortConfig.key &&
+                              sortConfig.direction === 'asc'
+                              ? 'border-primary-main dark:border-primary-main-dark'
+                              : 'border-neutral-60 dark:border-neutral-60-dark'
                               }`}
-                            />
-                            <span
-                              className={`w-0 h-0 border-l-4 border-l-transparent dark:border-l-transparent border-r-4 border-r-transparent dark:border-r-transparent border-t-8 transition-colors duration-300 ${
-                                col.key === sortConfig.key &&
-                                sortConfig.direction === 'desc'
-                                  ? 'border-primary-main dark:border-primary-main-dark'
-                                  : 'border-neutral-60 dark:border-neutral-60-dark'
+                          />
+                          <span
+                            className={`w-0 h-0 border-l-4 border-l-transparent dark:border-l-transparent border-r-4 border-r-transparent dark:border-r-transparent border-t-8 transition-colors duration-300 ${col.key === sortConfig.key &&
+                              sortConfig.direction === 'desc'
+                              ? 'border-primary-main dark:border-primary-main-dark'
+                              : 'border-neutral-60 dark:border-neutral-60-dark'
                               }`}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="w-full flex items-center">
-                        {col.subLabel ? (
-                          <div className="flex flex-col items-start">
-                            {col.label}
-                            <span className="text-16px">{col.subLabel}</span>
-                          </div>
-                        ) : (
-                          col.label
-                        )}
+                          />
+                        </div>
                       </div>
                     )}
-
+                    {!col.sortable && col.subLabel && (
+                      <div
+                        className={cx('w-full flex flex-col', {
+                          'items-start': !col.align || col.align === 'left',
+                          'items-end': col.align === 'right',
+                          'items-center': col.align === 'center',
+                        })}
+                      >
+                        <div>{col.label}</div>
+                        <div>{col.subLabel}</div>
+                      </div>
+                    )}
+                    {!col.sortable && !col.subLabel && (
+                      <div
+                        className={cx('w-full', {
+                          'text-left': !col.align || col.align === 'left',
+                          'text-right': col.align === 'right',
+                          'text-center': col.align === 'center',
+                        })}
+                      >
+                        {col.label}
+                      </div>
+                    )}
                     {/* Filters */}
                     {'filter' in col &&
                       col.filter !== undefined &&
@@ -307,14 +337,18 @@ const Table = <T extends { [key: string]: any }>({
                 <tr
                   key={rowIndex}
                   className={cx(
-                    'group border-b border-neutral-30 last:border-none',
+                    'group border-b border-neutral-30 last:border-none relative',
                     {
                       'text-18px': size === 'large',
-                      'text-14px': size === 'default', 
-                      'bg-neutral-10 dark:bg-neutral-10-dark even:bg-neutral-15 dark:even:bg-neutral-15-dark hover:bg-neutral-20 dark:hover:bg-neutral-20-dark':
+                      'text-14px': size === 'small' || size === 'default',
+                      'hover:bg-neutral-20 dark:hover:bg-neutral-20-dark':
                         !isCustomRowClassName,
+                      'bg-neutral-10 dark:bg-neutral-10-dark even:bg-neutral-15 dark:even:bg-neutral-15-dark':
+                        style === 'default',
+                      'bg-neutral-10 dark:bg-neutral-10-dark':
+                        style === 'simple',
                     },
-                    isCustomRowClassName
+                    isCustomRowClassName,
                   )}
                   style={rowStyle?.(row)}
                 >
@@ -324,9 +358,11 @@ const Table = <T extends { [key: string]: any }>({
                       style={{ verticalAlign }}
                     >
                       <div
-                        className={cx('px-4 py-3', {
+                        className={cx({
                           'bg-primary-surface dark:bg-primary-surface-dark':
                             isSelected,
+                          'px-4 py-3': size === 'default' || size === 'large',
+                          'px-4 py-0.5': size === 'small',
                         })}
                       >
                         <Checkbox
@@ -349,13 +385,25 @@ const Table = <T extends { [key: string]: any }>({
                     return (
                       <td
                         key={col.key.toString()}
-                        className="py-1.5 break-words"
+                        className={cx("py-1.5 break-words relative", {
+                          'p-4': size === 'default' || size === 'large',
+                          'px-4 py-2': size === 'small',
+                          'text-left': !col.align || col.align === 'left',
+                          'text-right': col.align === 'right',
+                          'text-center': col.align === 'center',
+                        })}
                         style={{ verticalAlign }}
                       >
+                        {/* <div className="absolute top-0 right-0 bottom-0 left-0 bg-primary-surface/50 dark:bg-primary-surface-dark/50" /> */}
                         <div
-                          className={cx('px-4 py-3', {
+                          className={cx({
                             'bg-primary-surface dark:bg-primary-surface-dark':
                               isSelected,
+                            'px-4 py-3': size === 'default' || size === 'large',
+                            'px-4 py-0.5': size === 'small',
+                            'text-left': !col.align || col.align === 'left',
+                            'text-right': col.align === 'right',
+                            'text-center': col.align === 'center',
                           })}
                         >
                           {col.render ? (

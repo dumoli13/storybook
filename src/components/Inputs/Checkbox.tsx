@@ -34,7 +34,7 @@ export interface CheckboxProps
 }
 
 /**
- * Checkboxes allow the user to turn an option on or off. 
+ * Checkboxes allow the user to turn an option on or off.
  */
 const Checkbox = ({
   label = '',
@@ -71,7 +71,7 @@ const Checkbox = ({
       elementRef.current?.focus();
     },
     reset: () => {
-      setInternalValue(defaultChecked);
+      setInternalValue(false);
     },
     disabled,
   }));
@@ -105,10 +105,10 @@ const Checkbox = ({
             size === 'large',
           'flex-col-reverse': labelPosition === 'top',
           'flex-col': labelPosition === 'bottom',
-          'gap-2 && h-[42px]':
+          'gap-2 && h-8':
             (labelPosition === 'left' || labelPosition === 'right') &&
             size === 'default',
-          'gap-2 && h-[64px]':
+          'gap-2 && h-[50px]':
             (labelPosition === 'left' || labelPosition === 'right') &&
             size === 'large',
           'flex-row-reverse': labelPosition === 'left',
@@ -121,7 +121,7 @@ const Checkbox = ({
           aria-disabled="false"
           aria-label={ariaLabel}
           className={cx(
-            'shrink-0rounded-md border flex justify-center items-center transition-all box-border relative',
+            'shrink-0 rounded-md border flex justify-center items-center transition-all box-border relative',
             {
               'w-5 h-5': size === 'default',
               'w-7 h-7': size === 'large',
