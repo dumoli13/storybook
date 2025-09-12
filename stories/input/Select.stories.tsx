@@ -1,9 +1,10 @@
 import React, { useMemo, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Icon, IconNames, Select, SelectProps, SelectRef, SelectValue } from '../../src/components';
+import { Icon, IconNames, Select, SelectProps, SelectRef } from '../../src/components';
 import '../../src/output.css';
 import { iconNames } from '../../const/icon';
 import { options } from '../../src/const/select';
+import { SelectValue } from '../../src';
 
 
 const sizeOption = ['default', 'large'];
@@ -144,7 +145,7 @@ const meta: Meta<SelectProps<any>> = {
             description: 'A flag that expand to full container width if set to true.',
             table: {
                 defaultValue: { summary: 'false' },
-                type: { summary: 'boolean' }, 
+                type: { summary: 'boolean' },
             },
         },
         width: {
@@ -171,7 +172,7 @@ const meta: Meta<SelectProps<any>> = {
 
         }
     },
-    args:{
+    args: {
         disabled: false,
     },
 };

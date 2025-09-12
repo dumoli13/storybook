@@ -43,9 +43,9 @@ const PrimaryModal = ({
       onConfirm={
         onConfirm
           ? () => {
-            onConfirm();
-            handleClose();
-          }
+              onConfirm();
+              handleClose();
+            }
           : undefined
       }
       confirmText={confirmText}

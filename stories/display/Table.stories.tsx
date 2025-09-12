@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Icon, IconButton, SelectValue, Table, TableColumn, TableProps, TableSortingProps } from '../../src/components';
+import { Icon, IconButton, Table, TableColumn, TableProps, TableSortingProps } from '../../src/components';
 import '../../src/output.css';
+import { SelectValue } from '../../src';
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export 
 const meta: Meta<TableProps<any>> = {

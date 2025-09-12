@@ -31,7 +31,6 @@ const pageButtonStyle = cx(
   'hover:bg-primary-hover dark:hover:bg-primary-hover-dark hover:text-neutral-10 dark:hover:text-neutral-10-dark',
 );
 
-
 const PrevButton = ({ onClick, disabled }: PaginationButtonProps) => {
   return (
     <button
@@ -46,7 +45,6 @@ const PrevButton = ({ onClick, disabled }: PaginationButtonProps) => {
     </button>
   );
 };
-
 
 const NextButton = ({ onClick, disabled }: PaginationButtonProps) => {
   return (
@@ -68,11 +66,10 @@ const NextButton = ({ onClick, disabled }: PaginationButtonProps) => {
 const Pagination = ({
   total,
   currentPage,
-  itemPerPage: itempPerPageProp = DEFAULT_ITEMS_PER_PAGE,
+  itemPerPage = DEFAULT_ITEMS_PER_PAGE,
   pageSize,
   onPageChange,
 }: PaginationProps) => {
-  const itemPerPage = itempPerPageProp.some(item => item === pageSize) ? [...itempPerPageProp, pageSize] : itempPerPageProp;
   const [itemsPerPage, setItemsPerPage] = React.useState(
     pageSize ?? itemPerPage[0],
   );

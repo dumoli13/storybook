@@ -70,7 +70,7 @@ const ModalContainer = ({
     return () => {
       document.body.style.overflow = '';
     };
-  }, [open]);
+  }, [open, document.body.style.overflow]);
 
   if (!open) return null;
 

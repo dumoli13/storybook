@@ -37,6 +37,8 @@ export interface CheckboxProps
  * Checkboxes allow the user to turn an option on or off.
  */
 const Checkbox = ({
+  id,
+  name,
   label = '',
   labelPosition = 'right',
   checked: valueProp,
@@ -89,7 +91,7 @@ const Checkbox = ({
   const handleFocus = () => setIsFocused(true);
   const handleBlur = () => setIsFocused(false);
 
-  const id = label ? label.replace(/\s+/g, '-').toLowerCase() : undefined;
+  const inputId = `checkbox-${id || name}-${React.useId()}`;
 
   return (
     <div className={className} style={width ? { width } : undefined}>
@@ -144,7 +146,7 @@ const Checkbox = ({
           }}
         >
           <input
-            id={id}
+            id={inputId}
             tabIndex={!disabled ? 0 : -1}
             type="checkbox"
             className="hidden"

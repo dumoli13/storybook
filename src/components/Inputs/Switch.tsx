@@ -40,6 +40,7 @@ export interface SwitchProps
  */
 const Switch = ({
   id,
+  name,
   defaultChecked,
   checked: checkedProp,
   label,
@@ -89,6 +90,8 @@ const Switch = ({
     }
   };
 
+  const inputId = `switch-${id || name}-${React.useId()}`;
+
   return (
     <div
       className={cx(
@@ -110,7 +113,7 @@ const Switch = ({
         )}
       >
         {label && (
-          <InputLabel id={id} size={size}>
+          <InputLabel id={inputId} size={size}>
             {label}
           </InputLabel>
         )}
@@ -143,7 +146,7 @@ const Switch = ({
           <input
             {...props}
             tabIndex={!disabled ? 0 : -1}
-            id={id}
+            id={inputId}
             type="checkbox"
             className="sr-only"
             checked={value}

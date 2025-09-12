@@ -67,6 +67,7 @@ export interface DatePickerProps
  */
 const DatePicker = ({
   id,
+  name,
   value: valueProp,
   defaultValue = valueProp,
   label,
@@ -725,6 +726,8 @@ const DatePicker = ({
     </div>
   );
 
+  const inputId = `datepicker-${id || name}-${React.useId()}`;
+
   return (
     <div
       className={cx(
@@ -737,7 +740,7 @@ const DatePicker = ({
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={id} size={size}>
+        <InputLabel id={inputId} size={size}>
           {label}
         </InputLabel>
       )}
@@ -768,7 +771,7 @@ const DatePicker = ({
         <input
           {...props}
           tabIndex={!disabled ? 0 : -1}
-          id={id}
+          id={inputId}
           value={value ? dayjs(value).format(format) : ''}
           placeholder={focused ? '' : placeholder}
           className={cx(

@@ -1,10 +1,11 @@
 import React from 'react';
 import cx from 'classnames';
+import { SelectValue } from '../../types/input';
 import Popper from '../Displays/Popper';
 import Icon from '../Icon';
 import AutoComplete from '../Inputs/AutoComplete';
 import IconButton from '../Inputs/IconButton';
-import Select, { SelectRef, SelectValue } from '../Inputs/Select';
+import Select, { SelectRef } from '../Inputs/Select';
 
 interface FilterSearchProps<T, D> {
   type: 'select' | 'autocomplete';

@@ -12,7 +12,7 @@ export interface ModalProps {
   children: React.ReactNode;
   className?: string;
   width?: string | number;
-  height?: string | number; 
+  height?: string | number;
   closeOnOverlayClick?: boolean;
   onClose?: () => void;
 }

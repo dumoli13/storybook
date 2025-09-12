@@ -1,7 +1,7 @@
 import React from 'react';
 import cx from 'classnames';
-import iconOutline from '../assets/icon-outline.svg';
 import iconFilled from '../assets/icon-filled.svg';
+import iconOutline from '../assets/icon-outline.svg';
 
 // Base props that all icons share
 type BaseIconProps = {
@@ -76,13 +76,9 @@ const Icon = React.forwardRef<HTMLSpanElement, IconProps>((props, ref) => {
     <span
       ref={ref}
       aria-label={name}
-      className={cx(
-        'flex items-center justify-center',
-        className,
-        {
-          'cursor-pointer': !!onClick && !disabled,
-        },
-      )}
+      className={cx('flex items-center justify-center', className, {
+        'cursor-pointer': !!onClick && !disabled,
+      })}
       {...(onClick && !disabled && { onClick, role: 'button', tabIndex: 0 })}
     >
       <svg
@@ -90,7 +86,9 @@ const Icon = React.forwardRef<HTMLSpanElement, IconProps>((props, ref) => {
         height={size}
         stroke={color}
         fill={variant === 'solid' ? fillColor : 'none'}
-        strokeWidth={variant === 'outline' && strokeWidth === 0 ? 1 : strokeWidth}
+        strokeWidth={
+          variant === 'outline' && strokeWidth === 0 ? 1 : strokeWidth
+        }
         strokeLinecap="round"
         strokeLinejoin="round"
         style={animationStyle}
@@ -124,7 +122,6 @@ const Icon = React.forwardRef<HTMLSpanElement, IconProps>((props, ref) => {
 Icon.displayName = 'Icon';
 
 export default Icon;
-
 
 export type IconNames =
   | 'academic-cap'

@@ -56,7 +56,11 @@ const SkeletonInput: React.FC<SkeletonInputProps> = ({ size = 'default' }) => (
 SkeletonInput.displayName = 'SkeletonInput';
 Skeleton.Input = SkeletonInput;
 
-const SkeletonTable = ({ column = 2, row = 3, size = 'default' }: SkeletonTableProps) => {
+const SkeletonTable = ({
+  column = 2,
+  row = 3,
+  size = 'default',
+}: SkeletonTableProps) => {
   return (
     <div className="overflow-y-auto border border-neutral-30 dark:border-neutral-30-dark rounded-md">
       <table className="w-full">
@@ -93,11 +97,13 @@ const SkeletonTable = ({ column = 2, row = 3, size = 'default' }: SkeletonTableP
                   key={colIndex}
                   aria-label={`Row ${rowIndex + 1}, Column ${colIndex + 1}`}
                 >
-                  <div className={cx("flex items-center justify-start px-4 py-2", {
-                    'h-[36px]': size === 'small',
-                    'h-[56px]': size === 'default',
-                    'h-[62px]': size === 'large',
-                  })}>
+                  <div
+                    className={cx('flex items-center justify-start px-4 py-2', {
+                      'h-[36px]': size === 'small',
+                      'h-[56px]': size === 'default',
+                      'h-[62px]': size === 'large',
+                    })}
+                  >
                     <div className="bg-neutral-40 dark:bg-neutral-40-dark rounded-full animate-pulse w-4/5 h-5" />
                   </div>
                 </td>

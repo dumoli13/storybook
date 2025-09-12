@@ -46,6 +46,7 @@ export interface PasswordFieldProps
  */
 const PasswordField = ({
   id,
+  name,
   value: valueProp,
   defaultValue,
   label,
@@ -120,6 +121,8 @@ const PasswordField = ({
     }
   };
 
+  const inputId = `passwordfield-${id || name}-${React.useId()}`;
+
   return (
     <div
       className={cx(
@@ -132,7 +135,7 @@ const PasswordField = ({
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={id} size={size}>
+        <InputLabel id={inputId} size={size}>
           {label}
         </InputLabel>
       )}
@@ -168,7 +171,7 @@ const PasswordField = ({
         <input
           {...props}
           tabIndex={!disabled ? 0 : -1}
-          id={id}
+          id={inputId}
           value={value}
           onChange={handleChange}
           placeholder={focused ? '' : placeholder}

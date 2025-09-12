@@ -59,6 +59,7 @@ export interface NumberTextFieldProps
  */
 const NumberTextField = ({
   id,
+  name,
   value: valueProp,
   defaultValue = valueProp,
   label,
@@ -190,6 +191,8 @@ const NumberTextField = ({
     setInternalStringValue('');
   };
 
+  const inputId = `numbertextfield-${id || name}-${React.useId()}`;
+
   return (
     <div
       className={cx(
@@ -202,7 +205,7 @@ const NumberTextField = ({
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={id} size={size}>
+        <InputLabel id={inputId} size={size}>
           {label}
         </InputLabel>
       )}
@@ -238,7 +241,7 @@ const NumberTextField = ({
         <input
           {...props}
           tabIndex={!disabled ? 0 : -1}
-          id={id}
+          id={inputId}
           value={displayValue}
           onChange={handleChange}
           placeholder={focused ? '' : placeholder}

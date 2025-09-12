@@ -1,36 +1,33 @@
-import { Icon, IconNames } from 'mis-design';
+import React, { useMemo } from 'react';
 import { Editor } from 'slate';
 import { useSlate } from 'slate-react';
-import { CustomRichText } from '.';
-import ToolbarButton from './ToolbarButton';
+import { RichTextProps } from '.';
+import RichTextToolbarButton from './RichTextToolbarButton';
+import Icon, { IconNames } from '../../Icon';
 
-const MarkButton: React.FC<{
-  format: keyof CustomRichText;
+interface RichTextMarkButtonProps {
+  format: keyof RichTextProps;
   icon: IconNames;
-}> = ({ format, icon }) => {
+}
+
+const MarkButton = ({ format, icon }: RichTextMarkButtonProps) => {
   const editor = useSlate();
+  const isMarkActive = Editor.marks(editor)?.[format] === true;
 
-  const isMarkActive = (editor: Editor, format: keyof CustomRichText) => {
-    const marks = Editor.marks(editor) as Record<string, boolean> | null;
-    return marks?.[format] === true;
-  };
+  const toggleMark = (e: React.MouseEvent) => {
+    e.preventDefault();
 
-  const toggleMark = (editor: Editor, format: keyof CustomRichText) => {
-    const isActive = isMarkActive(editor, format);
-    if (isActive) Editor.removeMark(editor, format);
+    if (isMarkActive) Editor.removeMark(editor, format);
     else Editor.addMark(editor, format, true);
   };
 
   return (
-    <ToolbarButton
-      active={isMarkActive(editor, format)}
-      onMouseDown={(e) => {
-        e.preventDefault();
-        toggleMark(editor, format);
-      }}
+    <RichTextToolbarButton
+      active={isMarkActive}
+      onMouseDown={toggleMark}
     >
-      <Icon name={icon} size={16} />
-    </ToolbarButton>
+      <Icon name={icon} size={20} />
+    </RichTextToolbarButton>
   );
 };
 

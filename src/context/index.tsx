@@ -11,7 +11,9 @@ interface LibraryContextType {
   toggleTheme?: () => void;
 }
 
-const LibraryContext = React.createContext<LibraryContextType | undefined>(undefined);
+const LibraryContext = React.createContext<LibraryContextType | undefined>(
+  undefined,
+);
 
 export const useMisDesignContext = (): LibraryContextType => {
   const context = React.useContext(LibraryContext);
@@ -27,13 +29,26 @@ export const useMisDesignContext = (): LibraryContextType => {
   return context;
 };
 
-export const MisDesignProvider = ({ children }: { children: React.ReactNode }) => {
+interface MisDesignProviderProps {
+  defaultTheme?: Theme;
+  theme?: Theme;
+  children: React.ReactNode;
+}
+
+export const MisDesignProvider = ({
+  defaultTheme = Theme.LIGHT,
+  theme: themeProp,
+  children,
+}: MisDesignProviderProps) => {
   const [isDarkMode, setIsDarkMode] = React.useState<boolean>(() => {
+    if (themeProp) return themeProp === Theme.DARK;
+
     const storedTheme = localStorage.getItem('theme');
     if (storedTheme) {
       return storedTheme === 'dark';
     }
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return defaultTheme === Theme.DARK;
   });
 
   React.useEffect(() => {

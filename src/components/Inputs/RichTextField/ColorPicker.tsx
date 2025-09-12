@@ -1,48 +1,48 @@
-import { useRef } from 'react';
-import { Editor, Text, Transforms } from 'slate';
-import { useSlate } from 'slate-react';
+import React from "react";
+import { Editor, Text, Transforms } from "slate";
+import { useSlate } from "slate-react";
 
-interface ColorPickerProps {
-  color: string;
-  onChange: (value: string) => void;
-}
-
-const setColor = (editor: Editor, color: string) => {
-  if (!editor.selection) return;
-
-  Transforms.setNodes(
-    editor,
-    { color },
-    { match: (n) => Text.isText(n), split: true, at: editor.selection },
-  );
-};
-
-const ColorPicker = ({ color, onChange }: ColorPickerProps) => {
+const ColorPicker = () => {
   const editor = useSlate();
-  const pickerRef = useRef<HTMLInputElement>(null);
+  const color = Editor.marks(editor)?.color || "#000000";
+  const pickerRef = React.useRef<HTMLInputElement>(null);
 
   const handleChange = (newColor: string) => {
-    setColor(editor, newColor);
-    onChange(newColor);
+    if (!editor.selection) return;
+
+    Transforms.setNodes(
+      editor,
+      { color: newColor },
+      { match: (n) => Text.isText(n), split: true, at: editor.selection }
+    );
+  };
+
+  const handleChooseColor = () => {
+    if (pickerRef.current) {
+      pickerRef.current.value = "";
+      pickerRef.current.click();
+    }
   };
 
   return (
-    <div className="h-8 w-8 flex flex-col items-center justify-center">
-      <button
-        type="button"
-        className="text-base font-bold select-none leading-none border-b-2"
+    <div
+      role="button"
+      onClick={handleChooseColor}
+      className=" shrink-0 flex items-center justify-center h-8 w-8 hover:border border-neutral-40 rounded-md relative"
+    >
+      <label
+        className="cursor-pointer text-20px font-bold leading-none border-b-3"
         style={{ borderColor: color }}
-        onClick={() => pickerRef.current?.click()}
       >
         A
-      </button>
-      <input
-        type="color"
-        value={color}
-        onChange={(e) => handleChange(e.target.value)}
-        className="bg-neutral-10 w-full h-0 invisible"
-        ref={pickerRef}
-      />
+        <input
+          type="color"
+          value={color}
+          onChange={(e) => handleChange(e.target.value)}
+          className="w-0 h-0 border-neutral-10 left-10"
+          ref={pickerRef}
+        />
+      </label>
     </div>
   );
 };

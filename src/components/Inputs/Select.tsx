@@ -1,16 +1,11 @@
 import React from 'react';
 import cx from 'classnames';
+import { SelectValue } from '../../types/input';
 import Icon from '../Icon';
 import InputDropdown from './InputDropdown';
 import InputEndIconWrapper from './InputEndIconWrapper';
 import InputHelper from './InputHelper';
 import InputLabel from './InputLabel';
-
-export type SelectValue<T, D = undefined> = {
-  value: T;
-  label: string;
-  detail?: D;
-};
 
 export interface SelectRef<T, D = undefined> {
   element: HTMLDivElement | null;
@@ -54,6 +49,7 @@ export interface SelectProps<T, D = undefined>
  */
 const Select = <T, D = undefined>({
   id,
+  name,
   value: valueProp,
   defaultValue,
   label,
@@ -202,6 +198,8 @@ const Select = <T, D = undefined>({
     </>
   );
 
+  const inputId = `select-${id || name}-${React.useId()}`;
+
   return (
     <div
       className={cx(
@@ -214,7 +212,7 @@ const Select = <T, D = undefined>({
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={id} size={size}>
+        <InputLabel id={inputId} size={size}>
           {label}
         </InputLabel>
       )}

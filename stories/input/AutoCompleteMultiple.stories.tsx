@@ -1,9 +1,10 @@
 import React, { useMemo, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { AutoCompleteMultiple, AutoCompleteMultipleProps, AutoCompleteMultipleRef, Icon, IconNames, SelectValue } from '../../src/components';
+import { AutoCompleteMultiple, AutoCompleteMultipleProps, AutoCompleteMultipleRef, Icon, IconNames } from '../../src/components';
 import '../../src/output.css';
 import { iconNames } from '../../const/icon';
 import { options } from '../../src/const/select';
+import { SelectValue } from '../../src';
 
 
 const sizeOption = ['default', 'large'];

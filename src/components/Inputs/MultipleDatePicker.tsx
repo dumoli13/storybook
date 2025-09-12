@@ -57,6 +57,7 @@ export interface MultipleDatePickerProps
  */
 const MultipleDatePicker = ({
   id,
+  name,
   value: valueProp,
   defaultValue,
   label,
@@ -555,6 +556,8 @@ const MultipleDatePicker = ({
     </div>
   );
 
+  const inputId = `multipledatepicker-${id || name}-${React.useId()}`;
+
   return (
     <div
       className={cx(
@@ -567,7 +570,7 @@ const MultipleDatePicker = ({
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={id} size={size}>
+        <InputLabel id={inputId} size={size}>
           {label}
         </InputLabel>
       )}

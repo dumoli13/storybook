@@ -9,7 +9,7 @@ export interface PopoverProps {
   elementRef: React.RefObject<HTMLElement | null>;
   onClose?: () => void;
   verticalAlign?: 'top' | 'center' | 'bottom';
-  horizontalAlign?: 'left' | 'center' | 'right'; 
+  horizontalAlign?: 'left' | 'center' | 'right';
 }
 
 const Popover = ({
@@ -19,7 +19,7 @@ const Popover = ({
   elementRef,
   onClose,
   verticalAlign = 'bottom',
-  horizontalAlign = 'left', 
+  horizontalAlign = 'left',
 }: PopoverProps) => {
   const popoverRef = React.useRef<HTMLDivElement | null>(null);
   const [dropdownPosition, setDropdownPosition] = React.useState({
@@ -37,7 +37,7 @@ const Popover = ({
     return () => {
       document.body.style.overflow = '';
     };
-  }, [open]);
+  }, [open, document.body.style.overflow]);
 
   const calculateDropdownPosition = React.useCallback(() => {
     if (elementRef.current && popoverRef.current) {
@@ -112,7 +112,7 @@ const Popover = ({
   if (!open) return null;
 
   // Create the transform-origin string
- 
+
   return createPortal(
     <div role="none" className="fixed z-[1300] inset-0">
       <div
@@ -126,7 +126,7 @@ const Popover = ({
         style={{
           top: `${dropdownPosition.top}px`,
           left: `${dropdownPosition.left}px`,
-         }}
+        }}
         className={cx(
           'text-neutral-100 dark:text-neutral-100-dark bg-neutral-10 dark:bg-neutral-30-dark shadow-box-2 rounded-lg p-4 mt-1 absolute z-[2100]',
           className,

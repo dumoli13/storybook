@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Button, DatePicker, Form, FormProps, InputDateValue, Select, SelectValue, TextField, useNotification } from '../../src/components';
+import { Button, DatePicker, Form, FormProps, InputDateValue, Select, TextField, useNotification } from '../../src/components';
 import '../../src/output.css';
 import MisDesignProvider from '../../src/context';
+import { SelectValue } from '../../src';
 
 const meta: Meta<FormProps<any>> = {
     title: 'Input/Form',

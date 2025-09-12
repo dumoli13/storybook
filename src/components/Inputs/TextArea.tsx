@@ -44,10 +44,10 @@ export interface TextAreaProps
  */
 const TextArea = ({
   id,
+  name,
   value: valueProp,
   defaultValue,
   label,
-
   labelPosition = 'top',
   autoHideLabel = false,
   onChange,
@@ -118,6 +118,8 @@ const TextArea = ({
     }
   };
 
+  const inputId = `textarea-${id || name}-${React.useId()}`;
+
   return (
     <div
       className={cx(
@@ -130,7 +132,7 @@ const TextArea = ({
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={id} size={size}>
+        <InputLabel id={inputId} size={size}>
           {label}
         </InputLabel>
       )}
@@ -163,7 +165,7 @@ const TextArea = ({
         <textarea
           {...props}
           tabIndex={!disabled ? 0 : -1}
-          id={id}
+          id={inputId}
           value={value}
           onChange={handleChange}
           placeholder={focused ? '' : placeholder}

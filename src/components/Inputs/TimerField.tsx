@@ -19,7 +19,6 @@ export interface TimerFieldProps
     React.InputHTMLAttributes<HTMLInputElement>,
     'value' | 'defaultValue' | 'onChange' | 'size' | 'required' | 'checked'
   > {
-  id?: string;
   value?: number | null;
   defaultValue?: number | null;
   clearable?: boolean;
@@ -49,6 +48,7 @@ export interface TimerFieldProps
  */
 const TimerField = ({
   id,
+  name,
   value: valueProp,
   defaultValue = valueProp,
   label,
@@ -279,6 +279,8 @@ const TimerField = ({
     </div>
   );
 
+  const inputId = `timerfield-${id || name}-${React.useId()}`;
+
   return (
     <div
       className={cx(
@@ -291,7 +293,7 @@ const TimerField = ({
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={id} size={size}>
+        <InputLabel id={inputId} size={size}>
           {label}
         </InputLabel>
       )}
@@ -332,7 +334,7 @@ const TimerField = ({
           <input
             {...props}
             tabIndex={!disabled ? 0 : -1}
-            id={id}
+            id={inputId}
             value={
               displayValue
                 ? `${Math.floor(displayValue / 3600)

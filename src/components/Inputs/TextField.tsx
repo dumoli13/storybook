@@ -44,6 +44,7 @@ export interface TextFieldProps
  */
 const TextField = ({
   id,
+  name,
   value: valueProp,
   defaultValue,
   label,
@@ -125,6 +126,8 @@ const TextField = ({
     }
   };
 
+  const inputId = `textfield-${id || name}-${React.useId()}`;
+
   return (
     <div
       className={cx(
@@ -137,7 +140,7 @@ const TextField = ({
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={id} size={size}>
+        <InputLabel id={inputId} size={size}>
           {label}
         </InputLabel>
       )}
@@ -173,7 +176,7 @@ const TextField = ({
         <input
           {...props}
           tabIndex={!disabled ? 0 : -1}
-          id={id}
+          id={inputId}
           value={value}
           onChange={handleChange}
           placeholder={focused ? '' : placeholder}

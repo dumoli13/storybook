@@ -1,10 +1,16 @@
+import { PickerType } from '../const/datePicker';
+
 /**
  *
  * @param value Date object
  * @param showTime boolean to show time or not
  * @returns if showTime is true, returns "D/M/YYYY HH:mm:ss", otherwise returns "D/M/YYYY"
  */
-export function formatDate(value: Date, showTime = false) {
+export function formatDate(
+  value: Date,
+  showTime = false,
+  picker: PickerType = 'date',
+) {
   const date = new Date(value);
 
   const day = date.getDate();
@@ -15,10 +21,18 @@ export function formatDate(value: Date, showTime = false) {
   const mins = date.getMinutes().toString().padStart(2, '0');
   const secs = date.getSeconds().toString().padStart(2, '0');
 
-  if (showTime) {
-    return `${day}/${month}/${year} ${hours}:${mins}:${secs}`;
+  let formattedDate: string;
+  if (picker === 'date') {
+    formattedDate = `${day}/${month}/${year}`;
+  } else if (picker === 'month') {
+    formattedDate = `${month}/${year}`;
   } else {
-    return `${day}/${month}/${year}`;
+    formattedDate = `${year}`;
+  }
+  if (showTime) {
+    return `${formattedDate} ${hours}:${mins}:${secs}`;
+  } else {
+    return formattedDate;
   }
 }
 

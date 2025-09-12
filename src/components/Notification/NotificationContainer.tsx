@@ -43,8 +43,8 @@ const NotificationContainer = ({
 }: NotificationContainerProps) => {
   const [visible, setVisible] = React.useState(open);
   const [progressWidth, setProgressWidth] = React.useState(100);
-  const timerRef = React.useRef<number | null>(null);
-  const intervalRef = React.useRef<number | null>(null);
+  const timerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
   const decrementInterval = 10;
   const decrementRate = 100 / (duration / decrementInterval);
 

@@ -49,8 +49,11 @@ export type {
 export { default as PasswordField } from './PasswordField';
 export type { PasswordFieldRef, PasswordFieldProps } from './PasswordField';
 
+export { default as RadioGroup } from './RadioGroup';
+export type { RadioGroupRef, RadioGroupProps } from './RadioGroup';
+
 export { default as Select } from './Select';
-export type { SelectValue, SelectRef, SelectProps } from './Select';
+export type { SelectRef, SelectProps } from './Select';
 
 export { default as Switch } from './Switch';
 export type { SwitchRef, SwitchProps } from './Switch';

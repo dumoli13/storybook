@@ -1,8 +1,8 @@
 /* eslint-disable react/no-array-index-key */
 import React from 'react';
 import cx from 'classnames';
+import { SelectValue } from '../../types/input';
 import Checkbox from '../Inputs/Checkbox';
-import { SelectValue } from '../Inputs/Select';
 import FilterSearch from './FilterSearch';
 import FilterSelect from './FilterSelect';
 
@@ -28,39 +28,39 @@ type ColumnWithoutDataIndex<T> = BaseColumnCommon & {
 
 type TextFieldColumn<T, K extends keyof T> =
   | (ColumnWithDataIndex<T, K> & {
-    filter: 'textfield';
-    filterValue: string;
-    onChange: (value: string) => void;
-  })
+      filter: 'textfield';
+      filterValue: string;
+      onChange: (value: string) => void;
+    })
   | (ColumnWithoutDataIndex<T> & {
-    filter: 'textfield';
-    filterValue: string;
-    onChange: (value: string) => void;
-  });
+      filter: 'textfield';
+      filterValue: string;
+      onChange: (value: string) => void;
+    });
 
 type SelectColumn<T, K extends keyof T, D = undefined> =
   | (ColumnWithDataIndex<T, K> & {
-    filter: 'select' | 'autocomplete';
-    filterValue: SelectValue<T[K], D> | null;
-    onChange: (value: SelectValue<T[K], D> | null) => void;
-    option: Array<SelectValue<T[K], D>>;
-  })
+      filter: 'select' | 'autocomplete';
+      filterValue: SelectValue<T[K], D> | null;
+      onChange: (value: SelectValue<T[K], D> | null) => void;
+      option: Array<SelectValue<T[K], D>>;
+    })
   | (ColumnWithoutDataIndex<T> & {
-    filter: 'select' | 'autocomplete';
-    filterValue: unknown;
-    onChange: (value: unknown) => void;
-    option: Array<SelectValue<any, D>>;
-  });
+      filter: 'select' | 'autocomplete';
+      filterValue: unknown;
+      onChange: (value: unknown) => void;
+      option: Array<SelectValue<any, D>>;
+    });
 
 type NoFilterColumn<T, K extends keyof T = keyof T> =
   | (ColumnWithDataIndex<T, K> & {
-    filter?: 'none';
-    filterValue?: T[K] | null;
-  })
+      filter?: 'none';
+      filterValue?: T[K] | null;
+    })
   | (ColumnWithoutDataIndex<T> & {
-    filter?: 'none';
-    filterValue?: unknown;
-  });
+      filter?: 'none';
+      filterValue?: unknown;
+    });
 
 export type TableColumn<T> =
   | { [K in keyof T]: TextFieldColumn<T, K> }[keyof T]
@@ -69,7 +69,7 @@ export type TableColumn<T> =
 
 export type TableSortingProps<T> = {
   direction: 'asc' | 'desc' | null;
-  key: keyof T | null;
+  key: keyof T;
 };
 
 export type TableFilterProps<T> = {
@@ -116,7 +116,7 @@ const Table = <T extends { [key: string]: any }>({
   style = 'default',
 }: TableProps<T>) => {
   const [sortConfig, setSortConfig] = React.useState<TableSortingProps<T>>(
-    sorting || { key: null, direction: null },
+    sorting || { key: columns[0].key, direction: null },
   );
 
   const [internalSelectedRows, setInternalSelectedRows] = React.useState<
@@ -258,18 +258,20 @@ const Table = <T extends { [key: string]: any }>({
                         )}
                         <div className="flex flex-col gap-0.5">
                           <span
-                            className={`w-0 h-0 border-l-4 border-l-transparent dark:border-l-transparent border-r-4 border-r-transparent dark:border-r-transparent border-b-8 transition-colors duration-300 ${col.key === sortConfig.key &&
+                            className={`w-0 h-0 border-l-4 border-l-transparent dark:border-l-transparent border-r-4 border-r-transparent dark:border-r-transparent border-b-8 transition-colors duration-300 ${
+                              col.key === sortConfig.key &&
                               sortConfig.direction === 'asc'
-                              ? 'border-primary-main dark:border-primary-main-dark'
-                              : 'border-neutral-60 dark:border-neutral-60-dark'
-                              }`}
+                                ? 'border-primary-main dark:border-primary-main-dark'
+                                : 'border-neutral-60 dark:border-neutral-60-dark'
+                            }`}
                           />
                           <span
-                            className={`w-0 h-0 border-l-4 border-l-transparent dark:border-l-transparent border-r-4 border-r-transparent dark:border-r-transparent border-t-8 transition-colors duration-300 ${col.key === sortConfig.key &&
+                            className={`w-0 h-0 border-l-4 border-l-transparent dark:border-l-transparent border-r-4 border-r-transparent dark:border-r-transparent border-t-8 transition-colors duration-300 ${
+                              col.key === sortConfig.key &&
                               sortConfig.direction === 'desc'
-                              ? 'border-primary-main dark:border-primary-main-dark'
-                              : 'border-neutral-60 dark:border-neutral-60-dark'
-                              }`}
+                                ? 'border-primary-main dark:border-primary-main-dark'
+                                : 'border-neutral-60 dark:border-neutral-60-dark'
+                            }`}
                           />
                         </div>
                       </div>
@@ -337,7 +339,7 @@ const Table = <T extends { [key: string]: any }>({
                 <tr
                   key={rowIndex}
                   className={cx(
-                    'group border-b border-neutral-30 last:border-none relative',
+                    'group border-b border-neutral-30 last:border-none',
                     {
                       'text-18px': size === 'large',
                       'text-14px': size === 'small' || size === 'default',
@@ -385,16 +387,9 @@ const Table = <T extends { [key: string]: any }>({
                     return (
                       <td
                         key={col.key.toString()}
-                        className={cx("py-1.5 break-words relative", {
-                          'p-4': size === 'default' || size === 'large',
-                          'px-4 py-2': size === 'small',
-                          'text-left': !col.align || col.align === 'left',
-                          'text-right': col.align === 'right',
-                          'text-center': col.align === 'center',
-                        })}
+                        className="py-1.5 break-words"
                         style={{ verticalAlign }}
                       >
-                        {/* <div className="absolute top-0 right-0 bottom-0 left-0 bg-primary-surface/50 dark:bg-primary-surface-dark/50" /> */}
                         <div
                           className={cx({
                             'bg-primary-surface dark:bg-primary-surface-dark':

@@ -14,7 +14,6 @@ export interface TooltipProps {
   disabled?: boolean;
 }
 
-
 /**
  * Tooltips display informative text when users hover over an element
  */
@@ -37,8 +36,8 @@ const Tooltip = ({
     width: number | undefined;
     opacity: number;
   } | null>(null);
-  const enterTimeout = React.useRef<number | null>(null);
-  const leaveTimeout = React.useRef<number | null>(null);
+  const enterTimeout = React.useRef<NodeJS.Timeout | null>(null);
+  const leaveTimeout = React.useRef<NodeJS.Timeout | null>(null);
 
   const calculateDropdownPosition = React.useCallback(() => {
     if (elementRef.current && dropdownRef.current) {

@@ -1,12 +1,12 @@
 import React from 'react';
 import cx from 'classnames';
+import { SelectValue } from '../../types/input';
 import Tag from '../Displays/Tag';
 import Icon from '../Icon';
 import InputDropdown from './InputDropdown';
 import InputEndIconWrapper from './InputEndIconWrapper';
 import InputHelper from './InputHelper';
 import InputLabel from './InputLabel';
-import { SelectValue } from './Select';
 
 export interface AutoCompleteMultipleRef<T, D = undefined> {
   element: HTMLDivElement | null;
@@ -65,6 +65,7 @@ export type AutoCompleteMultipleProps<T, D = undefined> =
  */
 const AutoCompleteMultiple = <T, D = undefined>({
   id,
+  name,
   value: valueProp,
   defaultValue = [],
   label,
@@ -310,6 +311,8 @@ const AutoCompleteMultiple = <T, D = undefined>({
     </>
   );
 
+  const inputId = `autocompletemultiple-${id || name}-${React.useId()}`;
+
   return (
     <div
       className={cx(
@@ -322,7 +325,7 @@ const AutoCompleteMultiple = <T, D = undefined>({
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={id} size={size}>
+        <InputLabel id={inputId} size={size}>
           {label}
         </InputLabel>
       )}
@@ -368,7 +371,7 @@ const AutoCompleteMultiple = <T, D = undefined>({
           <input
             {...props}
             tabIndex={!disabled ? 0 : -1}
-            id={id}
+            id={inputId}
             value={inputValue}
             onChange={handleInputChange}
             placeholder={focused ? '' : placeholder}

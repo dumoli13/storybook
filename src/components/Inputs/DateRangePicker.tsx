@@ -62,6 +62,7 @@ export interface DateRangePickerProps
  */
 const DateRangePicker = ({
   id,
+  name,
   value: valueProp,
   defaultValue,
   label,
@@ -968,6 +969,8 @@ const DateRangePicker = ({
     </div>
   );
 
+  const inputId = `daterangepicker-${id || name}-${React.useId()}`;
+
   return (
     <div
       className={cx(
@@ -980,7 +983,7 @@ const DateRangePicker = ({
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={id} size={size}>
+        <InputLabel id={inputId} size={size}>
           {label}
         </InputLabel>
       )}
@@ -1022,7 +1025,7 @@ const DateRangePicker = ({
               <input
                 {...props}
                 tabIndex={!disabled ? 0 : -1}
-                id={id}
+                id={inputId}
                 value={
                   isValidDate(value[0]) ? dayjs(value[0]).format(format) : ''
                 }
@@ -1046,7 +1049,7 @@ const DateRangePicker = ({
               <input
                 {...props}
                 tabIndex={!disabled ? 0 : -1}
-                id={id}
+                id={inputId}
                 value={
                   isValidDate(value[1]) ? dayjs(value[1]).format(format) : ''
                 }
@@ -1072,7 +1075,7 @@ const DateRangePicker = ({
               {...props}
               value={''}
               tabIndex={!disabled ? 0 : -1}
-              id={id}
+              id={inputId}
               placeholder={focused ? '' : placeholder}
               className={cx(
                 'truncate outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed',

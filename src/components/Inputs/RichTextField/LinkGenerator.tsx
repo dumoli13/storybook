@@ -1,14 +1,17 @@
-import { useState } from 'react';
-import { Button, Icon, Popper, TextField } from 'mis-design';
+import React from 'react';
+import { Popper } from '../../Displays';
+import TextField from '../TextField';
+import Button from '../Button';
+import Icon from '../../Icon';
 
 interface LinkGeneratorProps {
   onSubmit: (url: string, name: string) => void;
 }
 
 const LinkGenerator = ({ onSubmit }: LinkGeneratorProps) => {
-  const [linkModalOpen, setLinkModalOpen] = useState(false);
-  const [linkUrl, setLinkUrl] = useState('');
-  const [linkName, setLinkName] = useState('');
+  const [linkModalOpen, setLinkModalOpen] = React.useState(false);
+  const [linkUrl, setLinkUrl] = React.useState('');
+  const [linkName, setLinkName] = React.useState('');
 
   const handleSubmit = () => {
     onSubmit(linkUrl, linkName);
@@ -45,14 +48,6 @@ const LinkGenerator = ({ onSubmit }: LinkGeneratorProps) => {
           />
           <div className="flex justify-end gap-2">
             <Button
-              onClick={() => setLinkModalOpen(false)}
-              variant="outlined"
-              color="danger"
-              size="small"
-            >
-              Cancel
-            </Button>
-            <Button
               onClick={handleSubmit}
               variant="contained"
               color="primary"
@@ -65,11 +60,13 @@ const LinkGenerator = ({ onSubmit }: LinkGeneratorProps) => {
         </div>
       }
     >
-      <Icon
-        name="link"
-        className="cursor-pointer p-2 "
-        onClick={() => setLinkModalOpen(true)}
-      />
+      <div className="shrink-0 w-8 h-8 flex items-center justify-center hover:border border-neutral-40 rounded-md">
+        <Icon
+          name="link"
+          onClick={() => setLinkModalOpen(true)}
+        />
+      </div>
+
     </Popper>
   );
 };

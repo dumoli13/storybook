@@ -14,19 +14,19 @@ export interface FormRef<T> {
 
 export type FormRule =
   | {
-    required?: boolean;
-    email?: boolean;
-    url?: boolean;
-    pattern?: RegExp | string;
-    minLength?: number;
-    maxLength?: number;
-    exactLength?: number;
-    min?: number;
-    max?: number;
-    equal?: any;
-    validate?: (value: any) => boolean | string;
-    message?: string;
-  }
+      required?: boolean;
+      email?: boolean;
+      url?: boolean;
+      pattern?: RegExp | string;
+      minLength?: number;
+      maxLength?: number;
+      exactLength?: number;
+      min?: number;
+      max?: number;
+      equal?: any;
+      validate?: (value: any) => boolean | string;
+      message?: string;
+    }
   | 'required'
   | 'email'
   | 'url';
