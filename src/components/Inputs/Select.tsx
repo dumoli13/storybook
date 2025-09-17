@@ -1,11 +1,11 @@
-import React from 'react';
-import cx from 'classnames';
-import { SelectValue } from '../../types/input';
-import Icon from '../Icon';
-import InputDropdown from './InputDropdown';
-import InputEndIconWrapper from './InputEndIconWrapper';
-import InputHelper from './InputHelper';
-import InputLabel from './InputLabel';
+import React from "react";
+import cx from "classnames";
+import { SelectValue } from "../../types/input";
+import Icon from "../Icon";
+import InputDropdown from "./InputDropdown";
+import InputEndIconWrapper from "./InputEndIconWrapper";
+import InputHelper from "./InputHelper";
+import InputLabel from "./InputLabel";
 
 export interface SelectRef<T, D = undefined> {
   element: HTMLDivElement | null;
@@ -18,12 +18,12 @@ export interface SelectRef<T, D = undefined> {
 export interface SelectProps<T, D = undefined>
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
-    'onChange' | 'value' | 'defaultValue' | 'size' | 'required' | 'checked'
+    "onChange" | "value" | "defaultValue" | "size" | "required" | "checked"
   > {
   value?: SelectValue<T, D> | null;
   defaultValue?: T | null;
   label?: string;
-  labelPosition?: 'top' | 'left';
+  labelPosition?: "top" | "left";
   autoHideLabel?: boolean;
   placeholder?: string;
   options: SelectValue<T, D>[];
@@ -36,7 +36,7 @@ export interface SelectProps<T, D = undefined>
   inputRef?:
     | React.RefObject<SelectRef<T> | null>
     | React.RefCallback<SelectRef<T> | null>;
-  size?: 'default' | 'large';
+  size?: "default" | "large";
   error?: boolean | string;
   success?: boolean;
   loading?: boolean;
@@ -53,9 +53,9 @@ const Select = <T, D = undefined>({
   value: valueProp,
   defaultValue,
   label,
-  labelPosition = 'top',
+  labelPosition = "top",
   autoHideLabel = false,
-  placeholder = '',
+  placeholder = "",
   options,
   onChange,
   className,
@@ -65,7 +65,7 @@ const Select = <T, D = undefined>({
   startIcon,
   endIcon,
   inputRef,
-  size = 'default',
+  size = "default",
   error: errorProp,
   success: successProp,
   loading = false,
@@ -86,7 +86,7 @@ const Select = <T, D = undefined>({
 
   React.useEffect(() => {
     setInternalValue(
-      options.find((item) => item.value === defaultValue) || null,
+      options.find((item) => item.value === defaultValue) || null
     );
   }, [options]);
 
@@ -123,9 +123,9 @@ const Select = <T, D = undefined>({
       setDropdownOpen(false);
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -136,7 +136,7 @@ const Select = <T, D = undefined>({
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
-    const relatedTarget = event.relatedTarget as Node | null;
+    const relatedTarget = event.relatedTarget;
 
     const dropdownContainsTarget = dropdownRef.current?.contains(relatedTarget);
     const selectElementContainsTarget =
@@ -175,13 +175,13 @@ const Select = <T, D = undefined>({
           role="button"
           key={String(option.value)}
           onClick={() => handleOptionSelect(option)}
-          className={cx('py-1.5 px-4 text-left break-words', {
-            'bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark':
+          className={cx("py-1.5 px-4 text-left break-words", {
+            "bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark":
               option.value === value?.value,
-            'cursor-pointer hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100 dark:text-neutral-100-dark':
+            "cursor-pointer hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100 dark:text-neutral-100-dark":
               option.value !== value?.value,
-            'text-14px': size === 'default',
-            'text-18px': size === 'large',
+            "text-14px": size === "default",
+            "text-18px": size === "large",
           })}
         >
           {option.label}
@@ -203,12 +203,12 @@ const Select = <T, D = undefined>({
   return (
     <div
       className={cx(
-        'relative',
+        "relative",
         {
-          'w-full': fullWidth,
-          'flex items-center gap-4': labelPosition === 'left',
+          "w-full": fullWidth,
+          "flex items-center gap-4": labelPosition === "left",
         },
-        className,
+        className
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
@@ -218,24 +218,24 @@ const Select = <T, D = undefined>({
       )}
       <div
         className={cx(
-          'relative px-3 border rounded-md flex gap-2 items-center',
+          "relative px-3 border rounded-md flex gap-2 items-center",
           {
-            'w-full': fullWidth,
-            'border-danger-main dark:border-danger-main-dark focus:ring-danger-focus dark:focus:ring-danger-focus-dark':
+            "w-full": fullWidth,
+            "border-danger-main dark:border-danger-main-dark focus:ring-danger-focus dark:focus:ring-danger-focus-dark":
               isError,
-            'border-success-main dark:border-success-main-dark focus:ring-success-focus dark:focus:ring-success-focus-dark':
+            "border-success-main dark:border-success-main-dark focus:ring-success-focus dark:focus:ring-success-focus-dark":
               !isError && successProp,
-            'border-neutral-50 dark:border-neutral-50-dark hover:border-primary-hover dark:hover:border-primary-hover-dark focus:ring-primary-main dark:focus:ring-primary-main-dark':
+            "border-neutral-50 dark:border-neutral-50-dark hover:border-primary-hover dark:hover:border-primary-hover-dark focus:ring-primary-main dark:focus:ring-primary-main-dark":
               !isError && !successProp && !disabled,
-            'bg-neutral-20 dark:bg-neutral-30-dark cursor-not-allowed text-neutral-60 dark:text-neutral-60-dark':
+            "bg-neutral-20 dark:bg-neutral-30-dark cursor-not-allowed text-neutral-60 dark:text-neutral-60-dark":
               disabled,
-            'bg-neutral-10 dark:bg-neutral-10-dark shadow-box-3 focus:ring-3 focus:ring-primary-focus focus:!border-primary-main':
+            "bg-neutral-10 dark:bg-neutral-10-dark shadow-box-3 focus:ring-3 focus:ring-primary-focus focus:!border-primary-main":
               !disabled,
-            'ring-3 ring-primary-focus dark:ring-primary-focus-dark !border-primary-main dark:!border-primary-main-dark':
+            "ring-3 ring-primary-focus dark:ring-primary-focus-dark !border-primary-main dark:!border-primary-main-dark":
               focused,
-            'py-[3px]': size === 'default',
-            'py-[9px]': size === 'large',
-          },
+            "py-[3px]": size === "default",
+            "py-[9px]": size === "large",
+          }
         )}
         ref={elementRef}
         style={width ? { width } : undefined}
@@ -249,11 +249,11 @@ const Select = <T, D = undefined>({
           role="button"
           tabIndex={!disabled ? 0 : -1}
           aria-pressed="true"
-          className={cx('w-full outline-none truncate', {
-            'text-14px py-0.5': size === 'default',
-            'text-18px py-0.5': size === 'large',
-            'text-neutral-60 dark:text-neutral-60-dark': !value || !value.label,
-            '!bg-neutral-20 dark:!bg-neutral-30-dark cursor-not-allowed':
+          className={cx("w-full outline-none truncate", {
+            "text-14px py-0.5": size === "default",
+            "text-18px py-0.5": size === "large",
+            "text-neutral-60 dark:text-neutral-60-dark": !value || !value.label,
+            "!bg-neutral-20 dark:!bg-neutral-30-dark cursor-not-allowed":
               disabled,
           })}
           onFocus={handleFocus}
@@ -277,13 +277,13 @@ const Select = <T, D = undefined>({
             strokeWidth={2}
             onClick={handleDropdown}
             className={cx(
-              'rounded-full p-0.5 text-neutral-70 dark:text-neutral-70-dark',
+              "rounded-full p-0.5 text-neutral-70 dark:text-neutral-70-dark",
               {
-                'cursor-not-allowed': disabled,
-                'hover:bg-neutral-30 dark:hover:bg-neutral-30-dark cursor-pointer transition-color':
+                "cursor-not-allowed": disabled,
+                "hover:bg-neutral-30 dark:hover:bg-neutral-30-dark cursor-pointer transition-color":
                   !disabled,
-                'rotate-180': dropdownOpen,
-              },
+                "rotate-180": dropdownOpen,
+              }
             )}
           />
         </InputEndIconWrapper>

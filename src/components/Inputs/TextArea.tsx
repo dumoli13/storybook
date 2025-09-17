@@ -1,8 +1,8 @@
-import React from 'react';
-import cx from 'classnames';
-import InputEndIconWrapper from './InputEndIconWrapper';
-import InputHelper from './InputHelper';
-import InputLabel from './InputLabel';
+import React from "react";
+import cx from "classnames";
+import InputEndIconWrapper from "./InputEndIconWrapper";
+import InputHelper from "./InputHelper";
+import InputLabel from "./InputLabel";
 
 export interface TextAreaRef {
   element: HTMLTextAreaElement | null;
@@ -15,12 +15,12 @@ export interface TextAreaRef {
 export interface TextAreaProps
   extends Omit<
     React.TextareaHTMLAttributes<HTMLTextAreaElement>,
-    'onChange' | 'size' | 'required' | 'checked'
+    "onChange" | "size" | "required" | "checked"
   > {
   value?: string;
   defaultValue?: string;
   label?: string;
-  labelPosition?: 'top' | 'left';
+  labelPosition?: "top" | "left";
   autoHideLabel?: boolean;
   onChange?: (value: string) => void;
   helperText?: React.ReactNode;
@@ -31,7 +31,7 @@ export interface TextAreaProps
   inputRef?:
     | React.RefObject<TextAreaRef | null>
     | React.RefCallback<TextAreaRef | null>;
-  size?: 'default' | 'large';
+  size?: "default" | "large";
   error?: boolean | string;
   success?: boolean;
   loading?: boolean;
@@ -48,18 +48,18 @@ const TextArea = ({
   value: valueProp,
   defaultValue,
   label,
-  labelPosition = 'top',
+  labelPosition = "top",
   autoHideLabel = false,
   onChange,
   className,
   helperText,
-  placeholder = '',
+  placeholder = "",
   disabled: disabledProp = false,
   fullWidth,
   startIcon,
   endIcon,
   inputRef,
-  size = 'default',
+  size = "default",
   error: errorProp,
   success: successProp,
   loading = false,
@@ -71,7 +71,7 @@ const TextArea = ({
   const elementRef = React.useRef<HTMLTextAreaElement>(null);
   const [focused, setFocused] = React.useState(false);
   const [internalValue, setInternalValue] = React.useState(
-    defaultValue?.toString() ?? '',
+    defaultValue?.toString() ?? ""
   );
   const isControlled = valueProp !== undefined;
   const value = isControlled ? valueProp.toString() : internalValue;
@@ -87,7 +87,7 @@ const TextArea = ({
       elementRef.current?.focus();
     },
     reset: () => {
-      setInternalValue('');
+      setInternalValue("");
     },
     disabled,
   }));
@@ -98,7 +98,7 @@ const TextArea = ({
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLTextAreaElement>) => {
-    const relatedTarget = event.relatedTarget as Node | null;
+    const relatedTarget = event.relatedTarget;
 
     const selectElementContainsTarget =
       parentRef.current?.contains(relatedTarget);
@@ -123,12 +123,12 @@ const TextArea = ({
   return (
     <div
       className={cx(
-        'relative',
+        "relative",
         {
-          'w-full': fullWidth,
-          'flex items-center gap-4': labelPosition === 'left',
+          "w-full": fullWidth,
+          "flex items-center gap-4": labelPosition === "left",
         },
-        className,
+        className
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
@@ -138,21 +138,21 @@ const TextArea = ({
       )}
       <div
         className={cx(
-          ' relative px-4 border rounded-md flex gap-2 items-start',
+          " relative px-4 border rounded-md flex gap-2 items-start",
           {
-            'w-full': fullWidth,
-            'border-danger-main dark:border-danger-main-dark focus:ring-danger-focus dark:focus:ring-danger-focus-dark':
+            "w-full": fullWidth,
+            "border-danger-main dark:border-danger-main-dark focus:ring-danger-focus dark:focus:ring-danger-focus-dark":
               isError,
-            'border-success-main dark:border-success-main-dark focus:ring-success-focus dark:focus:ring-success-focus-dark':
+            "border-success-main dark:border-success-main-dark focus:ring-success-focus dark:focus:ring-success-focus-dark":
               !isError && successProp,
-            'border-neutral-50 dark:border-neutral-50-dark hover:border-primary-hover dark:hover:border-primary-hover-dark focus:ring-primary-main dark:focus:ring-primary-main-dark':
+            "border-neutral-50 dark:border-neutral-50-dark hover:border-primary-hover dark:hover:border-primary-hover-dark focus:ring-primary-main dark:focus:ring-primary-main-dark":
               !isError && !successProp,
-            'bg-neutral-20 dark:bg-neutral-30-dark cursor-not-allowed text-neutral-60 dark:text-neutral-60-dark':
+            "bg-neutral-20 dark:bg-neutral-30-dark cursor-not-allowed text-neutral-60 dark:text-neutral-60-dark":
               disabled,
-            'bg-neutral-10 dark:bg-neutral-10-dark shadow-box-3': !disabled,
-            'py-[3px]': size === 'default',
-            'py-[9px]': size === 'large',
-          },
+            "bg-neutral-10 dark:bg-neutral-10-dark shadow-box-3": !disabled,
+            "py-[3px]": size === "default",
+            "py-[9px]": size === "large",
+          }
         )}
         style={width ? { width } : undefined}
         ref={parentRef}
@@ -168,15 +168,15 @@ const TextArea = ({
           id={inputId}
           value={value}
           onChange={handleChange}
-          placeholder={focused ? '' : placeholder}
+          placeholder={focused ? "" : placeholder}
           onFocus={handleFocus}
           onBlur={handleBlur}
           className={cx(
-            'w-full outline-none resize-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed',
+            "w-full outline-none resize-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed",
             {
-              'text-14px py-0.5': size === 'default',
-              'text-18px py-0.5': size === 'large',
-            },
+              "text-14px py-0.5": size === "default",
+              "text-18px py-0.5": size === "large",
+            }
           )}
           disabled={disabled}
           rows={minLines}

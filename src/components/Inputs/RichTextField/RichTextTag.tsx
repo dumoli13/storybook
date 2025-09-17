@@ -3,9 +3,9 @@ import { Editor, Element, Transforms } from "slate";
 import { useSlate } from "slate-react";
 import AutoComplete from "../AutoComplete";
 import { RichElementDetail } from ".";
-import { SelectValue } from "../../../types";
 import { isTextTag } from "../../../libs/richTextField";
 import { TEXT_TAG } from "../../../types/richTextField";
+import { SelectValue } from "../../../types";
 
 const headings = [
   { label: "Heading 1", value: "heading-one" },
@@ -19,7 +19,7 @@ const headings = [
 
 const isBlockActive = (editor: Editor, format: RichElementDetail["type"]) => {
   const [match] = Editor.nodes(editor, {
-    match: (n) => {
+    match: (n: RichElementDetail) => {
       if (!Element.isElement(n)) return false;
 
       if (n.type === format) return true;
@@ -30,12 +30,10 @@ const isBlockActive = (editor: Editor, format: RichElementDetail["type"]) => {
     },
   });
 
-  console.log("isBlockActive match", match);
-
   return !!match;
 };
 
-const HeadingDropdown: React.FC = () => {
+const RichTextTag = () => {
   const editor = useSlate();
   const [value, setValue] = React.useState(headings[6]);
 
@@ -43,7 +41,7 @@ const HeadingDropdown: React.FC = () => {
     if (!editor.selection) return;
 
     const [match] = Editor.nodes(editor, {
-      match: (n) => Element.isElement(n) && "type" in n,
+      match: (n: RichElementDetail) => Element.isElement(n),
     });
 
     const type = match ? (match[0] as any).type : "paragraph";
@@ -51,29 +49,32 @@ const HeadingDropdown: React.FC = () => {
     setValue(headingOption);
   }, [editor.selection]);
 
-  const handleToggleBlock = (format: RichElementDetail["type"]) => {
-    const matchListItem = Editor.nodes(editor, {
-      match: (n) => Element.isElement(n) && n.type === "list-item",
+  const handleToggleBlock = (value: SelectValue<string, undefined>) => {
+    if (!value) return;
+
+    setValue(value);
+    const format = value.value as TEXT_TAG;
+
+    const [matchListItem] = Editor.nodes(editor, {
+      match: (n: RichElementDetail) =>
+        Element.isElement(n) && n.type === "list-item",
     });
-    console.log(
-      "match",
-      Editor.nodes(editor, {
-        match: (n) => Element.isElement(n) && n.type === "list-item",
-      })
-    );
 
     const isActive = isBlockActive(editor, format);
+    console.log("isActive", matchListItem, isActive, format);
 
     if (matchListItem && format.startsWith("heading")) {
       Transforms.setNodes(editor, { heading: format } as any, {
-        match: (n) => Element.isElement(n) && n.type === "list-item",
+        match: (n: RichElementDetail) =>
+          Element.isElement(n) && n.type === "list-item",
       });
     } else {
       Transforms.setNodes(
         editor,
         { type: isActive ? "paragraph" : format },
         {
-          match: (n) => Element.isElement(n) && isTextTag(n.type),
+          match: (n: RichElementDetail) =>
+            Element.isElement(n) && isTextTag(n.type),
           split: true,
         }
       );
@@ -86,16 +87,11 @@ const HeadingDropdown: React.FC = () => {
         placeholder="Select heading..."
         options={headings}
         value={value}
-        onChange={(selected) => {
-          if (selected) {
-            setValue(selected);
-            handleToggleBlock(selected.value as TEXT_TAG);
-          }
-        }}
+        onChange={handleToggleBlock}
         size="default"
       />
     </div>
   );
 };
 
-export default HeadingDropdown;
+export default RichTextTag;

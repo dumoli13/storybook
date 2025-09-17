@@ -1,12 +1,12 @@
-import React from 'react';
-import cx from 'classnames';
-import { SelectValue } from '../../types/input';
-import Tag from '../Displays/Tag';
-import Icon from '../Icon';
-import InputDropdown from './InputDropdown';
-import InputEndIconWrapper from './InputEndIconWrapper';
-import InputHelper from './InputHelper';
-import InputLabel from './InputLabel';
+import React from "react";
+import cx from "classnames";
+import { SelectValue } from "../../types/input";
+import Tag from "../Displays/Tag";
+import Icon from "../Icon";
+import InputDropdown from "./InputDropdown";
+import InputEndIconWrapper from "./InputEndIconWrapper";
+import InputHelper from "./InputHelper";
+import InputLabel from "./InputLabel";
 
 export interface AutoCompleteMultipleRef<T, D = undefined> {
   element: HTMLDivElement | null;
@@ -19,12 +19,12 @@ export interface AutoCompleteMultipleRef<T, D = undefined> {
 interface BaseAutoCompleteMultipleProps<T, D = undefined>
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
-    'onChange' | 'value' | 'defaultValue' | 'size' | 'required' | 'checked'
+    "onChange" | "value" | "defaultValue" | "size" | "required" | "checked"
   > {
   value?: SelectValue<T, D>[];
   defaultValue?: T[];
   label?: string;
-  labelPosition?: 'top' | 'left';
+  labelPosition?: "top" | "left";
   autoHideLabel?: boolean;
   placeholder?: string;
   options: SelectValue<T, D>[];
@@ -37,7 +37,7 @@ interface BaseAutoCompleteMultipleProps<T, D = undefined>
   inputRef?:
     | React.RefObject<AutoCompleteMultipleRef<T> | null>
     | React.RefCallback<AutoCompleteMultipleRef<T> | null>;
-  size?: 'default' | 'large';
+  size?: "default" | "large";
   error?: boolean | string;
   success?: boolean;
   loading?: boolean;
@@ -69,9 +69,9 @@ const AutoCompleteMultiple = <T, D = undefined>({
   value: valueProp,
   defaultValue = [],
   label,
-  labelPosition = 'top',
+  labelPosition = "top",
   autoHideLabel = false,
-  placeholder = '',
+  placeholder = "",
   options: optionsProp,
   onChange,
   className,
@@ -81,7 +81,7 @@ const AutoCompleteMultiple = <T, D = undefined>({
   startIcon,
   endIcon,
   inputRef,
-  size = 'default',
+  size = "default",
   error: errorProp,
   success: successProp,
   loading = false,
@@ -99,17 +99,17 @@ const AutoCompleteMultiple = <T, D = undefined>({
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
 
   const [injectOptions, setInjectOptions] = React.useState<SelectValue<T, D>[]>(
-    [],
+    []
   );
 
   const options = React.useMemo(
     () =>
       Array.from(
         new Map(
-          [...injectOptions, ...optionsProp].map((item) => [item.label, item]),
-        ).values(),
+          [...injectOptions, ...optionsProp].map((item) => [item.label, item])
+        ).values()
       ),
-    [optionsProp, injectOptions],
+    [optionsProp, injectOptions]
   );
 
   const [filteredOptions, setFilteredOptions] = React.useState<
@@ -117,20 +117,20 @@ const AutoCompleteMultiple = <T, D = undefined>({
   >([]);
 
   const [internalValue, setInternalValue] = React.useState<SelectValue<T, D>[]>(
-    options.filter((item) => defaultValue.includes(item.value)) || [],
+    options.filter((item) => defaultValue.includes(item.value)) || []
   );
 
   React.useEffect(() => {
     setInternalValue(
       options.filter((item) =>
-        defaultValue.map((v) => v).includes(item.value),
-      ) || [],
+        defaultValue.map((v) => v).includes(item.value)
+      ) || []
     );
   }, [optionsProp]);
 
   const isControlled = valueProp !== undefined;
   const value = valueProp ?? internalValue; // Default to internal state if undefined
-  const [inputValue, setInputValue] = React.useState('');
+  const [inputValue, setInputValue] = React.useState("");
 
   const helperMessage = errorProp ?? helperText;
   const isError = !!errorProp;
@@ -152,7 +152,7 @@ const AutoCompleteMultiple = <T, D = undefined>({
     const filtered = options.filter(
       (option) =>
         !inputValue ||
-        option.label.toLowerCase().includes(inputValue.toLowerCase()),
+        option.label.toLowerCase().includes(inputValue.toLowerCase())
     );
     setFilteredOptions(filtered);
   }, [inputValue, optionsProp, value]);
@@ -169,9 +169,9 @@ const AutoCompleteMultiple = <T, D = undefined>({
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -182,7 +182,7 @@ const AutoCompleteMultiple = <T, D = undefined>({
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
-    const relatedTarget = event.relatedTarget as Node | null;
+    const relatedTarget = event.relatedTarget;
 
     const dropdownContainsTarget = dropdownRef.current?.contains(relatedTarget);
     const selectElementContainsTarget =
@@ -215,14 +215,14 @@ const AutoCompleteMultiple = <T, D = undefined>({
 
   const handleOptionSelect = (option: SelectValue<T, D>) => {
     const newValue = [...(value || []), option];
-    setInputValue('');
+    setInputValue("");
     if (!isControlled) setInternalValue(newValue); // Update internal state if uncontrolled
     onChange?.(newValue);
   };
 
   const handleRemoveSelected = (option: SelectValue<T, D>) => {
     const newValue = value.filter((v) => v.value !== option.value);
-    setInputValue('');
+    setInputValue("");
     if (!isControlled) setInternalValue(newValue);
     onChange?.(newValue);
   };
@@ -248,11 +248,11 @@ const AutoCompleteMultiple = <T, D = undefined>({
             role="button"
             onClick={handleAppend}
             className={cx(
-              'py-1.5 px-4 text-left break-words cursor-pointer bg-neutral-15 dark:bg-neutral-15-dark hover:bg-neutral-20 dark:hover:bg-neutral-20-dark',
+              "py-1.5 px-4 text-left break-words cursor-pointer bg-neutral-15 dark:bg-neutral-15-dark hover:bg-neutral-20 dark:hover:bg-neutral-20-dark",
               {
-                'text-14px': size === 'default',
-                'text-18px': size === 'large',
-              },
+                "text-14px": size === "default",
+                "text-18px": size === "large",
+              }
             )}
           >
             Create <b>{inputValue}</b>...
@@ -267,11 +267,11 @@ const AutoCompleteMultiple = <T, D = undefined>({
             key={String(option.value)}
             onMouseDown={() => handleRemoveSelected(option)}
             className={cx(
-              'cursor-pointer py-1.5 px-4 hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-left break-words flex items-center justify-between gap-2.5 bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark',
+              "cursor-pointer py-1.5 px-4 hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-left break-words flex items-center justify-between gap-2.5 bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark",
               {
-                'text-14px': size === 'default',
-                'text-18px': size === 'large',
-              },
+                "text-14px": size === "default",
+                "text-18px": size === "large",
+              }
             )}
           >
             <span>{option.label}</span>
@@ -288,11 +288,11 @@ const AutoCompleteMultiple = <T, D = undefined>({
             key={String(option.value)}
             onMouseDown={() => handleOptionSelect(option)}
             className={cx(
-              'cursor-pointer py-1.5 px-4 hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-left break-words text-neutral-100 dark:text-neutral-100-dark',
+              "cursor-pointer py-1.5 px-4 hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-left break-words text-neutral-100 dark:text-neutral-100-dark",
               {
-                'text-14px': size === 'default',
-                'text-18px': size === 'large',
-              },
+                "text-14px": size === "default",
+                "text-18px": size === "large",
+              }
             )}
           >
             {option.label}
@@ -316,12 +316,12 @@ const AutoCompleteMultiple = <T, D = undefined>({
   return (
     <div
       className={cx(
-        'relative',
+        "relative",
         {
-          'w-full': fullWidth,
-          'flex items-center gap-4': labelPosition === 'left',
+          "w-full": fullWidth,
+          "flex items-center gap-4": labelPosition === "left",
         },
-        className,
+        className
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
@@ -331,24 +331,24 @@ const AutoCompleteMultiple = <T, D = undefined>({
       )}
       <div
         className={cx(
-          'relative px-3 border rounded-md flex gap-2 items-center',
+          "relative px-3 border rounded-md flex gap-2 items-center",
           {
-            'w-full': fullWidth,
-            'border-danger-main dark:border-danger-main-dark focus:ring-danger-focus dark:focus:ring-danger-focus-dark':
+            "w-full": fullWidth,
+            "border-danger-main dark:border-danger-main-dark focus:ring-danger-focus dark:focus:ring-danger-focus-dark":
               isError,
-            'border-success-main dark:border-success-main-dark focus:ring-success-focus dark:focus:ring-success-focus-dark':
+            "border-success-main dark:border-success-main-dark focus:ring-success-focus dark:focus:ring-success-focus-dark":
               !isError && successProp,
-            'border-neutral-50 dark:border-neutral-50-dark hover:border-primary-main dark:hover:border-primary-main-dark focus:ring-primary-main dark:focus:ring-primary-main-dark':
+            "border-neutral-50 dark:border-neutral-50-dark hover:border-primary-main dark:hover:border-primary-main-dark focus:ring-primary-main dark:focus:ring-primary-main-dark":
               !isError && !successProp && !disabled,
-            'bg-neutral-20 dark:bg-neutral-30-dark cursor-not-allowed text-neutral-60 dark:text-neutral-60-dark':
+            "bg-neutral-20 dark:bg-neutral-30-dark cursor-not-allowed text-neutral-60 dark:text-neutral-60-dark":
               disabled,
-            'bg-neutral-10 dark:bg-neutral-10-dark shadow-box-3 focus:ring-3 focus:ring-primary-focus focus:!border-primary-main':
+            "bg-neutral-10 dark:bg-neutral-10-dark shadow-box-3 focus:ring-3 focus:ring-primary-focus focus:!border-primary-main":
               !disabled,
-            'ring-3 ring-primary-focus dark:ring-primary-focus-dark !border-primary-main dark:!border-primary-main-dark':
+            "ring-3 ring-primary-focus dark:ring-primary-focus-dark !border-primary-main dark:!border-primary-main-dark":
               focused,
-            'py-[3px]': size === 'default',
-            'py-[9px]': size === 'large',
-          },
+            "py-[3px]": size === "default",
+            "py-[9px]": size === "large",
+          }
         )}
         style={width ? { width } : undefined}
         ref={elementRef}
@@ -359,8 +359,8 @@ const AutoCompleteMultiple = <T, D = undefined>({
           </div>
         )}
         <div
-          className={cx('flex flex-1 gap-x-2 gap-y-1 items-center flex-wrap', {
-            'w-full': fullWidth,
+          className={cx("flex flex-1 gap-x-2 gap-y-1 items-center flex-wrap", {
+            "w-full": fullWidth,
           })}
         >
           {value?.map((selected) => (
@@ -374,13 +374,13 @@ const AutoCompleteMultiple = <T, D = undefined>({
             id={inputId}
             value={inputValue}
             onChange={handleInputChange}
-            placeholder={focused ? '' : placeholder}
+            placeholder={focused ? "" : placeholder}
             className={cx(
-              'flex-grow outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed',
+              "flex-grow outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed",
               {
-                'text-14px py-0.5': size === 'default',
-                'text-18px py-0.5': size === 'large',
-              },
+                "text-14px py-0.5": size === "default",
+                "text-18px py-0.5": size === "large",
+              }
             )}
             disabled={disabled}
             aria-label={label}
@@ -404,13 +404,13 @@ const AutoCompleteMultiple = <T, D = undefined>({
             strokeWidth={2}
             onClick={handleDropdown}
             className={cx(
-              'rounded-full p-0.5 text-neutral-70 dark:text-neutral-70-dark',
+              "rounded-full p-0.5 text-neutral-70 dark:text-neutral-70-dark",
               {
-                'cursor-not-allowed': disabled,
-                'hover:bg-neutral-30 dark:hover:bg-neutral-30-dark cursor-pointer transition-color':
+                "cursor-not-allowed": disabled,
+                "hover:bg-neutral-30 dark:hover:bg-neutral-30-dark cursor-pointer transition-color":
                   !disabled,
-                'rotate-180': dropdownOpen,
-              },
+                "rotate-180": dropdownOpen,
+              }
             )}
           />
         </InputEndIconWrapper>

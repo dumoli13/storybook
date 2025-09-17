@@ -7,7 +7,7 @@ import { Editor, Element, Transforms } from "slate";
 import { isListType, isTextTag } from "../../../libs/richTextField";
 import { LIST_TYPES } from "../../../types/richTextField";
 
-interface BlockButtonProps {
+interface RichTextListButtonProps {
   format: LIST_TYPES;
   icon: IconNames;
 }
@@ -23,7 +23,7 @@ export enum TEXT_TAG {
   BlockQuote = "block-quote",
 }
 
-const BlockButton = ({ format, icon }: BlockButtonProps) => {
+const RichTextListButton = ({ format, icon }: RichTextListButtonProps) => {
   const editor = useSlate();
 
   const [match] = Editor.nodes(editor, {
@@ -44,7 +44,6 @@ const BlockButton = ({ format, icon }: BlockButtonProps) => {
     });
     const isActive = !!parentList;
 
-    console.log("isActive", isActive);
     if (isActive) {
       for (const [node, path] of Editor.nodes(editor, {
         match: (n) => Element.isElement(n) && n.type === "list-item",
@@ -102,9 +101,13 @@ const BlockButton = ({ format, icon }: BlockButtonProps) => {
 
   return (
     <RichTextToolbarButton active={isActive} onMouseDown={handleToggleBlock}>
-      <Icon name={icon} size={16} />
+      <Icon
+        name={icon}
+        size={24}
+        className="text-neutral-100 dark:text-neutral-100-dark"
+      />
     </RichTextToolbarButton>
   );
 };
 
-export default BlockButton;
+export default RichTextListButton;

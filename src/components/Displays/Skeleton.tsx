@@ -1,21 +1,21 @@
 /* eslint-disable react/no-array-index-key */
-import React from 'react';
-import cx from 'classnames';
+import React from "react";
+import cx from "classnames";
 
 export interface SkeletonProps {
   width?: number;
   height?: number;
-  type?: 'circle' | 'rounded' | 'rect';
+  type?: "circle" | "rounded" | "rect";
 }
 
 export interface SkeletonInputProps {
-  size?: 'default' | 'large';
+  size?: "default" | "large";
 }
 
 export interface SkeletonTableProps {
   column?: number;
   row?: number;
-  size?: 'small' | 'default' | 'large';
+  size?: "small" | "default" | "large";
 }
 
 /**
@@ -24,42 +24,42 @@ export interface SkeletonTableProps {
  * It consists of a title placeholder and a large input field placeholder.
  *
  */
-const Skeleton = ({ width, height, type = 'circle' }: SkeletonProps) => {
+const Skeleton = ({ width, height, type = "circle" }: SkeletonProps) => {
   return (
     <div
-      className={cx('bg-neutral-40  dark:bg-neutral-40-dark animate-pulse', {
-        'rounded-full': type === 'circle',
-        'rounded-md': type === 'rounded',
-        'shrink-0': !!height || !!width,
+      className={cx("bg-neutral-40  dark:bg-neutral-40-dark animate-pulse", {
+        "rounded-full": type === "circle",
+        "rounded-md": type === "rounded",
+        "shrink-0": !!height || !!width,
       })}
       style={{
-        width: width ? `${width}px` : '100%',
-        height: height ? `${height}px` : '100%',
+        width: width ? `${width}px` : "100%",
+        height: height ? `${height}px` : "100%",
       }}
     />
   );
 };
-const SkeletonInput: React.FC<SkeletonInputProps> = ({ size = 'default' }) => (
+const SkeletonInput = ({ size = "default" }: SkeletonInputProps) => (
   <div>
     <div className="w-1/5 h-5 mb-1 bg-neutral-40 dark:bg-neutral-40-dark rounded-full animate-pulse" />
     <div
       className={cx(
-        'w-full bg-neutral-40 dark:bg-neutral-40-dark rounded-full animate-pulse',
+        "w-full bg-neutral-40 dark:bg-neutral-40-dark rounded-full animate-pulse",
         {
-          'h-[42px]': size === 'default',
-          'h-[54px]': size === 'large',
-        },
+          "h-[42px]": size === "default",
+          "h-[54px]": size === "large",
+        }
       )}
     />
   </div>
 );
-SkeletonInput.displayName = 'SkeletonInput';
+SkeletonInput.displayName = "SkeletonInput";
 Skeleton.Input = SkeletonInput;
 
 const SkeletonTable = ({
   column = 2,
   row = 3,
-  size = 'default',
+  size = "default",
 }: SkeletonTableProps) => {
   return (
     <div className="overflow-y-auto border border-neutral-30 dark:border-neutral-30-dark rounded-md">
@@ -98,10 +98,10 @@ const SkeletonTable = ({
                   aria-label={`Row ${rowIndex + 1}, Column ${colIndex + 1}`}
                 >
                   <div
-                    className={cx('flex items-center justify-start px-4 py-2', {
-                      'h-[36px]': size === 'small',
-                      'h-[56px]': size === 'default',
-                      'h-[62px]': size === 'large',
+                    className={cx("flex items-center justify-start px-4 py-2", {
+                      "h-[36px]": size === "small",
+                      "h-[56px]": size === "default",
+                      "h-[62px]": size === "large",
                     })}
                   >
                     <div className="bg-neutral-40 dark:bg-neutral-40-dark rounded-full animate-pulse w-4/5 h-5" />
@@ -115,7 +115,7 @@ const SkeletonTable = ({
     </div>
   );
 };
-SkeletonTable.displayName = 'SkeletonTable';
+SkeletonTable.displayName = "SkeletonTable";
 Skeleton.Table = SkeletonTable;
 
 export default Skeleton;

@@ -2,7 +2,7 @@ import React from "react";
 import { Editor, Text, Transforms } from "slate";
 import { useSlate } from "slate-react";
 
-const ColorPicker = () => {
+const RichTextColorPicker = () => {
   const editor = useSlate();
   const color = Editor.marks(editor)?.color || "#000000";
   const pickerRef = React.useRef<HTMLInputElement>(null);
@@ -31,10 +31,10 @@ const ColorPicker = () => {
       className=" shrink-0 flex items-center justify-center h-8 w-8 hover:border border-neutral-40 rounded-md relative"
     >
       <label
-        className="cursor-pointer text-20px font-bold leading-none border-b-3"
+        className="cursor-pointer text-20px font-bold leading-none border-b-3 text-neutral-100 dark:text-neutral-100-dark"
         style={{ borderColor: color }}
       >
-        A
+        <span>A</span>
         <input
           type="color"
           value={color}
@@ -47,4 +47,4 @@ const ColorPicker = () => {
   );
 };
 
-export default ColorPicker;
+export default RichTextColorPicker;

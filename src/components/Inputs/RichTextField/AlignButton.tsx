@@ -23,22 +23,22 @@ const AlignButton = ({ align, icon }: AlignButtonProps) => {
       editor,
       { align },
       {
-        match: (n) =>
-          Element.isElement(n) &&
-          [
-            "paragraph",
-            "heading-one",
-            "heading-two",
-            "block-quote",
-            "list-item",
-          ].includes(n.type),
+        match: (n) => Element.isElement(n),
       }
     );
   };
 
   return (
-    <RichTextToolbarButton active={isMarkActive} onMouseDown={toggleAlign}>
-      <Icon name={icon} size={20} />
+    <RichTextToolbarButton
+      active={isMarkActive}
+      onMouseDown={toggleAlign}
+      disabled={isMarkActive}
+    >
+      <Icon
+        name={icon}
+        size={20}
+        className="text-neutral-100 dark:text-neutral-100-dark"
+      />
     </RichTextToolbarButton>
   );
 };
