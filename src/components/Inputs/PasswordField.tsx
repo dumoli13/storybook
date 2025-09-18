@@ -38,6 +38,7 @@ export interface PasswordFieldProps
   success?: boolean;
   loading?: boolean;
   width?: number;
+  required?: boolean;
 }
 
 /**
@@ -68,6 +69,7 @@ const PasswordField = ({
   success: successProp,
   loading = false,
   width,
+  required,
   ...props
 }: PasswordFieldProps) => {
   const parentRef = React.useRef<HTMLDivElement>(null);
@@ -135,7 +137,7 @@ const PasswordField = ({
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={inputId} size={size}>
+        <InputLabel id={inputId} size={size} required={required}>
           {label}
         </InputLabel>
       )}

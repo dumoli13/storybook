@@ -37,6 +37,7 @@ export interface TextFieldProps
   success?: boolean;
   loading?: boolean;
   width?: number;
+  required?: boolean;
 }
 
 /**
@@ -65,6 +66,7 @@ const TextField = ({
   success: successProp,
   loading = false,
   width,
+  required,
   ...props
 }: TextFieldProps) => {
   const parentRef = React.useRef<HTMLDivElement>(null);
@@ -139,7 +141,7 @@ const TextField = ({
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={inputId} size={size}>
+        <InputLabel id={inputId} size={size} required={required}>
           {label}
         </InputLabel>
       )}

@@ -1,11 +1,11 @@
-import React from 'react';
-import cx from 'classnames';
-import { TimeUnit } from '../../const/datePicker';
-import Icon from '../Icon';
-import InputDropdown from './InputDropdown';
-import InputEndIconWrapper from './InputEndIconWrapper';
-import InputHelper from './InputHelper';
-import InputLabel from './InputLabel';
+import React from "react";
+import cx from "classnames";
+import { TimeUnit } from "../../const/datePicker";
+import Icon from "../Icon";
+import InputDropdown from "./InputDropdown";
+import InputEndIconWrapper from "./InputEndIconWrapper";
+import InputHelper from "./InputHelper";
+import InputLabel from "./InputLabel";
 
 export interface TimerFieldRef {
   element: HTMLInputElement | null;
@@ -17,13 +17,13 @@ export interface TimerFieldRef {
 export interface TimerFieldProps
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
-    'value' | 'defaultValue' | 'onChange' | 'size' | 'required' | 'checked'
+    "value" | "defaultValue" | "onChange" | "size" | "required" | "checked"
   > {
   value?: number | null;
   defaultValue?: number | null;
   clearable?: boolean;
   label?: string;
-  labelPosition?: 'top' | 'left';
+  labelPosition?: "top" | "left";
   autoHideLabel?: boolean;
   onChange?: (value: number | null) => void;
   className?: string;
@@ -36,11 +36,12 @@ export interface TimerFieldProps
   inputRef?:
     | React.RefObject<TimerFieldRef | null>
     | React.RefCallback<TimerFieldRef | null>;
-  size?: 'default' | 'large';
+  size?: "default" | "large";
   error?: boolean | string;
   success?: boolean;
   loading?: boolean;
   width?: number;
+  required?: boolean;
 }
 
 /**
@@ -52,34 +53,35 @@ const TimerField = ({
   value: valueProp,
   defaultValue = valueProp,
   label,
-  labelPosition = 'top',
+  labelPosition = "top",
   autoHideLabel = false,
   onChange,
   className,
   helperText,
-  placeholder = 'hh:mm:ss',
+  placeholder = "hh:mm:ss",
   disabled: disabledProp = false,
   fullWidth,
   startIcon,
   endIcon,
   inputRef,
-  size = 'default',
+  size = "default",
   clearable = false,
   error: errorProp,
   success: successProp,
   loading = false,
   width,
+  required,
   ...props
 }: TimerFieldProps) => {
   const elementRef = React.useRef<HTMLInputElement>(null);
   const valueRef = React.useRef<HTMLDivElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const [focused, setFocused] = React.useState<
-    'hour' | 'minute' | 'second' | null
+    "hour" | "minute" | "second" | null
   >(null);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const [internalValue, setInternalValue] = React.useState<number | null>(
-    defaultValue !== undefined ? defaultValue : null,
+    defaultValue !== undefined ? defaultValue : null
   );
 
   const isControlled = valueProp !== undefined;
@@ -131,7 +133,7 @@ const TimerField = ({
     setTimeValue(selectedTime);
   };
 
-  const handleFocus = (component: 'hour' | 'minute' | 'second' = 'hour') => {
+  const handleFocus = (component: "hour" | "minute" | "second" = "hour") => {
     if (disabled) return;
     setFocused(component);
     setDropdownOpen(true);
@@ -167,7 +169,7 @@ const TimerField = ({
 
   const handleDropdown = () => {
     if (disabled) return;
-    setFocused('hour');
+    setFocused("hour");
     setDropdownOpen((prev) => {
       return !prev;
     });
@@ -187,9 +189,9 @@ const TimerField = ({
       handleBlur();
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -210,10 +212,10 @@ const TimerField = ({
 
             container.scrollTo({
               top: container.scrollTop + offset,
-              behavior: 'smooth',
+              behavior: "smooth",
             });
           }
-        },
+        }
       );
     }, 50); // Small delay for rendering
   }, [dropdownOpen, timeValue]);
@@ -247,15 +249,15 @@ const TimerField = ({
                   ref={(el) => {
                     itemRefs[unit].current[idx] = el;
                   }}
-                  className={cx('w-10 text-center rounded py-0.5', {
-                    'bg-primary-main dark:bg-primary-main-dark text-neutral-10 dark:text-neutral-10-dark cursor-default':
+                  className={cx("w-10 text-center rounded py-0.5", {
+                    "bg-primary-main dark:bg-primary-main-dark text-neutral-10 dark:text-neutral-10-dark cursor-default":
                       idx === timeValue[unit],
-                    'hover:bg-neutral-20 dark:hover:bg-neutral-20-dark':
+                    "hover:bg-neutral-20 dark:hover:bg-neutral-20-dark":
                       idx !== timeValue[unit],
                   })}
                   onClick={() => handleSelectTime(unit, idx)}
                 >
-                  {idx.toString().padStart(2, '0')}
+                  {idx.toString().padStart(2, "0")}
                 </button>
               ))}
             </div>
@@ -267,9 +269,9 @@ const TimerField = ({
           type="button"
           onClick={handleConfirmTime}
           className={cx(
-            'text-14px py-0.5 px-2 rounded disabled:border',
-            'text-neutral-10 disabled:border-neutral-40 disabled:text-neutral-60 disabled:bg-neutral-30 bg-primary-main hover:bg-primary-hover active:bg-primary-pressed',
-            'dark:text-neutral-10-dark dark:disabled:border-neutral-40-dark dark:disabled:text-neutral-60-dark dark:disabled:bg-neutral-30-dark dark:bg-primary-main-dark dark:hover:bg-primary-hover-dark dark:active:bg-primary-pressed-dark',
+            "text-14px py-0.5 px-2 rounded disabled:border",
+            "text-neutral-10 disabled:border-neutral-40 disabled:text-neutral-60 disabled:bg-neutral-30 bg-primary-main hover:bg-primary-hover active:bg-primary-pressed",
+            "dark:text-neutral-10-dark dark:disabled:border-neutral-40-dark dark:disabled:text-neutral-60-dark dark:disabled:bg-neutral-30-dark dark:bg-primary-main-dark dark:hover:bg-primary-hover-dark dark:active:bg-primary-pressed-dark"
           )}
           disabled={disabled}
         >
@@ -284,39 +286,39 @@ const TimerField = ({
   return (
     <div
       className={cx(
-        'relative',
+        "relative",
         {
-          'w-full': fullWidth,
-          'flex items-center gap-4': labelPosition === 'left',
+          "w-full": fullWidth,
+          "flex items-center gap-4": labelPosition === "left",
         },
-        className,
+        className
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={inputId} size={size}>
+        <InputLabel id={inputId} size={size} required={required}>
           {label}
         </InputLabel>
       )}
       <div
         className={cx(
-          'relative px-3 border rounded-md flex gap-2 items-center',
+          "relative px-3 border rounded-md flex gap-2 items-center",
           {
-            'w-full': fullWidth,
-            'border-danger-main dark:border-danger-main-dark focus:ring-danger-focus dark:focus:ring-danger-focus-dark':
+            "w-full": fullWidth,
+            "border-danger-main dark:border-danger-main-dark focus:ring-danger-focus dark:focus:ring-danger-focus-dark":
               isError,
-            'border-success-main dark:border-success-main-dark focus:ring-success-focus dark:focus:ring-success-focus-dark':
+            "border-success-main dark:border-success-main-dark focus:ring-success-focus dark:focus:ring-success-focus-dark":
               !isError && successProp,
-            'border-neutral-50 dark:border-neutral-50-dark hover:border-primary-hover dark:hover:border-primary-hover-dark focus:ring-primary-main dark:focus:ring-primary-main-dark':
+            "border-neutral-50 dark:border-neutral-50-dark hover:border-primary-hover dark:hover:border-primary-hover-dark focus:ring-primary-main dark:focus:ring-primary-main-dark":
               !isError && !successProp && !disabled,
-            'bg-neutral-20 dark:bg-neutral-30-dark cursor-not-allowed text-neutral-60 dark:text-neutral-60-dark':
+            "bg-neutral-20 dark:bg-neutral-30-dark cursor-not-allowed text-neutral-60 dark:text-neutral-60-dark":
               disabled,
-            'bg-neutral-10 dark:bg-neutral-10-dark shadow-box-3 focus:ring-3 focus:ring-primary-focus focus:!border-primary-main':
+            "bg-neutral-10 dark:bg-neutral-10-dark shadow-box-3 focus:ring-3 focus:ring-primary-focus focus:!border-primary-main":
               !disabled,
-            'ring-3 ring-primary-focus dark:ring-primary-focus-dark !border-primary-main dark:!border-primary-main-dark':
+            "ring-3 ring-primary-focus dark:ring-primary-focus-dark !border-primary-main dark:!border-primary-main-dark":
               focused,
-            'py-[3px]': size === 'default',
-            'py-[9px]': size === 'large',
-          },
+            "py-[3px]": size === "default",
+            "py-[9px]": size === "large",
+          }
         )}
         style={width ? { width } : undefined}
       >
@@ -326,9 +328,9 @@ const TimerField = ({
           </div>
         )}
         <div
-          className={cx('flex items-center w-full', {
-            'text-14px py-0.5': size === 'default',
-            'text-18px py-0.5': size === 'large',
+          className={cx("flex items-center w-full", {
+            "text-14px py-0.5": size === "default",
+            "text-18px py-0.5": size === "large",
           })}
         >
           <input
@@ -338,17 +340,16 @@ const TimerField = ({
             value={
               displayValue
                 ? `${Math.floor(displayValue / 3600)
-                    .toLocaleString('en-US')
-                    .padStart(2, '0')}:${Math.floor((displayValue % 3600) / 60)
-                    .toLocaleString('en-US')
-                    .padStart(
-                      2,
-                      '0',
-                    )}:${(displayValue % 60).toLocaleString('en-US').padStart(2, '0')}`
-                : ''
+                    .toLocaleString("en-US")
+                    .padStart(2, "0")}:${Math.floor((displayValue % 3600) / 60)
+                    .toLocaleString("en-US")
+                    .padStart(2, "0")}:${(displayValue % 60)
+                    .toLocaleString("en-US")
+                    .padStart(2, "0")}`
+                : ""
             }
-            placeholder={focused ? '' : placeholder}
-            onFocus={() => handleFocus('hour')}
+            placeholder={focused ? "" : placeholder}
+            onFocus={() => handleFocus("hour")}
             onChange={() => {}}
             ref={elementRef}
             className="w-full outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed"

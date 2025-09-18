@@ -60,6 +60,7 @@ export interface DatePickerProps
   showTime?: boolean;
   picker?: PickerType;
   format?: string;
+  required?: boolean;
 }
 
 /**
@@ -90,6 +91,7 @@ const DatePicker = ({
   showTime = false,
   format: formatProps,
   picker = "date",
+  required,
   ...props
 }: DatePickerProps) => {
   const elementRef = React.useRef<HTMLDivElement>(null);
@@ -740,7 +742,7 @@ const DatePicker = ({
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={inputId} size={size}>
+        <InputLabel id={inputId} size={size} required={required}>
           {label}
         </InputLabel>
       )}

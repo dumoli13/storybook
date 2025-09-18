@@ -42,6 +42,7 @@ export interface SelectProps<T, D = undefined>
   loading?: boolean;
   clearable?: boolean;
   width?: number;
+  required?: boolean;
 }
 
 /**
@@ -71,6 +72,7 @@ const Select = <T, D = undefined>({
   loading = false,
   clearable = false,
   width,
+  required,
 }: SelectProps<T, D>) => {
   const elementRef = React.useRef<HTMLDivElement>(null);
   const valueRef = React.useRef<HTMLDivElement>(null);
@@ -212,7 +214,7 @@ const Select = <T, D = undefined>({
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={inputId} size={size}>
+        <InputLabel id={inputId} size={size} required={required}>
           {label}
         </InputLabel>
       )}

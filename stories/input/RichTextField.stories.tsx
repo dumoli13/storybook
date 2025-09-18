@@ -74,6 +74,14 @@ const meta: Meta<RichTextFieldProps> = {
         type: { summary: "boolean" },
       },
     },
+    required: {
+      control: "boolean",
+      description: "A flag to set if input is required.",
+      table: {
+        defaultValue: { summary: "false" },
+        type: { summary: "boolean" },
+      },
+    },
     placeholder: {
       control: "text",
       description:
@@ -144,15 +152,6 @@ const meta: Meta<RichTextFieldProps> = {
         type: { summary: "number" },
       },
     },
-    clearable: {
-      control: "boolean",
-      description:
-        "A flag that show clear button of input field if set to true",
-      table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
-      },
-    },
   },
   args: {
     disabled: false,
@@ -168,7 +167,6 @@ export const Playground: Story = {
     placeholder: "Input Placeholder...",
     helperText: "Input helper text",
     size: "default",
-    clearable: false,
     loading: false,
     success: false,
     error: "",

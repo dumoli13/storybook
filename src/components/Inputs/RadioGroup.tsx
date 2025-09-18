@@ -1,8 +1,8 @@
-import React from 'react';
-import cx from 'classnames';
-import { SelectValue } from '../../types/input';
-import InputHelper from './InputHelper';
-import InputLabel from './InputLabel';
+import React from "react";
+import cx from "classnames";
+import { SelectValue } from "../../types/input";
+import InputHelper from "./InputHelper";
+import InputLabel from "./InputLabel";
 
 export interface RadioGroupRef<T, D = undefined> {
   element: HTMLDivElement | null;
@@ -15,16 +15,16 @@ export interface RadioGroupRef<T, D = undefined> {
 export interface RadioGroupProps<T, D = undefined>
   extends Omit<
     React.HTMLAttributes<HTMLDivElement>,
-    'onChange' | 'defaultValue'
+    "onChange" | "defaultValue"
   > {
   value?: T | null;
   defaultValue?: T | null;
   name?: string;
   label?: string;
-  labelPosition?: 'top' | 'left';
+  labelPosition?: "top" | "left";
   autoHideLabel?: boolean;
   options: SelectValue<T, D>[];
-  direction?: 'row' | 'column';
+  direction?: "row" | "column";
   onChange?: (value: SelectValue<T, D>) => void;
   helperText?: React.ReactNode;
   disabled?: boolean;
@@ -32,11 +32,12 @@ export interface RadioGroupProps<T, D = undefined>
   inputRef?:
     | React.RefObject<RadioGroupRef<T, D> | null>
     | React.RefCallback<RadioGroupRef<T, D> | null>;
-  size?: 'default' | 'large';
+  size?: "default" | "large";
   error?: boolean | string;
   success?: boolean;
   loading?: boolean;
   width?: number;
+  required?: boolean;
 }
 
 /**
@@ -48,21 +49,22 @@ const RadioGroup = <T, D = undefined>({
   id,
   name,
   label,
-  labelPosition = 'top',
+  labelPosition = "top",
   autoHideLabel = false,
   options,
-  direction = 'column',
+  direction = "column",
   onChange,
   helperText,
   disabled: disabledProp = false,
   fullWidth,
   inputRef,
-  size = 'default',
+  size = "default",
   error: errorProp,
   success: successProp,
   loading = false,
   width,
   className,
+  required,
   ...props
 }: RadioGroupProps<T, D>) => {
   const elementRef = React.useRef<HTMLDivElement>(null);
@@ -76,7 +78,7 @@ const RadioGroup = <T, D = undefined>({
   const value = isControlled ? valueProp : internalValue;
 
   const helperMessage =
-    typeof errorProp === 'boolean' ? helperText : errorProp || helperText;
+    typeof errorProp === "boolean" ? helperText : errorProp || helperText;
   const isError = !!errorProp;
   const disabled = loading || disabledProp;
 
@@ -85,7 +87,7 @@ const RadioGroup = <T, D = undefined>({
     value: options.find((option) => option.value === value) || null,
     focus: () => {
       const firstRadio = elementRef.current?.querySelector(
-        'input[type="radio"]',
+        'input[type="radio"]'
       );
       if (firstRadio instanceof HTMLInputElement) {
         firstRadio.focus();
@@ -120,28 +122,28 @@ const RadioGroup = <T, D = undefined>({
   return (
     <div
       className={cx(
-        'relative',
+        "relative",
         {
-          'w-full': fullWidth,
-          'flex items-start gap-4': labelPosition === 'left',
+          "w-full": fullWidth,
+          "flex items-start gap-4": labelPosition === "left",
         },
-        className,
+        className
       )}
       ref={elementRef}
       style={width ? { width } : undefined}
       {...props}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={inputId} size={size}>
+        <InputLabel id={inputId} size={size} required={required}>
           {label}
         </InputLabel>
       )}
 
       <div
-        className={cx('flex gap-2', {
-          'w-full': fullWidth,
-          'flex-row': direction === 'row',
-          'flex-col': direction === 'column',
+        className={cx("flex gap-2", {
+          "w-full": fullWidth,
+          "flex-row": direction === "row",
+          "flex-col": direction === "column",
         })}
         role="radiogroup"
         aria-labelledby={label ? inputId : undefined}
@@ -154,32 +156,32 @@ const RadioGroup = <T, D = undefined>({
             <label
               key={String(option.value)}
               htmlFor={radioId}
-              className={cx('flex items-center cursor-pointer', {
-                'cursor-not-allowed opacity-50': disabled,
+              className={cx("flex items-center cursor-pointer", {
+                "cursor-not-allowed opacity-50": disabled,
               })}
             >
               <div
                 className={cx(
-                  'shrink-0 rounded-full border flex justify-center items-center transition-all box-border relative',
+                  "shrink-0 rounded-full border flex justify-center items-center transition-all box-border relative",
                   {
-                    'w-5 h-5': size === 'default',
-                    'w-7 h-7': size === 'large',
-                    'bg-neutral-10 dark:bg-neutral-10-dark hover:border-primary-main dark:hover:border-primary-main-dark':
+                    "w-5 h-5": size === "default",
+                    "w-7 h-7": size === "large",
+                    "bg-neutral-10 dark:bg-neutral-10-dark hover:border-primary-main dark:hover:border-primary-main-dark":
                       !disabled,
-                    'bg-primary-main dark:bg-primary-main-dark':
+                    "bg-primary-main dark:bg-primary-main-dark":
                       !disabled && isChecked,
-                    'bg-neutral-50 dark:bg-neutral-50-dark':
+                    "bg-neutral-50 dark:bg-neutral-50-dark":
                       disabled && isChecked,
-                    'ring-3 ring-primary-focus': focused && !disabled,
-                    'border-success-main dark:border-success-main-dark':
+                    "ring-3 ring-primary-focus": focused && !disabled,
+                    "border-success-main dark:border-success-main-dark":
                       successProp,
-                    'border-danger-main dark:border-danger-main-dark': isError,
-                    'border-primary-main dark:border-primary-main-dark':
+                    "border-danger-main dark:border-danger-main-dark": isError,
+                    "border-primary-main dark:border-primary-main-dark":
                       !!successProp && !isError && !disabled && isChecked,
-                    'border-neutral-50 dark:border-neutral-50-dark':
+                    "border-neutral-50 dark:border-neutral-50-dark":
                       !successProp && !isError && !disabled,
-                    '!border-neutral-40 !dark:border-neutral-40-dark': disabled,
-                  },
+                    "!border-neutral-40 !dark:border-neutral-40-dark": disabled,
+                  }
                 )}
               >
                 <input
@@ -198,22 +200,22 @@ const RadioGroup = <T, D = undefined>({
                 {isChecked && (
                   <div
                     className={cx(
-                      'rounded-full bg-neutral-10 dark:bg-neutral-10-dark',
+                      "rounded-full bg-neutral-10 dark:bg-neutral-10-dark",
                       {
-                        'w-2 h-2': size === 'default',
-                        'w-3 h-3': size === 'large',
-                      },
+                        "w-2 h-2": size === "default",
+                        "w-3 h-3": size === "large",
+                      }
                     )}
                   />
                 )}
               </div>
               <span
                 className={cx(
-                  'ml-2 text-neutral-90 dark:text-neutral-90-dark',
+                  "ml-2 text-neutral-90 dark:text-neutral-90-dark",
                   {
-                    'text-14px': size === 'default',
-                    'text-18px': size === 'large',
-                  },
+                    "text-14px": size === "default",
+                    "text-18px": size === "large",
+                  }
                 )}
               >
                 {option.label}

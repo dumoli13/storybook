@@ -190,6 +190,7 @@ export interface RichTextFieldProps
   success?: boolean;
   loading?: boolean;
   width?: number;
+  required?: boolean;
 }
 
 export const RichTextField = ({
@@ -211,6 +212,7 @@ export const RichTextField = ({
   success: successProp,
   loading = false,
   width,
+  required,
   ...props
 }: RichTextFieldProps) => {
   const parentRef = React.useRef<HTMLDivElement>(null);
@@ -408,7 +410,7 @@ export const RichTextField = ({
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={inputId} size={size}>
+        <InputLabel id={inputId} size={size} required={required}>
           {label}
         </InputLabel>
       )}

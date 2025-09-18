@@ -37,6 +37,7 @@ export interface TextAreaProps
   loading?: boolean;
   lines?: number;
   width?: number;
+  required?: boolean;
 }
 
 /**
@@ -64,6 +65,7 @@ const TextArea = ({
   success: successProp,
   loading = false,
   lines: minLines = 2,
+  required,
   width,
   ...props
 }: TextAreaProps) => {
@@ -132,7 +134,7 @@ const TextArea = ({
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={inputId} size={size}>
+        <InputLabel id={inputId} size={size} required={required}>
           {label}
         </InputLabel>
       )}

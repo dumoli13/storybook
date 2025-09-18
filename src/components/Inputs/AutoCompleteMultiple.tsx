@@ -43,6 +43,7 @@ interface BaseAutoCompleteMultipleProps<T, D = undefined>
   loading?: boolean;
   clearable?: boolean;
   width?: number;
+  required?: boolean;
 }
 
 interface AutoCompleteMultipleWithoutAppendProps<T, D = undefined>
@@ -89,6 +90,7 @@ const AutoCompleteMultiple = <T, D = undefined>({
   width,
   appendIfNotFound,
   onAppend,
+  required,
   ...props
 }: AutoCompleteMultipleProps<T, D>) => {
   const elementRef = React.useRef<HTMLDivElement>(null);
@@ -325,7 +327,7 @@ const AutoCompleteMultiple = <T, D = undefined>({
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={inputId} size={size}>
+        <InputLabel id={inputId} size={size} required={required}>
           {label}
         </InputLabel>
       )}

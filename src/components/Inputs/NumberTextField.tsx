@@ -52,6 +52,7 @@ export interface NumberTextFieldProps
   success?: boolean;
   loading?: boolean;
   width?: number;
+  required?: boolean;
 }
 
 /**
@@ -81,6 +82,7 @@ const NumberTextField = ({
   success: successProp,
   loading = false,
   width,
+  required,
   ...props
 }: NumberTextFieldProps) => {
   const parentRef = React.useRef<HTMLDivElement>(null);
@@ -205,7 +207,7 @@ const NumberTextField = ({
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={inputId} size={size}>
+        <InputLabel id={inputId} size={size} required={required}>
           {label}
         </InputLabel>
       )}

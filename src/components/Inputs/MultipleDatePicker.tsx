@@ -48,6 +48,7 @@ export interface MultipleDatePickerProps
   width?: number;
   picker?: PickerType;
   format?: string;
+  required?: boolean;
 }
 
 /**
@@ -79,6 +80,7 @@ const MultipleDatePicker = ({
   width,
   format = "D/M/YYYY",
   picker = "date",
+  required,
 }: MultipleDatePickerProps) => {
   const elementRef = React.useRef<HTMLDivElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
@@ -570,7 +572,7 @@ const MultipleDatePicker = ({
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={inputId} size={size}>
+        <InputLabel id={inputId} size={size} required={required}>
           {label}
         </InputLabel>
       )}

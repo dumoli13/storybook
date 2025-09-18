@@ -1,6 +1,4 @@
-import React from "react";
 import { useSlate } from "slate-react";
-import IconButton from "../IconButton";
 import { Transforms } from "slate";
 import Icon from "../../Icon";
 import RichTextToolbarButton from "./RichTextToolbarButton";
