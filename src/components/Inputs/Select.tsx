@@ -6,6 +6,8 @@ import InputDropdown from "./InputDropdown";
 import InputEndIconWrapper from "./InputEndIconWrapper";
 import InputHelper from "./InputHelper";
 import InputLabel from "./InputLabel";
+import { useInView } from "react-intersection-observer";
+import { FETCH_LIMIT } from "../../const/select";
 
 export interface SelectRef<T, D = undefined> {
   element: HTMLDivElement | null;
@@ -15,7 +17,7 @@ export interface SelectRef<T, D = undefined> {
   disabled: boolean;
 }
 
-export interface SelectProps<T, D = undefined>
+interface BaseProps<T, D = undefined>
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
     "onChange" | "value" | "defaultValue" | "size" | "required" | "checked"
@@ -26,7 +28,6 @@ export interface SelectProps<T, D = undefined>
   labelPosition?: "top" | "left";
   autoHideLabel?: boolean;
   placeholder?: string;
-  options: SelectValue<T, D>[];
   onChange?: (value: SelectValue<T, D> | null) => void;
   helperText?: React.ReactNode;
   disabled?: boolean;
@@ -39,11 +40,33 @@ export interface SelectProps<T, D = undefined>
   size?: "default" | "large";
   error?: boolean | string;
   success?: boolean;
-  loading?: boolean;
   clearable?: boolean;
   width?: number;
   required?: boolean;
+  renderOption?: (
+    option: Array<SelectValue<T, D>>,
+    onClick: (value: SelectValue<T, D>) => void,
+    selected: SelectValue<T, D> | null
+  ) => React.ReactNode;
 }
+
+interface AsyncProps<T, D> {
+  async: true;
+  fetchOptions: (page: number, limit: number) => Promise<SelectValue<T, D>[]>;
+  options?: never;
+  loading?: never;
+}
+
+interface NonAsyncProps<T, D> {
+  async?: false;
+  fetchOptions?: never;
+  options: SelectValue<T, D>[];
+  loading?: boolean;
+}
+
+export type SelectProps<T, D = undefined> =
+  | (BaseProps<T, D> & AsyncProps<T, D>)
+  | (BaseProps<T, D> & NonAsyncProps<T, D>);
 
 /**
  * Select components are used for collecting user provided information from a list of options.
@@ -57,7 +80,7 @@ const Select = <T, D = undefined>({
   labelPosition = "top",
   autoHideLabel = false,
   placeholder = "",
-  options,
+  options: optionsProp,
   onChange,
   className,
   helperText,
@@ -73,6 +96,9 @@ const Select = <T, D = undefined>({
   clearable = false,
   width,
   required,
+  renderOption,
+  async,
+  fetchOptions,
 }: SelectProps<T, D>) => {
   const elementRef = React.useRef<HTMLDivElement>(null);
   const valueRef = React.useRef<HTMLDivElement>(null);
@@ -81,6 +107,20 @@ const Select = <T, D = undefined>({
   const [focused, setFocused] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
 
+  const { ref: refInView, inView } = useInView({ threshold: 0.1 });
+  const [loadingFetchOptions, setLoadingFetchOptions] = React.useState(!!async);
+  const [stopAsyncFetch, setStopAsyncFetch] = React.useState(false);
+  const [inheritOptions, setInheritOptions] = React.useState<
+    SelectValue<T, D>[]
+  >(optionsProp || []);
+
+  const [page, setPage] = React.useState(0);
+
+  const options = React.useMemo(
+    () => (async ? inheritOptions : optionsProp),
+    [async, optionsProp, inheritOptions]
+  );
+
   const [internalValue, setInternalValue] = React.useState<SelectValue<
     T,
     D
@@ -88,9 +128,11 @@ const Select = <T, D = undefined>({
 
   React.useEffect(() => {
     setInternalValue(
-      options.find((item) => item.value === defaultValue) || null
+      options.find(
+        (item) => item.value === (internalValue?.value ?? defaultValue)
+      ) || null
     );
-  }, [options]);
+  }, [optionsProp]);
 
   const isControlled = valueProp !== undefined;
   const value = isControlled ? valueProp : internalValue;
@@ -102,12 +144,8 @@ const Select = <T, D = undefined>({
   React.useImperativeHandle(inputRef, () => ({
     element: elementRef.current,
     value: value as SelectValue<T, undefined>,
-    focus: () => {
-      valueRef.current?.focus();
-    },
-    reset: () => {
-      setInternalValue(null);
-    },
+    focus: () => valueRef.current?.focus(),
+    reset: () => setInternalValue(null),
     disabled,
   }));
 
@@ -130,6 +168,22 @@ const Select = <T, D = undefined>({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  React.useEffect(() => {
+    const getAsyncOptions = async () => {
+      setLoadingFetchOptions(true);
+      const newPage = page + 1;
+      const response = await fetchOptions(newPage, FETCH_LIMIT);
+      setPage(newPage);
+      if (response.length < FETCH_LIMIT) {
+        setStopAsyncFetch(true);
+      }
+      setInheritOptions((prev) => [...prev, ...response]);
+      setLoadingFetchOptions(false);
+    };
+
+    if (async && inView && !stopAsyncFetch) getAsyncOptions();
+  }, [async, inView, dropdownOpen]);
 
   const handleFocus = () => {
     if (disabled) return;
@@ -157,39 +211,54 @@ const Select = <T, D = undefined>({
     setDropdownOpen((prev) => !prev);
   };
 
-  const handleOptionSelect = (option: SelectValue<T, D>) => {
-    onChange?.(option);
-    if (!isControlled) setInternalValue(option);
-    setFocused(false);
-    setDropdownOpen(false);
-  };
-
   const handleClearValue = () => {
     setDropdownOpen(true);
     onChange?.(null);
     if (!isControlled) setInternalValue(null);
   };
 
+  const handleOptionSelect = (option: SelectValue<T, D>) => {
+    if (value?.value === option.value) return;
+
+    if (!isControlled) setInternalValue(option);
+    onChange?.(option);
+
+    setFocused(false);
+    setDropdownOpen(false);
+  };
+
   const dropdownContent = (
     <>
-      {options.map((option) => (
-        <div
-          role="button"
-          key={String(option.value)}
-          onClick={() => handleOptionSelect(option)}
-          className={cx("py-1.5 px-4 text-left break-words", {
-            "bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark":
-              option.value === value?.value,
-            "cursor-pointer hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100 dark:text-neutral-100-dark":
-              option.value !== value?.value,
-            "text-14px": size === "default",
-            "text-18px": size === "large",
-          })}
-        >
-          {option.label}
-        </div>
-      ))}
-      {options.length === 0 && (
+      {renderOption
+        ? renderOption(options, handleOptionSelect, value)
+        : options.map((option) => (
+            <div
+              role="button"
+              key={String(option.value)}
+              onClick={() => handleOptionSelect(option)}
+              className={cx("py-1.5 px-4 text-left break-words", {
+                "bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark":
+                  option.value === value?.value,
+                "cursor-pointer hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100 dark:text-neutral-100-dark":
+                  option.value !== value?.value,
+                "text-14px": size === "default",
+                "text-18px": size === "large",
+              })}
+            >
+              {option.label}
+            </div>
+          ))}
+      <div ref={refInView} />
+      {(loading || loadingFetchOptions) && (
+        <Icon
+          name="loader"
+          size={24}
+          strokeWidth={2}
+          animation="spin"
+          className="p-2 text-neutral-60 dark:text-neutral-60-dark"
+        />
+      )}
+      {!loadingFetchOptions && options.length === 0 && (
         <div className="flex flex-col items-center gap-4 text center text-neutral-60 dark:text-neutral-60-dark text-16px">
           <div className="h-12 w-12 bg-neutral-60 dark:bg-neutral-60-dark flex items-center justify-center rounded-full text-neutral-10 dark:text-neutral-10-dark text-36px font-semibold mt-1">
             !
@@ -273,21 +342,27 @@ const Select = <T, D = undefined>({
           onClear={handleClearValue}
           endIcon={endIcon}
         >
-          <Icon
-            name="chevron-down"
-            size={20}
-            strokeWidth={2}
-            onClick={handleDropdown}
-            className={cx(
-              "rounded-full p-0.5 text-neutral-70 dark:text-neutral-70-dark",
-              {
-                "cursor-not-allowed": disabled,
-                "hover:bg-neutral-30 dark:hover:bg-neutral-30-dark cursor-pointer transition-color":
-                  !disabled,
-                "rotate-180": dropdownOpen,
-              }
-            )}
-          />
+          {disabled ? (
+            <Icon
+              name="chevron-down"
+              size={20}
+              strokeWidth={2}
+              className="p-0.5 text-neutral-70 dark:text-neutral-70-dark"
+            />
+          ) : (
+            <Icon
+              name="chevron-down"
+              size={20}
+              strokeWidth={2}
+              onClick={handleDropdown}
+              className={cx(
+                "rounded-full p-0.5 text-neutral-70 dark:text-neutral-70-dark hover:bg-neutral-30 dark:hover:bg-neutral-30-dark cursor-pointer transition-color",
+                {
+                  "rotate-180": dropdownOpen,
+                }
+              )}
+            />
+          )}
         </InputEndIconWrapper>
       </div>
       <InputHelper message={helperMessage} error={isError} size={size} />

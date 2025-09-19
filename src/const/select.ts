@@ -27,3 +27,5 @@ export const options = [
   { label: "Cauliflower", value: "cauliflower" },
   { label: "Potato", value: "potato" },
 ];
+
+export const FETCH_LIMIT = 10;

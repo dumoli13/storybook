@@ -41,7 +41,7 @@ const PrevButton = ({ onClick, disabled }: PaginationButtonProps) => {
       disabled={disabled}
     >
       <Icon name="chevron-left" size={16} strokeWidth={2} />
-      <span>Prev</span>
+      <span className="hidden md:block">Prev</span>
     </button>
   );
 };
@@ -54,7 +54,7 @@ const NextButton = ({ onClick, disabled }: PaginationButtonProps) => {
       onClick={onClick}
       disabled={disabled}
     >
-      <span>Next</span>
+      <span className="hidden md:block">Next</span>
       <Icon name="chevron-right" size={16} strokeWidth={2} />
     </button>
   );
@@ -219,7 +219,7 @@ const Pagination = ({
 
   return (
     <div
-      className={`flex gap-10 items-center justify-between ${totalPages > 1 ? 'flex-row' : 'flex-row-reverse'}`}
+      className={`flex gap-4 md:gap-10 items-start justify-between ${totalPages > 1 ? 'flex-row' : 'flex-row-reverse'}`}
     >
       {totalPages > 1 && (
         <div className="flex item-center flex-wrap gap-2">

@@ -11,6 +11,7 @@ import "../../src/output.css";
 import { iconNames } from "../../const/icon";
 import { options } from "../../src/const/select";
 import { SelectValue } from "../../src";
+import cx from "classnames";
 
 const sizeOption = ["default", "large"];
 const labelPositionOption = ["top", "left"];
@@ -193,6 +194,34 @@ const meta: Meta<SelectProps<any>> = {
         type: { summary: "{ label: string, value: T }[]" },
       },
     },
+    renderOption: {
+      control: "object",
+      description: "Render function for each option.",
+      table: {
+        type: {
+          summary:
+            "(option: Array<SelectValue<T, D>>, onClick: (value: SelectValue<T, D>) => void) => ReactNode",
+        },
+      },
+    },
+    async: {
+      control: "boolean",
+      description: "Flag to enable asynchronous loading of options.",
+      table: {
+        defaultValue: { summary: "false" },
+        type: { summary: "boolean" },
+      },
+    },
+    fetchOptions: {
+      control: "object",
+      description: "Function to fetch options asynchronously.",
+      table: {
+        type: {
+          summary:
+            "(keyword: string, page: number, limit: number) => SelectValue<T, D>",
+        },
+      },
+    },
   },
   args: {
     disabled: false,
@@ -283,6 +312,149 @@ const UncontrolledValue = () => {
 };
 
 export default UncontrolledValue;
+          `.trim(),
+      },
+    },
+  },
+};
+
+export const AsyncAndCustomRender: Story = {
+  args: {
+    label: "Input Label",
+    placeholder: "Input Placeholder...",
+    helperText: "Input helper text",
+  },
+  render: (args) => {
+    const fetchData = async (page: number, limit: number) => {
+      const response = await fetch(
+        `https://jsonplaceholder.typicode.com/posts?_limit=${limit}&_page=${page}`
+      );
+      const data = await response.json();
+      return data.map((item) => ({
+        label: item.title,
+        value: item.id,
+        detail: item,
+      }));
+    };
+
+    const handleRenderOption = (
+      option: Array<SelectValue<number, any>>,
+      onClick: (value: SelectValue<number, any>) => void,
+      value: SelectValue<number, any> | null
+    ) => {
+      return (
+        <table>
+          <thead>
+            <tr>
+              <th className="px-4 py-2">ID</th>
+              <th className="px-4 py-2">Title</th>
+              <th className="px-4 py-2">UserId</th>
+              <th className="px-4 py-2">Body</th>
+            </tr>
+          </thead>
+          <tbody>
+            {option.map((item) =>
+              item.detail ? (
+                <tr
+                  key={item.value}
+                  onClick={() => onClick(item)}
+                  className={cx("", {
+                    "bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark":
+                      item.value === value?.value,
+                    "cursor-pointer hover:bg-neutral-20 dark:hover:bg-neutral-20-dark ":
+                      item.value !== value?.value,
+                  })}
+                >
+                  <td className="px-4 py-2">{item.detail?.id ?? "-"}</td>
+                  <td className="px-4 py-2">{item.detail?.title ?? "-"}</td>
+                  <td className="px-4 py-2">{item.detail?.userId ?? "-"}</td>
+                  <td className="px-4 py-2">{item.detail?.body ?? "-"}</td>
+                </tr>
+              ) : (
+                "-"
+              )
+            )}
+          </tbody>
+        </table>
+      );
+    };
+
+    return (
+      <Select
+        {...args}
+        async
+        fetchOptions={fetchData}
+        renderOption={handleRenderOption}
+      />
+    );
+  },
+  argTypes: {
+    value: { control: false },
+    defaultValue: { control: false },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "This story demonstrates a uncontrolled AutoComplete. to access the input field and its value, use the inputRef.",
+      },
+      source: {
+        code: ` 
+const AsyncAndCustomRender = () => {
+    const fetchData = async (keyword: string, page: number, limit: number) => {
+      const response = await fetch("https://jsonplaceholder.typicode.com/posts");
+      const data = await response.json();
+      return data.map((item) => ({
+        label: item.title,
+        value: item.id,
+        detail: item,
+      }));
+    };
+
+    const handleRenderOption = (
+      option: Array<SelectValue<number, any>>,
+      onClick: (value: SelectValue<number, any>) => void,
+      value: SelectValue<number, any> | null
+    ) => {
+      return (
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>UserId</th>d
+              <th>Body</th>
+            </tr>
+          </thead>
+          <tbody>
+            {option.map((item) =>
+              item.detail ? (
+                <tr key={item.value} onClick={() => onClick(item)}>
+                  <td>{item.detail?.id ?? "-"}</td>
+                  <td>{item.detail?.title ?? "-"}</td>
+                  <td>{item.detail?.userId ?? "-"}</td>
+                  <td>{item.detail?.body ?? "-"}</td>
+                </tr>
+              ) : (
+                "-"
+              )
+            )}
+          </tbody>
+        </table>
+      );
+    };
+
+    return (
+      <Select
+        {...args}
+        async
+        fetchOptions={fetchData}
+        renderOption={handleRenderOption}
+      />
+    );
+};
+
+export default AsyncAndCustomRender;
           `.trim(),
       },
     },

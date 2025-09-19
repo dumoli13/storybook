@@ -271,467 +271,495 @@ export const Playground: Story = {
   },
 };
 
-export const AppendableOption: Story = {
-  args: {
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
-    size: "default",
-    clearable: false,
-    fullWidth: false,
-    loading: false,
-    success: false,
-    labelPosition: "top",
-    options,
-    appendIfNotFound: true,
-  },
-  render: (args) => {
-    const InputRef = useRef<AutoCompleteRef<string> | null>(null);
-    const [options, setOptions] = useState<SelectValue<string>[]>(args.options);
+// export const AppendableOption: Story = {
+//   args: {
+//     label: "Input Label",
+//     placeholder: "Input Placeholder...",
+//     helperText: "Input helper text",
+//     size: "default",
+//     clearable: false,
+//     fullWidth: false,
+//     loading: false,
+//     success: false,
+//     labelPosition: "top",
+//     options,
+//     appendIfNotFound: true,
+//   },
+//   render: (args) => {
+//     const InputRef = useRef<AutoCompleteRef<string> | null>(null);
+//     const [options, setOptions] = useState<SelectValue<string>[]>(args.options);
 
-    const getValueByRef = () => {
-      return InputRef.current?.value; // {value: T, label: string, detail?: D}
-    };
+//     const getValueByRef = () => {
+//       return InputRef.current?.value; // {value: T, label: string, detail?: D}
+//     };
 
-    const handleAppend = (input: SelectValue<string>) => {
-      console.log("handleAppend", input);
-    };
+//     const handleAppend = (input: SelectValue<string>) => {
+//       console.log("handleAppend", input);
+//     };
 
-    return (
-      <AutoComplete
-        {...args}
-        options={options}
-        inputRef={InputRef}
-        onAppend={handleAppend}
-      />
-    );
-  },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "The autocomplete is a normal text input enhanced by a panel of suggested options.",
-      },
-      source: {
-        code: `
-import { useState } from 'react';
+//     return (
+//       <AutoComplete
+//         {...args}
+//         options={options}
+//         inputRef={InputRef}
+//         onAppend={handleAppend}
+//       />
+//     );
+//   },
+//   parameters: {
+//     docs: {
+//       description: {
+//         story:
+//           "The autocomplete is a normal text input enhanced by a panel of suggested options.",
+//       },
+//       source: {
+//         code: `
+// import { useState } from 'react';
 
-const options: SelectValue<string>[] = [
-    { label: 'Apple', value: 'apple' },
-    { label: 'Orange', value: 'orange' },
-    { label: 'Banana', value: 'banana' },
-];
+// const options: SelectValue<string>[] = [
+//     { label: 'Apple', value: 'apple' },
+//     { label: 'Orange', value: 'orange' },
+//     { label: 'Banana', value: 'banana' },
+// ];
 
-const UncontrolledValue = () => {
-    const InputRef = useRef<AutoCompleteRef<string> | null>(null);
+// const AppendableOption = () => {
+//     const InputRef = useRef<AutoCompleteRef<string> | null>(null);
 
-    const getValueByRef = () => {
-        return InputRef.current?.value; // {value: T, label: string, detail?: D}
-    }
+//     const getValueByRef = () => {
+//         return InputRef.current?.value; // {value: T, label: string, detail?: D}
+//     }
 
-    const handleAppend = (input: SelectValue<string>) => {
-        console.log("handleAppend", input);
-    }
+//     const handleAppend = (input: SelectValue<string>) => {
+//         console.log("handleAppend", input);
+//     }
 
-    return (
-        <AutoComplete
-            label="This is label"
-            placeholder="Input Placeholder..."
-            value={value}
-            onChange={setValue}
-            options={options}
-            onAppend={handleAppend}
-        />
-    );
-};
+//     return (
+//         <AutoComplete
+//             label="This is label"
+//             placeholder="Input Placeholder..."
+//             value={value}
+//             onChange={setValue}
+//             options={options}
+//             onAppend={handleAppend}
+//         />
+//     );
+// };
 
-export default UncontrolledValue;
-          `.trim(),
-      },
-    },
-  },
-};
+// export default AppendableOption;
+//           `.trim(),
+//       },
+//     },
+//   },
+// };
 
-export const DefaultValue: Story = {
-  args: {
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
-    defaultValue: "apple",
-    options,
-  },
-  render: (args) => {
-    const InputRef = useRef<AutoCompleteRef<string> | null>(null);
+// export const DefaultValue: Story = {
+//   args: {
+//     label: "Input Label",
+//     placeholder: "Input Placeholder...",
+//     helperText: "Input helper text",
+//     defaultValue: "apple",
+//     options,
+//   },
+//   render: (args) => {
+//     const InputRef = useRef<AutoCompleteRef<string> | null>(null);
 
-    const getValueByRef = () => {
-      return InputRef.current?.value; // {value: T, label: string, detail?: D}
-    };
+//     const getValueByRef = () => {
+//       return InputRef.current?.value; // {value: T, label: string, detail?: D}
+//     };
 
-    return <AutoComplete {...args} options={options} inputRef={InputRef} />;
-  },
-  argTypes: {
-    value: { control: false },
-    defaultValue: { control: false },
-  },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "This story demonstrates a uncontrolled AutoComplete. to access the input field and its value, use the inputRef.",
-      },
-      source: {
-        code: `
-import { useState } from 'react';
+//     return <AutoComplete {...args} options={options} inputRef={InputRef} />;
+//   },
+//   argTypes: {
+//     value: { control: false },
+//     defaultValue: { control: false },
+//   },
+//   parameters: {
+//     docs: {
+//       description: {
+//         story:
+//           "This story demonstrates a uncontrolled AutoComplete. to access the input field and its value, use the inputRef.",
+//       },
+//       source: {
+//         code: `
+// import { useState } from 'react';
 
-const options: SelectValue<string>[] = [
-    { label: 'Apple', value: 'apple' },
-    { label: 'Orange', value: 'orange' },
-    { label: 'Banana', value: 'banana' },
-];
+// const options: SelectValue<string>[] = [
+//     { label: 'Apple', value: 'apple' },
+//     { label: 'Orange', value: 'orange' },
+//     { label: 'Banana', value: 'banana' },
+// ];
 
-const UncontrolledValue = () => {
-    const InputRef = useRef<AutoCompleteRef<string> | null>(null);
+// const DefaultValue = () => {
+//     const InputRef = useRef<AutoCompleteRef<string> | null>(null);
 
-    const getValueByRef = () => {
-        return InputRef.current?.value; // {value: T, label: string, detail?: D}
-    }
+//     const getValueByRef = () => {
+//         return InputRef.current?.value; // {value: T, label: string, detail?: D}
+//     }
 
-    return (
-        <AutoComplete
-            label="This is label"
-            placeholder="Input Placeholder..."
-            value={value}
-            onChange={setValue}
-            options={options}
-        />
-    );
-};
+//     return (
+//         <AutoComplete
+//             label="This is label"
+//             placeholder="Input Placeholder..."
+//             value={value}
+//             onChange={setValue}
+//             options={options}
+//         />
+//     );
+// };
 
-export default UncontrolledValue;
-          `.trim(),
-      },
-    },
-  },
-};
+// export default DefaultValue;
+//           `.trim(),
+//       },
+//     },
+//   },
+// };
 
-export const AsyncAndCustomRender: Story = {
-  args: {
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
-  },
-  render: (args) => {
-    const fetchData = async (keyword: string, page: number, limit: number) => {
-      const response = await fetch(
-        `https://jsonplaceholder.typicode.com/posts?_limit=${limit}&_page=${page}${
-          keyword ? `&title_like=${keyword}` : ""
-        }`
-      );
-      const data = await response.json();
-      return data.map((item) => ({
-        label: `${page} ${item.title}`,
-        value: item.id,
-        detail: item,
-      }));
-    };
+// export const AsyncAndCustomRender: Story = {
+//   args: {
+//     label: "Input Label",
+//     placeholder: "Input Placeholder...",
+//     helperText: "Input helper text",
+//   },
+//   render: (args) => {
+//     const fetchData = async (keyword: string, page: number, limit: number) => {
+//       const response = await fetch(
+//         `https://jsonplaceholder.typicode.com/posts?_limit=${limit}&_page=${page}${
+//           keyword ? `&title_like=${keyword}` : ""
+//         }`
+//       );
+//       const data = await response.json();
+//       return data.map((item) => ({
+//         label: item.title,
+//         value: item.id,
+//         detail: item,
+//       }));
+//     };
 
-    const handleRenderOption = (
-      option: Array<SelectValue<number, any>>,
-      onClick: (value: SelectValue<number, any>) => void,
-      value: SelectValue<number, any> | null
-    ) => {
-      return (
-        <table>
-          <thead>
-            <tr>
-              <th className="px-4 py-2">ID</th>
-              <th className="px-4 py-2">Title</th>
-              <th className="px-4 py-2">UserId</th>
-              <th className="px-4 py-2">Body</th>
-            </tr>
-          </thead>
-          <tbody>
-            {option.map((item) =>
-              item.detail ? (
-                <tr
-                  key={item.value}
-                  onClick={() => onClick(item)}
-                  className={cx("", {
-                    "bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark":
-                      item.value === value?.value,
-                    "cursor-pointer hover:bg-neutral-20 dark:hover:bg-neutral-20-dark ":
-                      item.value !== value?.value,
-                  })}
-                >
-                  <td className="px-4 py-2">{item.detail?.id ?? "-"}</td>
-                  <td className="px-4 py-2">{item.detail?.title ?? "-"}</td>
-                  <td className="px-4 py-2">{item.detail?.userId ?? "-"}</td>
-                  <td className="px-4 py-2">{item.detail?.body ?? "-"}</td>
-                </tr>
-              ) : (
-                "-"
-              )
-            )}
-          </tbody>
-        </table>
-      );
-    };
+//     const handleRenderOption = (
+//       option: Array<SelectValue<number, any>>,
+//       onClick: (value: SelectValue<number, any>) => void,
+//       value: SelectValue<number, any> | null
+//     ) => {
+//       return (
+//         <table>
+//           <thead>
+//             <tr>
+//               <th className="px-4 py-2">ID</th>
+//               <th className="px-4 py-2">Title</th>
+//               <th className="px-4 py-2">UserId</th>
+//               <th className="px-4 py-2">Body</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             {option.map((item) =>
+//               item.detail ? (
+//                 <tr
+//                   key={item.value}
+//                   onClick={() => onClick(item)}
+//                   className={cx("", {
+//                     "bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark":
+//                       item.value === value?.value,
+//                     "cursor-pointer hover:bg-neutral-20 dark:hover:bg-neutral-20-dark ":
+//                       item.value !== value?.value,
+//                   })}
+//                 >
+//                   <td className="px-4 py-2">{item.detail?.id ?? "-"}</td>
+//                   <td className="px-4 py-2">{item.detail?.title ?? "-"}</td>
+//                   <td className="px-4 py-2">{item.detail?.userId ?? "-"}</td>
+//                   <td className="px-4 py-2">{item.detail?.body ?? "-"}</td>
+//                 </tr>
+//               ) : (
+//                 "-"
+//               )
+//             )}
+//           </tbody>
+//         </table>
+//       );
+//     };
 
-    return (
-      <AutoComplete
-        {...args}
-        async
-        fetchOptions={fetchData}
-        renderOption={handleRenderOption}
-      />
-    );
-  },
-  argTypes: {
-    value: { control: false },
-    defaultValue: { control: false },
-  },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "This story demonstrates a uncontrolled AutoComplete. to access the input field and its value, use the inputRef.",
-      },
-      source: {
-        code: `
-import { useState } from 'react';
+//     return (
+//       <AutoComplete
+//         {...args}
+//         async
+//         fetchOptions={fetchData}
+//         renderOption={handleRenderOption}
+//       />
+//     );
+//   },
+//   argTypes: {
+//     value: { control: false },
+//     defaultValue: { control: false },
+//   },
+//   parameters: {
+//     docs: {
+//       description: {
+//         story:
+//           "This story demonstrates a uncontrolled AutoComplete. to access the input field and its value, use the inputRef.",
+//       },
+//       source: {
+//         code: ` 
+// const AsyncAndCustomRender = () => {
+//     const fetchData = async (keyword: string, page: number, limit: number) => {
+//       const response = await fetch("https://jsonplaceholder.typicode.com/posts");
+//       const data = await response.json();
+//       return data.map((item) => ({
+//         label: item.title,
+//         value: item.id,
+//         detail: item,
+//       }));
+//     };
 
-const options: SelectValue<string>[] = [
-    { label: 'Apple', value: 'apple' },
-    { label: 'Orange', value: 'orange' },
-    { label: 'Banana', value: 'banana' },
-];
+//     const handleRenderOption = (
+//       option: Array<SelectValue<number, any>>,
+//       onClick: (value: SelectValue<number, any>) => void,
+//       value: SelectValue<number, any> | null
+//     ) => {
+//       return (
+//         <table>
+//           <thead>
+//             <tr>
+//               <th>ID</th>
+//               <th>Title</th>
+//               <th>UserId</th>d
+//               <th>Body</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             {option.map((item) =>
+//               item.detail ? (
+//                 <tr key={item.value} onClick={() => onClick(item)}>
+//                   <td>{item.detail?.id ?? "-"}</td>
+//                   <td>{item.detail?.title ?? "-"}</td>
+//                   <td>{item.detail?.userId ?? "-"}</td>
+//                   <td>{item.detail?.body ?? "-"}</td>
+//                 </tr>
+//               ) : (
+//                 "-"
+//               )
+//             )}
+//           </tbody>
+//         </table>
+//       );
+//     };
 
-const UncontrolledValue = () => {
-    const InputRef = useRef<AutoCompleteRef<string> | null>(null);
+//     return (
+//       <AutoComplete
+//         {...args}
+//         async
+//         fetchOptions={fetchData}
+//         renderOption={handleRenderOption}
+//       />
+//     );
+// };
 
-    const getValueByRef = () => {
-        return InputRef.current?.value; // {value: T, label: string, detail?: D}
-    }
+// export default AsyncAndCustomRender;
+//           `.trim(),
+//       },
+//     },
+//   },
+// };
 
-    return (
-        <AutoComplete
-            label="This is label"
-            placeholder="Input Placeholder..."
-            value={value}
-            onChange={setValue}
-            options={options}
-        />
-    );
-};
+// export const ControlledValue: Story = {
+//   args: {
+//     label: "Input Label",
+//     placeholder: "Input Placeholder...",
+//     helperText: "Input helper text",
+//   },
+//   render: (args) => {
+//     const [value, setValue] = useState<SelectValue<string> | null>({
+//       label: "Orange",
+//       value: "orange",
+//     });
 
-export default UncontrolledValue;
-          `.trim(),
-      },
-    },
-  },
-};
+//     return (
+//       <AutoComplete
+//         {...args}
+//         value={value}
+//         onChange={setValue}
+//         options={options}
+//       />
+//     );
+//   },
+//   argTypes: {
+//     value: { control: false },
+//     defaultValue: { control: false },
+//   },
+//   parameters: {
+//     docs: {
+//       description: {
+//         story:
+//           "This story demonstrates a controlled AutoComplete with internal state using useState.",
+//       },
+//       source: {
+//         code: `
+// import { useState } from 'react';
 
-export const ControlledValue: Story = {
-  args: {
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
-  },
-  render: (args) => {
-    const [value, setValue] = useState<SelectValue<string> | null>({
-      label: "Orange",
-      value: "orange",
-    });
+// const options: SelectValue<string>[] = [
+//     { label: 'Apple', value: 'apple' },
+//     { label: 'Orange', value: 'orange' },
+//     { label: 'Banana', value: 'banana' },
+// ];
 
-    return (
-      <AutoComplete
-        {...args}
-        value={value}
-        onChange={setValue}
-        options={options}
-      />
-    );
-  },
-  argTypes: {
-    value: { control: false },
-    defaultValue: { control: false },
-  },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "This story demonstrates a controlled AutoComplete with internal state using useState.",
-      },
-      source: {
-        code: `
-import { useState } from 'react';
+// const ControlledValue = () => {
+//     const [value, setValue] = useState<SelectValue<string> | null>({ label: 'Orange', value: 'orange' });
 
-const options: SelectValue<string>[] = [
-    { label: 'Apple', value: 'apple' },
-    { label: 'Orange', value: 'orange' },
-    { label: 'Banana', value: 'banana' },
-];
+//     return (
+//         <AutoComplete
+//             label="This is label"
+//             placeholder="Input Placeholder..."
+//             value={value}
+//             onChange={setValue}
+//             options={options}
+//         />
+//     );
+// };
 
-const ControlledValue = () => {
-    const [value, setValue] = useState<SelectValue<string> | null>({ label: 'Orange', value: 'orange' });
+// export default ControlledValue;
+//           `.trim(),
+//       },
+//     },
+//   },
+// };
 
-    return (
-        <AutoComplete
-            label="This is label"
-            placeholder="Input Placeholder..."
-            value={value}
-            onChange={setValue}
-            options={options}
-        />
-    );
-};
+// export const Sizes: Story = {
+//   render: (args) => (
+//     <div className="flex gap-10 flex-wrap">
+//       {sizeOption.map((size) => (
+//         <AutoComplete
+//           key={size}
+//           {...args}
+//           size={size as AutoCompleteProps<any>["size"]}
+//           label={`Size ${size}`}
+//           options={options}
+//         />
+//       ))}
+//     </div>
+//   ),
+//   args: {
+//     placeholder: "Input Placeholder...",
+//   },
+//   argTypes: {
+//     size: { control: false },
+//     label: { control: false },
+//   },
+// };
 
-export default ControlledValue;
-          `.trim(),
-      },
-    },
-  },
-};
+// export const LabelPosition: Story = {
+//   render: (args) => (
+//     <div className="flex flex-col w-full gap-4">
+//       {labelPositionOption.map((position) => (
+//         <AutoComplete
+//           key={position}
+//           {...args}
+//           labelPosition={position as AutoCompleteProps<any>["labelPosition"]}
+//           label={`Position ${position}`}
+//           options={options}
+//           width={500}
+//         />
+//       ))}
+//     </div>
+//   ),
+//   args: {
+//     placeholder: "Input Placeholder...",
+//     helperText: "Input helper text",
+//   },
+//   argTypes: {
+//     size: { control: false },
+//     label: { control: false },
+//   },
+// };
 
-export const Sizes: Story = {
-  render: (args) => (
-    <div className="flex gap-10 flex-wrap">
-      {sizeOption.map((size) => (
-        <AutoComplete
-          key={size}
-          {...args}
-          size={size as AutoCompleteProps<any>["size"]}
-          label={`Size ${size}`}
-          options={options}
-        />
-      ))}
-    </div>
-  ),
-  args: {
-    placeholder: "Input Placeholder...",
-  },
-  argTypes: {
-    size: { control: false },
-    label: { control: false },
-  },
-};
+// export const SuccessAndError: Story = {
+//   render: (args) => (
+//     <div className="flex flex-col gap-10">
+//       <AutoComplete
+//         {...args}
+//         label="Neutral AutoComplete size"
+//         className="flex-1"
+//         options={options}
+//       />
+//       <AutoComplete
+//         {...args}
+//         label="Success AutoComplete size"
+//         className="flex-1"
+//         success
+//         options={options}
+//       />
+//       <AutoComplete
+//         {...args}
+//         label="Success AutoComplete size"
+//         className="flex-1"
+//         error
+//         options={options}
+//       />
+//       <AutoComplete
+//         {...args}
+//         label="Success AutoComplete size"
+//         className="flex-1"
+//         error="Error with message"
+//         options={options}
+//       />
+//     </div>
+//   ),
+//   args: {
+//     placeholder: "Input Placeholder...",
+//     helperText: "Input helper text",
+//   },
+//   argTypes: {
+//     success: { control: false },
+//     error: { control: false },
+//   },
+// };
 
-export const LabelPosition: Story = {
-  render: (args) => (
-    <div className="flex flex-col w-full gap-4">
-      {labelPositionOption.map((position) => (
-        <AutoComplete
-          key={position}
-          {...args}
-          labelPosition={position as AutoCompleteProps<any>["labelPosition"]}
-          label={`Position ${position}`}
-          options={options}
-          width={500}
-        />
-      ))}
-    </div>
-  ),
-  args: {
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
-  },
-  argTypes: {
-    size: { control: false },
-    label: { control: false },
-  },
-};
+// type WithIconControls = AutoCompleteProps<any> & {
+//   startIconName: IconNames;
+//   endIconName: IconNames;
+// };
+// export const WithIcon: StoryObj<WithIconControls> = {
+//   args: {
+//     startIconName: "arrow-up",
+//     endIconName: "arrow-down",
+//     label: "Input Label",
+//     placeholder: "Input Placeholder...",
+//     helperText: "Input helper text",
+//   },
+//   argTypes: {
+//     startIconName: {
+//       control: { type: "select" },
+//       options: iconNames,
+//       description: "Name of the start icon",
+//       table: {
+//         category: "Icons",
+//       },
+//     },
+//     endIconName: {
+//       control: { type: "select" },
+//       options: iconNames,
+//       description: "Name of the end icon",
+//       table: {
+//         category: "Icons",
+//       },
+//     },
+//   },
+//   render: (args) => {
+//     const { startIconName, endIconName, ...rest } = args;
 
-export const SuccessAndError: Story = {
-  render: (args) => (
-    <div className="flex flex-col gap-10">
-      <AutoComplete
-        {...args}
-        label="Neutral AutoComplete size"
-        className="flex-1"
-        options={options}
-      />
-      <AutoComplete
-        {...args}
-        label="Success AutoComplete size"
-        className="flex-1"
-        success
-        options={options}
-      />
-      <AutoComplete
-        {...args}
-        label="Success AutoComplete size"
-        className="flex-1"
-        error
-        options={options}
-      />
-      <AutoComplete
-        {...args}
-        label="Success AutoComplete size"
-        className="flex-1"
-        error="Error with message"
-        options={options}
-      />
-    </div>
-  ),
-  args: {
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
-  },
-  argTypes: {
-    success: { control: false },
-    error: { control: false },
-  },
-};
+//     const start = useMemo(
+//       () => <Icon name={startIconName} color="currentColor" />,
+//       [startIconName]
+//     );
+//     const end = useMemo(
+//       () => <Icon name={endIconName} color="currentColor" />,
+//       [endIconName]
+//     );
 
-type WithIconControls = AutoCompleteProps<any> & {
-  startIconName: IconNames;
-  endIconName: IconNames;
-};
-export const WithIcon: StoryObj<WithIconControls> = {
-  args: {
-    startIconName: "arrow-up",
-    endIconName: "arrow-down",
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
-  },
-  argTypes: {
-    startIconName: {
-      control: { type: "select" },
-      options: iconNames,
-      description: "Name of the start icon",
-      table: {
-        category: "Icons",
-      },
-    },
-    endIconName: {
-      control: { type: "select" },
-      options: iconNames,
-      description: "Name of the end icon",
-      table: {
-        category: "Icons",
-      },
-    },
-  },
-  render: (args) => {
-    const { startIconName, endIconName, ...rest } = args;
-
-    const start = useMemo(
-      () => <Icon name={startIconName} color="currentColor" />,
-      [startIconName]
-    );
-    const end = useMemo(
-      () => <Icon name={endIconName} color="currentColor" />,
-      [endIconName]
-    );
-
-    return (
-      <AutoComplete
-        {...rest}
-        startIcon={start}
-        endIcon={end}
-        options={options}
-      />
-    );
-  },
-};
+//     return (
+//       <AutoComplete
+//         {...rest}
+//         startIcon={start}
+//         endIcon={end}
+//         options={options}
+//       />
+//     );
+//   },
+// };

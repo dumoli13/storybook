@@ -58,10 +58,12 @@ const InputDropdown = ({
 
     if (spaceBelow >= dropdownHeight || spaceBelow > spaceAbove) {
       // Place below
+      console.log("condition 1")
       top = anchorRect.bottom + window.scrollY;
       direction = 'down';
     } else {
       // Place above
+      console.log("condition 2")
       top = anchorRect.top - dropdownHeight - 10 + window.scrollY;
       direction = 'up';
     }
@@ -73,15 +75,14 @@ const InputDropdown = ({
     if (fullWidth) {
       left = anchorRect.left + window.scrollX;
       width = anchorRect.width;
-    } else {
-      // Check if dropdown fits to the right
-      if (spaceRight >= dropdownWidth || spaceRight > spaceLeft) {
+    } else if (spaceRight >= dropdownWidth || spaceRight > spaceLeft) {
+        // Check if dropdown fits to the right
         left = anchorRect.left + window.scrollX;
       } else {
         // Place to the left
         left = anchorRect.right - dropdownWidth + window.scrollX;
       }
-    }
+    
 
     // Ensure dropdown stays within viewport boundaries
     const viewportWidth = window.innerWidth;
@@ -97,9 +98,11 @@ const InputDropdown = ({
 
     // Adjust vertical position if needed
     if (top + dropdownHeight > viewportHeight + window.scrollY) {
+      console.log("condition 3")
       top = viewportHeight - dropdownHeight + window.scrollY;
     }
     if (top < window.scrollY) {
+      console.log("condition 4")
       top = window.scrollY;
     }
 

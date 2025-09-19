@@ -9,9 +9,13 @@ export const theme = {
   container: {
     center: true,
     padding: '2rem',
-    screens: {
-      '2xl': '1400px',
-    },
+  screens: {
+    xs: '0px',
+    sm: '640px', // mobile screen size
+    md: '768px', // tablet screen size
+    lg: '1024px', // desktop screen size
+    xl: '1440px', // wide desktop screen size
+  },
   },
   extend: {
     flex: {

@@ -7,6 +7,9 @@ import InputDropdown from "./InputDropdown";
 import InputEndIconWrapper from "./InputEndIconWrapper";
 import InputHelper from "./InputHelper";
 import InputLabel from "./InputLabel";
+import { useInView } from "react-intersection-observer";
+import { FETCH_LIMIT } from "../../const/select";
+import { useDebouncedCallback } from "use-debounce";
 
 export interface AutoCompleteMultipleRef<T, D = undefined> {
   element: HTMLDivElement | null;
@@ -27,7 +30,6 @@ interface BaseAutoCompleteMultipleProps<T, D = undefined>
   labelPosition?: "top" | "left";
   autoHideLabel?: boolean;
   placeholder?: string;
-  options: SelectValue<T, D>[];
   onChange?: (value: SelectValue<T, D>[]) => void;
   helperText?: React.ReactNode;
   disabled?: boolean;
@@ -40,26 +42,50 @@ interface BaseAutoCompleteMultipleProps<T, D = undefined>
   size?: "default" | "large";
   error?: boolean | string;
   success?: boolean;
-  loading?: boolean;
   clearable?: boolean;
   width?: number;
   required?: boolean;
+  renderOption?: (
+    option: Array<SelectValue<T, D>>,
+    onClick: (value: SelectValue<T, D>) => void,
+    selected: Array<SelectValue<T, D>>
+  ) => React.ReactNode;
 }
 
-interface AutoCompleteMultipleWithoutAppendProps<T, D = undefined>
+interface WithoutAppendProps<T, D = undefined>
   extends BaseAutoCompleteMultipleProps<T, D> {
   appendIfNotFound?: false;
   onAppend?: (input: SelectValue<T, D>) => never;
 }
-interface AutoCompleteMultipleWithAppendProps<T, D = undefined>
+interface WithAppendProps<T, D = undefined>
   extends BaseAutoCompleteMultipleProps<T, D> {
   appendIfNotFound: true;
   onAppend: (input: SelectValue<T>) => void;
 }
 
+interface AsyncProps<T, D> {
+  async: true;
+  fetchOptions: (
+    keyword: string,
+    page: number,
+    limit: number
+  ) => Promise<SelectValue<T, D>[]>;
+  options?: never;
+  loading?: never;
+}
+
+interface NonAsyncProps<T, D> {
+  async?: false;
+  fetchOptions?: never;
+  options: SelectValue<T, D>[];
+  loading?: boolean;
+}
+
 export type AutoCompleteMultipleProps<T, D = undefined> =
-  | AutoCompleteMultipleWithoutAppendProps<T, D>
-  | AutoCompleteMultipleWithAppendProps<T, D>;
+  | (WithoutAppendProps<T, D> & AsyncProps<T, D>)
+  | (WithoutAppendProps<T, D> & NonAsyncProps<T, D>)
+  | (WithAppendProps<T, D> & AsyncProps<T, D>)
+  | (WithAppendProps<T, D> & NonAsyncProps<T, D>);
 
 /**
  * An autocomplete where multiple options can be selected
@@ -91,6 +117,9 @@ const AutoCompleteMultiple = <T, D = undefined>({
   appendIfNotFound,
   onAppend,
   required,
+  renderOption,
+  async,
+  fetchOptions,
   ...props
 }: AutoCompleteMultipleProps<T, D>) => {
   const elementRef = React.useRef<HTMLDivElement>(null);
@@ -100,26 +129,42 @@ const AutoCompleteMultiple = <T, D = undefined>({
   const [focused, setFocused] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
 
+  const { ref: refInView, inView } = useInView({ threshold: 0.1 });
+  const [loadingFetchOptions, setLoadingFetchOptions] = React.useState(!!async);
+  const [stopAsyncFetch, setStopAsyncFetch] = React.useState(false);
+  const [inheritOptions, setInheritOptions] = React.useState<
+    SelectValue<T, D>[]
+  >(optionsProp || []);
   const [injectOptions, setInjectOptions] = React.useState<SelectValue<T, D>[]>(
     []
   );
 
-  const options = React.useMemo(
-    () =>
-      Array.from(
-        new Map(
-          [...injectOptions, ...optionsProp].map((item) => [item.label, item])
-        ).values()
-      ),
-    [optionsProp, injectOptions]
-  );
+  const [inputValue, setInputValue] = React.useState("");
+  const [page, setPage] = React.useState(0);
 
-  const [filteredOptions, setFilteredOptions] = React.useState<
-    SelectValue<T, D>[]
-  >([]);
+  const options = React.useMemo(() => {
+    const sourceOptions = async ? inheritOptions : optionsProp;
+    const combinedOptions = [...injectOptions, ...sourceOptions];
+
+    return Array.from(
+      new Map(combinedOptions.map((item) => [item.label, item])).values()
+    );
+  }, [async, optionsProp, inheritOptions, injectOptions]);
 
   const [internalValue, setInternalValue] = React.useState<SelectValue<T, D>[]>(
     options.filter((item) => defaultValue.includes(item.value)) || []
+  );
+
+  const filteredOptions = React.useMemo(
+    () =>
+      async
+        ? options
+        : options.filter(
+            (option) =>
+              !inputValue ||
+              option.label.toLowerCase().includes(inputValue.toLowerCase())
+          ),
+    [inputValue, options]
   );
 
   React.useEffect(() => {
@@ -132,7 +177,6 @@ const AutoCompleteMultiple = <T, D = undefined>({
 
   const isControlled = valueProp !== undefined;
   const value = valueProp ?? internalValue; // Default to internal state if undefined
-  const [inputValue, setInputValue] = React.useState("");
 
   const helperMessage = errorProp ?? helperText;
   const isError = !!errorProp;
@@ -141,23 +185,10 @@ const AutoCompleteMultiple = <T, D = undefined>({
   React.useImperativeHandle(inputRef, () => ({
     element: elementRef.current,
     value: value as SelectValue<T, undefined>[],
-    focus: () => {
-      valueRef.current?.focus();
-    },
-    reset: () => {
-      setInternalValue([]);
-    },
+    focus: () => valueRef.current?.focus(),
+    reset: () => setInternalValue(null),
     disabled,
   }));
-
-  React.useEffect(() => {
-    const filtered = options.filter(
-      (option) =>
-        !inputValue ||
-        option.label.toLowerCase().includes(inputValue.toLowerCase())
-    );
-    setFilteredOptions(filtered);
-  }, [inputValue, optionsProp, value]);
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -176,6 +207,42 @@ const AutoCompleteMultiple = <T, D = undefined>({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  React.useEffect(() => {
+    const getAsyncOptions = async () => {
+      setLoadingFetchOptions(true);
+      const newPage = page + 1;
+      const response = await fetchOptions(inputValue, newPage, FETCH_LIMIT);
+      setPage(newPage);
+      if (response.length < FETCH_LIMIT) {
+        setStopAsyncFetch(true);
+      }
+      setInheritOptions((prev) => [...prev, ...response]);
+      setLoadingFetchOptions(false);
+    };
+
+    if (async && inView && !stopAsyncFetch) getAsyncOptions();
+  }, [async, inView, dropdownOpen]);
+
+  const handleFetchOption = async (keyword: string) => {
+    // Fetch new options and reset page
+    setInheritOptions([]);
+    setStopAsyncFetch(false);
+    setLoadingFetchOptions(true);
+    const newPage = 1;
+    const response = await fetchOptions(keyword, newPage, FETCH_LIMIT);
+    setPage(newPage);
+    if (response.length < FETCH_LIMIT) {
+      setStopAsyncFetch(true);
+    }
+    setInheritOptions(response);
+    setLoadingFetchOptions(false);
+  };
+
+  const debouncedSearch = useDebouncedCallback(
+    (keyword: string) => handleFetchOption(keyword),
+    500
+  );
 
   const handleFocus = () => {
     if (disabled) return;
@@ -199,7 +266,6 @@ const AutoCompleteMultiple = <T, D = undefined>({
   };
 
   const handleDropdown = () => {
-    if (disabled) return;
     setFocused(true);
     setDropdownOpen((prev) => !prev);
   };
@@ -211,20 +277,29 @@ const AutoCompleteMultiple = <T, D = undefined>({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setInputValue(newValue);
+    setInputValue(e.target.value);
+
+    const input = e.target.value.toLowerCase();
+    if (async) {
+      debouncedSearch(input);
+    } else {
+      const filtered = options.find(
+        ({ label }) => label.toLowerCase() === input
+      );
+      if (filtered) {
+        handleOptionSelect(filtered);
+      }
+    }
   };
 
   const handleOptionSelect = (option: SelectValue<T, D>) => {
     const newValue = [...(value || []), option];
-    setInputValue("");
     if (!isControlled) setInternalValue(newValue); // Update internal state if uncontrolled
     onChange?.(newValue);
   };
 
   const handleRemoveSelected = (option: SelectValue<T, D>) => {
     const newValue = value.filter((v) => v.value !== option.value);
-    setInputValue("");
     if (!isControlled) setInternalValue(newValue);
     onChange?.(newValue);
   };
@@ -246,8 +321,8 @@ const AutoCompleteMultiple = <T, D = undefined>({
       {appendIfNotFound &&
         inputValue &&
         !options.find((option) => option.label === inputValue) && (
-          <div
-            role="button"
+          <button
+            type="button"
             onClick={handleAppend}
             className={cx(
               "py-1.5 px-4 text-left break-words cursor-pointer bg-neutral-15 dark:bg-neutral-15-dark hover:bg-neutral-20 dark:hover:bg-neutral-20-dark",
@@ -258,58 +333,72 @@ const AutoCompleteMultiple = <T, D = undefined>({
             )}
           >
             Create <b>{inputValue}</b>...
+          </button>
+        )}
+      {renderOption
+        ? renderOption(filteredOptions, handleOptionSelect, value)
+        : filteredOptions.map((option) => {
+            const selected = value?.some((v) => v.value === option.value);
+
+            return selected ? (
+              <div
+                role="button"
+                key={String(option.value)}
+                onMouseDown={() => handleRemoveSelected(option)}
+                className={cx(
+                  "cursor-pointer py-1.5 px-4 hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-left break-words flex items-center justify-between gap-2.5 bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark",
+                  {
+                    "text-14px": size === "default",
+                    "text-18px": size === "large",
+                  }
+                )}
+              >
+                <span>{option.label}</span>
+                <Icon
+                  name="check"
+                  size={10}
+                  strokeWidth={3}
+                  className="text-primary-main dark:text-primary-main-dark"
+                />
+              </div>
+            ) : (
+              <div
+                role="button"
+                key={String(option.value)}
+                onMouseDown={() => handleOptionSelect(option)}
+                className={cx(
+                  "cursor-pointer py-1.5 px-4 hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-left break-words text-neutral-100 dark:text-neutral-100-dark",
+                  {
+                    "text-14px": size === "default",
+                    "text-18px": size === "large",
+                  }
+                )}
+              >
+                {option.label}
+              </div>
+            );
+          })}
+      <div ref={refInView} />
+      {(loading || loadingFetchOptions) && (
+        <Icon
+          name="loader"
+          size={24}
+          strokeWidth={2}
+          animation="spin"
+          className="p-2 text-neutral-60 dark:text-neutral-60-dark"
+        />
+      )}
+      {!loading &&
+        !loadingFetchOptions &&
+        ((options.length === 0 && !inputValue) ||
+          (!appendIfNotFound && filteredOptions.length === 0)) && (
+          <div className="flex flex-col items-center gap-4 text center text-neutral-60 text-16px dark:text-neutral-60-dark">
+            <div className="h-12 w-12 bg-neutral-60 dark:bg-neutral-60-dark flex items-center justify-center rounded-full text-neutral-10 dark:text-neutral-10-dark text-36px font-semibold mt-1">
+              !
+            </div>
+            <div>Empty Option</div>
           </div>
         )}
-      {filteredOptions.map((option) => {
-        const selected = value?.some((v) => v.value === option.value);
-
-        return selected ? (
-          <div
-            role="button"
-            key={String(option.value)}
-            onMouseDown={() => handleRemoveSelected(option)}
-            className={cx(
-              "cursor-pointer py-1.5 px-4 hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-left break-words flex items-center justify-between gap-2.5 bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark",
-              {
-                "text-14px": size === "default",
-                "text-18px": size === "large",
-              }
-            )}
-          >
-            <span>{option.label}</span>
-            <Icon
-              name="check"
-              size={10}
-              strokeWidth={3}
-              className="text-primary-main dark:text-primary-main-dark"
-            />
-          </div>
-        ) : (
-          <div
-            role="button"
-            key={String(option.value)}
-            onMouseDown={() => handleOptionSelect(option)}
-            className={cx(
-              "cursor-pointer py-1.5 px-4 hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-left break-words text-neutral-100 dark:text-neutral-100-dark",
-              {
-                "text-14px": size === "default",
-                "text-18px": size === "large",
-              }
-            )}
-          >
-            {option.label}
-          </div>
-        );
-      })}
-      {((optionsProp.length === 0 && !inputValue) ||
-        (!appendIfNotFound && filteredOptions.length === 0)) && (
-        <div className="flex flex-col items-center gap-4 text center text-neutral-60 text-16px dark:text-neutral-60-dark">
-          <div className="h-12 w-12 bg-neutral-60 dark:bg-neutral-60-dark flex items-center justify-center rounded-full text-neutral-10 dark:text-neutral-10-dark text-36px font-semibold mt-1">
-            !
-          </div>
-          <div>Empty Option</div>
-        </div>
-      )}
     </>
   );
 
@@ -374,7 +463,7 @@ const AutoCompleteMultiple = <T, D = undefined>({
             {...props}
             tabIndex={!disabled ? 0 : -1}
             id={inputId}
-            value={inputValue}
+            value={focused ? inputValue : ""}
             onChange={handleInputChange}
             placeholder={focused ? "" : placeholder}
             className={cx(
@@ -400,21 +489,27 @@ const AutoCompleteMultiple = <T, D = undefined>({
           onClear={handleClearValue}
           endIcon={endIcon}
         >
-          <Icon
-            name="chevron-down"
-            size={20}
-            strokeWidth={2}
-            onClick={handleDropdown}
-            className={cx(
-              "rounded-full p-0.5 text-neutral-70 dark:text-neutral-70-dark",
-              {
-                "cursor-not-allowed": disabled,
-                "hover:bg-neutral-30 dark:hover:bg-neutral-30-dark cursor-pointer transition-color":
-                  !disabled,
-                "rotate-180": dropdownOpen,
-              }
-            )}
-          />
+          {disabled ? (
+            <Icon
+              name="chevron-down"
+              size={20}
+              strokeWidth={2}
+              className="p-0.5 text-neutral-70 dark:text-neutral-70-dark"
+            />
+          ) : (
+            <Icon
+              name="chevron-down"
+              size={20}
+              strokeWidth={2}
+              onClick={handleDropdown}
+              className={cx(
+                "rounded-full p-0.5 text-neutral-70 dark:text-neutral-70-dark hover:bg-neutral-30 dark:hover:bg-neutral-30-dark cursor-pointer transition-color",
+                {
+                  "rotate-180": dropdownOpen,
+                }
+              )}
+            />
+          )}
         </InputEndIconWrapper>
       </div>
       <InputHelper message={helperMessage} error={isError} size={size} />

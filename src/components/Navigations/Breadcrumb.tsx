@@ -102,9 +102,7 @@ const Breadcrumb = ({
         <BreadcrumbLink
           item={item}
           key={item.key}
-          isLast={index === parsedItem.length - 1}
-          // isFormEdited={isFormEdited}
-          // onNavigate={onNavigate}
+          isLast={index === parsedItem.length - 1} 
           {...props}
         />
       ));
@@ -121,23 +119,19 @@ const Breadcrumb = ({
         <BreadcrumbLink
           item={item}
           key={item.key}
-          isLast={false}
-          // isFormEdited={isFormEdited}
-          // onNavigate={onNavigate}
+          isLast={false} 
           {...props}
         />
       )),
       <React.Fragment key="ellipsis">
-        <span className="mx-2">...</span>
+        <span className="mx-2.5">...</span>
         <span>/</span>
       </React.Fragment>,
       ...lastItems.map((item, index) => (
         <BreadcrumbLink
           item={item}
           key={item.key}
-          isLast={index === lastItems.length - 1}
-          // isFormEdited={isFormEdited}
-          // onNavigate={onNavigate}
+          isLast={index === lastItems.length - 1} 
           {...props}
         />
       )),
@@ -147,7 +141,7 @@ const Breadcrumb = ({
   return (
     <nav
       aria-label="breadcrumb"
-      className="flex items-center gap-2.5 font-medium text-neutral-60 dark:text-neutral-60-dark text-24px"
+      className="flex items-center gap-2.5 font-medium text-neutral-90 dark:text-neutral-90-dark text-14px"
     >
       {renderItems()}
     </nav>

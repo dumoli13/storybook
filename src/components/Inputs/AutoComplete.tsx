@@ -8,6 +8,7 @@ import InputHelper from "./InputHelper";
 import InputLabel from "./InputLabel";
 import { SelectValue } from "../../types";
 import Icon from "../Icon";
+import { FETCH_LIMIT } from "../../const/select";
 
 export interface AutoCompleteRef<T, D = undefined> {
   element: HTMLDivElement | null;
@@ -17,7 +18,7 @@ export interface AutoCompleteRef<T, D = undefined> {
   disabled: boolean;
 }
 
-interface BaseAutoCompleteProps<T, D = undefined>
+interface BaseProps<T, D = undefined>
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
     "onChange" | "value" | "defaultValue" | "size" | "required" | "checked"
@@ -50,14 +51,12 @@ interface BaseAutoCompleteProps<T, D = undefined>
   ) => React.ReactNode;
 }
 
-interface AutoCompleteWithoutAppendProps<T, D = undefined>
-  extends BaseAutoCompleteProps<T, D> {
+interface WithoutAppendProps<T, D = undefined> {
   appendIfNotFound?: false;
   onAppend?: (input: SelectValue<T, D>) => never;
 }
 
-interface AutoCompleteWithAppendProps<T, D = undefined>
-  extends BaseAutoCompleteProps<T, D> {
+interface WithAppendProps<T, D = undefined> extends BaseProps<T, D> {
   appendIfNotFound: true;
   onAppend: (input: SelectValue<T, D>) => void;
 }
@@ -81,12 +80,10 @@ interface NonAsyncProps<T, D> {
 }
 
 export type AutoCompleteProps<T, D = undefined> =
-  | (AutoCompleteWithoutAppendProps<T, D> & AsyncProps<T, D>)
-  | (AutoCompleteWithoutAppendProps<T, D> & NonAsyncProps<T, D>)
-  | (AutoCompleteWithAppendProps<T, D> & AsyncProps<T, D>)
-  | (AutoCompleteWithAppendProps<T, D> & NonAsyncProps<T, D>);
-
-const FETCH_LIMIT = 10;
+  | (BaseProps<T, D> & WithoutAppendProps<T, D> & AsyncProps<T, D>)
+  | (BaseProps<T, D> & WithoutAppendProps<T, D> & NonAsyncProps<T, D>)
+  | (BaseProps<T, D> & WithAppendProps<T, D> & AsyncProps<T, D>)
+  | (BaseProps<T, D> & WithAppendProps<T, D> & NonAsyncProps<T, D>);
 
 /**
  * The autocomplete is a normal text input enhanced by a panel of suggested options.
@@ -130,17 +127,18 @@ const AutoComplete = <T, D = undefined>({
   const [focused, setFocused] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
 
-  const { ref: refInView, inView } = useInView({
-    threshold: 0.1,
-  });
+  const { ref: refInView, inView } = useInView({ threshold: 0.1 });
   const [loadingFetchOptions, setLoadingFetchOptions] = React.useState(!!async);
   const [stopAsyncFetch, setStopAsyncFetch] = React.useState(false);
-  const [injectOptions, setInjectOptions] = React.useState<SelectValue<T, D>[]>(
-    []
-  );
   const [inheritOptions, setInheritOptions] = React.useState<
     SelectValue<T, D>[]
   >(optionsProp || []);
+  const [injectOptions, setInjectOptions] = React.useState<SelectValue<T, D>[]>(
+    []
+  );
+
+  const [inputValue, setInputValue] = React.useState("");
+  const [page, setPage] = React.useState(0);
 
   const options = React.useMemo(() => {
     const sourceOptions = async ? inheritOptions : optionsProp;
@@ -149,16 +147,24 @@ const AutoComplete = <T, D = undefined>({
     return Array.from(
       new Map(combinedOptions.map((item) => [item.label, item])).values()
     );
-  }, [optionsProp, inheritOptions, injectOptions]);
-
-  const [filteredOptions, setFilteredOptions] = React.useState<
-    SelectValue<T, D>[]
-  >([]);
+  }, [async, optionsProp, inheritOptions, injectOptions]);
 
   const [internalValue, setInternalValue] = React.useState<SelectValue<
     T,
     D
   > | null>(options.find((item) => item.value === defaultValue) || null);
+
+  const filteredOptions = React.useMemo(
+    () =>
+      async
+        ? options
+        : options.filter(
+            (option) =>
+              !inputValue ||
+              option.label.toLowerCase().includes(inputValue.toLowerCase())
+          ),
+    [inputValue, options]
+  );
 
   React.useEffect(() => {
     setInternalValue(
@@ -170,48 +176,10 @@ const AutoComplete = <T, D = undefined>({
 
   const isControlled = valueProp !== undefined;
   const value = isControlled ? valueProp : internalValue;
-  const [inputValue, setInputValue] = React.useState("");
-  const [page, setPage] = React.useState(0);
 
   const helperMessage = errorProp ?? helperText;
   const isError = !!errorProp;
   const disabled = loading || disabledProp;
-
-  React.useEffect(() => {
-    const getAsyncOptions = async () => {
-      setLoadingFetchOptions(true);
-      const newPage = page + 1;
-      const response = await fetchOptions!(inputValue, newPage, FETCH_LIMIT);
-      setPage(newPage);
-      if (response.length < FETCH_LIMIT) {
-        setStopAsyncFetch(true);
-      }
-      setInheritOptions((prev) => [...prev, ...response]);
-      setLoadingFetchOptions(false);
-    };
-
-    if (async && inView && !stopAsyncFetch) getAsyncOptions();
-  }, [inView, dropdownOpen]);
-
-  const handleFetchOption = async (keyword: string) => {
-    // Fetch new options and reset page
-    setInheritOptions([]);
-    setStopAsyncFetch(false);
-    setLoadingFetchOptions(true);
-    const newPage = 1;
-    const response = await fetchOptions!(keyword, newPage, FETCH_LIMIT);
-    setPage(newPage);
-    if (response.length < FETCH_LIMIT) {
-      setStopAsyncFetch(true);
-    }
-    setInheritOptions(response);
-    setLoadingFetchOptions(false);
-  };
-
-  const debouncedSearch = useDebouncedCallback(
-    (keyword: string) => handleFetchOption(keyword),
-    500
-  );
 
   React.useImperativeHandle(inputRef, () => ({
     element: elementRef.current,
@@ -220,15 +188,6 @@ const AutoComplete = <T, D = undefined>({
     reset: () => setInternalValue(null),
     disabled,
   }));
-
-  React.useEffect(() => {
-    const filtered = options.filter(
-      (option) =>
-        !inputValue ||
-        option.label.toLowerCase().includes(inputValue.toLowerCase())
-    );
-    setFilteredOptions(filtered);
-  }, [inputValue, options]);
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -251,11 +210,46 @@ const AutoComplete = <T, D = undefined>({
     };
   }, []);
 
+  React.useEffect(() => {
+    const getAsyncOptions = async () => {
+      setLoadingFetchOptions(true);
+      const newPage = page + 1;
+      const response = await fetchOptions(inputValue, newPage, FETCH_LIMIT);
+      setPage(newPage);
+      if (response.length < FETCH_LIMIT) {
+        setStopAsyncFetch(true);
+      }
+      setInheritOptions((prev) => [...prev, ...response]);
+      setLoadingFetchOptions(false);
+    };
+
+    if (async && inView && !stopAsyncFetch) getAsyncOptions();
+  }, [async, inView, dropdownOpen]);
+
+  const handleFetchOption = async (keyword: string) => {
+    // Fetch new options and reset page
+    setInheritOptions([]);
+    setStopAsyncFetch(false);
+    setLoadingFetchOptions(true);
+    const newPage = 1;
+    const response = await fetchOptions(keyword, newPage, FETCH_LIMIT);
+    setPage(newPage);
+    if (response.length < FETCH_LIMIT) {
+      setStopAsyncFetch(true);
+    }
+    setInheritOptions(response);
+    setLoadingFetchOptions(false);
+  };
+
+  const debouncedSearch = useDebouncedCallback(
+    (keyword: string) => handleFetchOption(keyword),
+    500
+  );
+
   const handleFocus = () => {
     if (disabled) return;
     setFocused(true);
     setDropdownOpen(true);
-    setFilteredOptions(options);
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
@@ -274,10 +268,8 @@ const AutoComplete = <T, D = undefined>({
   };
 
   const handleDropdown = () => {
-    if (disabled) return;
     setFocused(true);
     setDropdownOpen((prev) => !prev);
-    setFilteredOptions(options);
   };
 
   const handleClearValue = () => {
@@ -293,25 +285,23 @@ const AutoComplete = <T, D = undefined>({
     if (async) {
       debouncedSearch(input);
     } else {
+      // if what user typed exactly match with any option, select it
       const filtered = options.find(
         ({ label }) => label.toLowerCase() === input
       );
 
       if (filtered) {
-        onChange?.(filtered);
-        if (!isControlled) {
-          setInternalValue(filtered);
-        }
+        handleOptionSelect(filtered);
         setInputValue("");
       }
     }
   };
 
   const handleOptionSelect = (option: SelectValue<T, D>) => {
+    if (value?.value === option.value) return;
+
+    if (!isControlled) setInternalValue(option);
     onChange?.(option);
-    if (!isControlled) {
-      setInternalValue(option);
-    }
 
     setFocused(false);
     setDropdownOpen(false);
@@ -340,11 +330,11 @@ const AutoComplete = <T, D = undefined>({
       {appendIfNotFound &&
         inputValue &&
         !options.find((option) => option.label === inputValue) && (
-          <div
-            role="button"
+          <button
+            type="button"
             onClick={handleAppend}
             className={cx(
-              "py-1.5 px-4 text-left break-words cursor-pointer bg-neutral-15 dark:bg-neutral-15-dark hover:bg-neutral-20 dark:hover:bg-neutral-20-dark",
+              "w-full py-1.5 px-4 text-left break-words cursor-pointer bg-neutral-15 dark:bg-neutral-15-dark hover:bg-neutral-20 dark:hover:bg-neutral-20-dark",
               {
                 "text-14px": size === "default",
                 "text-18px": size === "large",
@@ -352,27 +342,26 @@ const AutoComplete = <T, D = undefined>({
             )}
           >
             Create <b>{inputValue}</b>...
-          </div>
+          </button>
         )}
       {renderOption
-        ? renderOption(
-            async ? options : filteredOptions,
-            handleOptionSelect,
-            value
-          )
-        : (async ? options : filteredOptions).map((option) => (
+        ? renderOption(filteredOptions, handleOptionSelect, value)
+        : filteredOptions.map((option) => (
             <div
               role="button"
               key={String(option.value)}
               onClick={() => handleOptionSelect(option)}
-              className={cx("py-1.5 px-4 text-left break-words", {
-                "bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark":
-                  option.value === value?.value,
-                "cursor-pointer hover:bg-neutral-20 dark:hover:bg-neutral-20-dark ":
-                  option.value !== value?.value,
-                "text-14px": size === "default",
-                "text-18px": size === "large",
-              })}
+              className={cx(
+                "select-text w-full py-1.5 px-4 text-left break-words",
+                {
+                  "cursor-default bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark":
+                    option.value === value?.value,
+                  "hover:bg-neutral-20 dark:hover:bg-neutral-20-dark ":
+                    option.value !== value?.value,
+                  "text-14px": size === "default",
+                  "text-18px": size === "large",
+                }
+              )}
             >
               {option.label}
             </div>
@@ -384,7 +373,7 @@ const AutoComplete = <T, D = undefined>({
           size={24}
           strokeWidth={2}
           animation="spin"
-          className="p-2 text-neutral-50 dark:text-neutral-50-dark"
+          className="p-2 text-neutral-60 dark:text-neutral-60-dark"
         />
       )}
       {!loading &&
@@ -421,14 +410,14 @@ const AutoComplete = <T, D = undefined>({
       )}
       <div
         className={cx(
-          " relative px-3 border rounded-md flex gap-2 items-center",
+          "relative px-3 border rounded-md flex gap-2 items-center",
           {
             "w-full": fullWidth,
             "border-danger-main dark:border-danger-main-dark focus:ring-danger-focus dark:focus:ring-danger-focus-dark":
               isError,
             "border-success-main dark:border-success-main-dark focus:ring-success-focus dark:focus:ring-success-focus-dark":
               !isError && successProp,
-            "border-neutral-50 dark:border-neutral-50-dark hover:border-primary-main dark:hover:border-primary-main-dark focus:ring-primary-main dark:focus:ring-primary-main-dark":
+            "handleInputChangeborder-neutral-50 dark:border-neutral-50-dark hover:border-primary-main dark:hover:border-primary-main-dark focus:ring-primary-main dark:focus:ring-primary-main-dark":
               !isError && !successProp && !disabled,
             "bg-neutral-20 dark:bg-neutral-30-dark cursor-not-allowed text-neutral-60 dark:text-neutral-60-dark":
               disabled,
@@ -480,26 +469,33 @@ const AutoComplete = <T, D = undefined>({
           onClear={handleClearValue}
           endIcon={endIcon}
         >
-          <Icon
-            name="chevron-down"
-            size={20}
-            strokeWidth={2}
-            onClick={handleDropdown}
-            className={cx(
-              "rounded-full p-0.5 text-neutral-70 dark:text-neutral-70-dark",
-              {
-                "cursor-not-allowed": disabled,
-                "hover:bg-neutral-30 dark:hover:bg-neutral-30-dark cursor-pointer transition-color":
-                  !disabled,
-                "rotate-180": dropdownOpen,
-              }
-            )}
-          />
+          {disabled ? (
+            <Icon
+              name="chevron-down"
+              size={20}
+              strokeWidth={2}
+              className="p-0.5 text-neutral-70 dark:text-neutral-70-dark"
+            />
+          ) : (
+            <Icon
+              name="chevron-down"
+              size={20}
+              strokeWidth={2}
+              onClick={handleDropdown}
+              className={cx(
+                "rounded-full p-0.5 text-neutral-70 dark:text-neutral-70-dark hover:bg-neutral-30 dark:hover:bg-neutral-30-dark cursor-pointer transition-color",
+                {
+                  "rotate-180": dropdownOpen,
+                }
+              )}
+            />
+          )}
         </InputEndIconWrapper>
       </div>
       <InputHelper message={helperMessage} error={isError} size={size} />
       <InputDropdown
-        open={dropdownOpen}
+        // open={dropdownOpen}
+        open
         elementRef={elementRef}
         dropdownRef={dropdownRef}
         fullWidth
