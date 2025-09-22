@@ -2,6 +2,7 @@ import React from 'react';
 import { useDebouncedCallback } from 'use-debounce';
 import { InputProps, InputPropsRefType } from '../../types/input';
 import { ButtonProps } from './Button';
+import { EMAIL_REGEX, URL_REGEX } from '../../const/regex';
 
 export interface FormRef<T> {
   submit: () => Promise<void>;
@@ -111,9 +112,6 @@ const Form = <T,>({
   >({});
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const formDisabled = disabled || isSubmitting;
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
 
   const getErrorMessage = (
     rule: FormRule,
@@ -252,7 +250,7 @@ const Form = <T,>({
           break;
         }
 
-        if (normalizedRule.email && !emailRegex.test(String(value))) {
+        if (normalizedRule.email && !EMAIL_REGEX.test(String(value))) {
           newErrors[fieldName] = getErrorMessage(rule, 'email');
           break;
         }
@@ -260,7 +258,7 @@ const Form = <T,>({
         if (
           normalizedRule.url &&
           typeof value === 'string' &&
-          !urlRegex.test(String(value))
+          !URL_REGEX.test(String(value))
         ) {
           newErrors[fieldName] = getErrorMessage(rule, 'url');
           break;

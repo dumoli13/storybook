@@ -58,12 +58,10 @@ const InputDropdown = ({
 
     if (spaceBelow >= dropdownHeight || spaceBelow > spaceAbove) {
       // Place below
-      console.log("condition 1")
       top = anchorRect.bottom + window.scrollY;
       direction = 'down';
     } else {
       // Place above
-      console.log("condition 2")
       top = anchorRect.top - dropdownHeight - 10 + window.scrollY;
       direction = 'up';
     }
@@ -76,34 +74,11 @@ const InputDropdown = ({
       left = anchorRect.left + window.scrollX;
       width = anchorRect.width;
     } else if (spaceRight >= dropdownWidth || spaceRight > spaceLeft) {
-        // Check if dropdown fits to the right
-        left = anchorRect.left + window.scrollX;
-      } else {
-        // Place to the left
-        left = anchorRect.right - dropdownWidth + window.scrollX;
-      }
-    
-
-    // Ensure dropdown stays within viewport boundaries
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    // Adjust horizontal position if needed
-    if (left + dropdownWidth > viewportWidth + window.scrollX) {
-      left = viewportWidth - dropdownWidth + window.scrollX - 24;
-    }
-    if (left < window.scrollX) {
-      left = window.scrollX;
-    }
-
-    // Adjust vertical position if needed
-    if (top + dropdownHeight > viewportHeight + window.scrollY) {
-      console.log("condition 3")
-      top = viewportHeight - dropdownHeight + window.scrollY;
-    }
-    if (top < window.scrollY) {
-      console.log("condition 4")
-      top = window.scrollY;
+      // Check if dropdown fits to the right
+      left = anchorRect.left + window.scrollX;
+    } else {
+      // Place to the left
+      left = anchorRect.right - dropdownWidth + window.scrollX;
     }
 
     setPosition({
@@ -132,8 +107,11 @@ const InputDropdown = ({
       onMouseDown={(e) => e.stopPropagation()}
       ref={dropdownRef}
       style={{
-        top: position.top,
-        left: position.left,
+        // top: position.top,
+        // left: position.left,
+        top: 0,
+        left: 0,
+        transform: `translate(${position.left}px, ${position.top}px)`,
         width: position.width,
         maxHeight,
       }}

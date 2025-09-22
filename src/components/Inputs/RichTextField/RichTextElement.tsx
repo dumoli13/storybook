@@ -1,17 +1,18 @@
-import React from "react";
-import { Editor, Element } from "slate";
-import { ReactEditor, useSlate } from "slate-react";
-import RichTextImageThumbnail from "./RichTextImageThumbnail";
-import { RichTextRenderElementProps, RichElementDetail } from ".";
-import cx from "classnames";
+import React from 'react';
+import { Editor, Element } from 'slate';
+import { ReactEditor, useSlate } from 'slate-react';
+import RichTextImageViewer from './RichTextImageViewer';
+import { RichTextRenderElementProps, CustomElement } from '.';
+import cx from 'classnames';
+import RichTextLinkViewer from './RichTextLinkViewer';
 
-const classNameMap: Record<string, string> = {
-  "heading-one": "text-30px font-bold",
-  "heading-two": "text-24px font-semibold",
-  "heading-three": "text-20px font-semibold",
-  "heading-four": "text-18px font-medium",
-  "heading-five": "text-16px font-medium",
-  "heading-six": "text-14px font-medium",
+const classNameMap = {
+  'heading-one': 'text-30px font-bold',
+  'heading-two': 'text-24px font-semibold',
+  'heading-three': 'text-20px font-semibold',
+  'heading-four': 'text-18px font-medium',
+  'heading-five': 'text-16px font-medium',
+  'heading-six': 'text-14px font-medium',
 };
 
 const RichTextElement = (props: RichTextRenderElementProps) => {
@@ -19,74 +20,74 @@ const RichTextElement = (props: RichTextRenderElementProps) => {
   const editor = useSlate();
   const style: React.CSSProperties = {};
 
-  if ("color" in element && element.color) style.color = element.color;
-  if ("align" in element && element.align) style.textAlign = element.align;
+  if ('color' in element && element.color) style.color = element.color;
+  if ('align' in element && element.align) style.textAlign = element.align;
 
   switch (element.type) {
-    case "heading-one":
+    case 'heading-one':
       return (
         <h1
           {...attributes}
-          className={classNameMap["heading-one"]}
+          className={classNameMap['heading-one']}
           style={style}
         >
           {children}
         </h1>
       );
-    case "heading-two":
+    case 'heading-two':
       return (
         <h2
           {...attributes}
-          className={classNameMap["heading-two"]}
+          className={classNameMap['heading-two']}
           style={style}
         >
           {children}
         </h2>
       );
-    case "heading-three":
+    case 'heading-three':
       return (
         <h3
           {...attributes}
-          className={classNameMap["heading-three"]}
+          className={classNameMap['heading-three']}
           style={style}
         >
           {children}
         </h3>
       );
-    case "heading-four":
+    case 'heading-four':
       return (
         <h4
           {...attributes}
-          className={classNameMap["heading-four"]}
+          className={classNameMap['heading-four']}
           style={style}
         >
           {children}
         </h4>
       );
-    case "heading-five":
+    case 'heading-five':
       return (
         <h5
           {...attributes}
-          className={classNameMap["heading-five"]}
+          className={classNameMap['heading-five']}
           style={style}
         >
           {children}
         </h5>
       );
-    case "heading-six":
+    case 'heading-six':
       return (
         <h6
           {...attributes}
-          className={classNameMap["heading-six"]}
+          className={classNameMap['heading-six']}
           style={style}
         >
           {children}
         </h6>
       );
-    case "paragraph": {
+    case 'paragraph': {
       const hasListChild = element.children.some(
         (child: any) =>
-          child.type === "bulleted-list" || child.type === "numbered-list"
+          child.type === 'bulleted-list' || child.type === 'numbered-list',
       );
 
       if (hasListChild) {
@@ -99,8 +100,8 @@ const RichTextElement = (props: RichTextRenderElementProps) => {
 
       const parent = Editor.above(editor, {
         at: ReactEditor.findPath(editor, element),
-        match: (element: RichElementDetail) =>
-          Element.isElement(element) && element.type === "list-item",
+        match: (element: CustomElement) =>
+          Element.isElement(element) && element.type === 'list-item',
       });
 
       if (parent) {
@@ -117,7 +118,7 @@ const RichTextElement = (props: RichTextRenderElementProps) => {
         </p>
       );
     }
-    case "block-quote":
+    case 'block-quote':
       return (
         <blockquote
           {...attributes}
@@ -127,9 +128,9 @@ const RichTextElement = (props: RichTextRenderElementProps) => {
           {children}
         </blockquote>
       );
-    case "bulleted-list":
-    case "numbered-list": {
-      const Tag = element.type === "bulleted-list" ? "ul" : "ol";
+    case 'bulleted-list':
+    case 'numbered-list': {
+      const Tag = element.type === 'bulleted-list' ? 'ul' : 'ol';
 
       if (!element.children || element.children.length === 0) {
         return <>{children}</>;
@@ -137,26 +138,26 @@ const RichTextElement = (props: RichTextRenderElementProps) => {
       return (
         <Tag
           {...attributes}
-          className={cx("mb-2 text-left", {
-            "list-disc": element.type === "bulleted-list",
-            "list-decimal": element.type === "numbered-list",
+          className={cx('mb-2 text-left', {
+            'list-disc': element.type === 'bulleted-list',
+            'list-decimal': element.type === 'numbered-list',
           })}
           style={{
             textAlign: element.align,
-            listStylePosition: "inside",
+            listStylePosition: 'inside',
           }}
         >
           {children}
         </Tag>
       );
     }
-    case "list-item": {
+    case 'list-item': {
       const parent = Editor.above(editor, {
         at: ReactEditor.findPath(editor, element),
-        match: (element: RichElementDetail) =>
+        match: (element: CustomElement) =>
           Element.isElement(element) &&
-          (element.type === "bulleted-list" ||
-            element.type === "numbered-list"),
+          (element.type === 'bulleted-list' ||
+            element.type === 'numbered-list'),
       });
 
       if (!parent) {
@@ -176,32 +177,66 @@ const RichTextElement = (props: RichTextRenderElementProps) => {
       return (
         <li
           {...attributes}
-          className={cx("text-left", classNameMap[headingType])}
-          style={{ textAlign: element.align || "left" }}
+          className={cx('text-left', classNameMap[headingType])}
+          style={{ textAlign: element.align || 'left' }}
         >
           {children}
         </li>
       );
     }
-    case "link":
+    case 'link': {
+      return <RichTextLinkViewer {...props} />;
+
+      // return (
+      //   <a
+      //     {...attributes}
+      //     href={(element as any).url}
+      //     className="text-blue-600 underline cursor-pointer"
+      //     target="_blank"
+      //     rel="noreferrer"
+      //     onClick={(e) => {
+      //       e.preventDefault();
+      //       window.open((element as any).url, '_blank');
+      //     }}
+      //   >
+      //     {children}
+      //   </a>
+      // );
+    }
+    case 'image':
+      return <RichTextImageViewer {...props} />;
+    case 'table':
       return (
-        <a
+        <div {...attributes} className="my-4 overflow-x-auto">
+          <table className="w-full border-collapse border border-gray-300">
+            <tbody>{children}</tbody>
+          </table>
+        </div>
+      );
+    case 'table-row':
+      return (
+        <tr
           {...attributes}
-          href={(element as any).url}
-          className="text-blue-600 underline cursor-pointer"
-          target="_blank"
-          rel="noreferrer"
-          onClick={(e) => {
-            e.preventDefault();
-            window.open((element as any).url, "_blank");
-          }}
+          className={
+            element.isHeader
+              ? 'bg-neutral-80 dark:bg-neutral-80-dark font-semibold'
+              : ''
+          }
         >
           {children}
-        </a>
+        </tr>
       );
-    case "image":
-      return <RichTextImageThumbnail {...props} />;
-
+    case 'table-cell':
+      return (
+        <td
+          {...attributes}
+          className="border border-gray-300 p-2 align-top"
+          colSpan={element.colspan}
+          rowSpan={element.rowspan}
+        >
+          {children}
+        </td>
+      );
     default:
       return (
         <p {...attributes} style={style}>

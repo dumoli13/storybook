@@ -71,6 +71,8 @@ const ModalConfirmContainer = ({
   customAction,
   size = 'default',
 }: ModalProps) => {
+  const modalRef = React.useRef<HTMLDivElement>(null);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Escape' && onClose) {
       onClose();
@@ -97,14 +99,26 @@ const ModalConfirmContainer = ({
     };
   }, [open, document.body.style.overflow]);
 
+  React.useEffect(() => {
+    if (open && modalRef.current) {
+      const timer = setTimeout(() => {
+        modalRef.current.focus();
+      }, 10);
+      return () => clearTimeout(timer);
+    }
+  }, [open, modalRef.current]);
+
   if (!open) return null;
 
   return (
     <div
-      role="none"
+      role="dialog"
       id="modal-container"
       className="flex items-center justify-center z-[1300] inset-0 fixed"
       onKeyDown={handleKeyDown}
+      ref={modalRef}
+      aria-modal="true"
+      tabIndex={-1}
     >
       {closeOnOverlayClick ? (
         <div
@@ -122,7 +136,6 @@ const ModalConfirmContainer = ({
           className,
         )}
         style={{ width }}
-        tabIndex={-1}
         onSubmit={onConfirm}
       >
         {(title || icon) && (

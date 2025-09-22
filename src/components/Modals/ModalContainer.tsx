@@ -72,15 +72,26 @@ const ModalContainer = ({
     };
   }, [open, document.body.style.overflow]);
 
+  React.useEffect(() => {
+    if (open && modalRef.current) {
+      const timer = setTimeout(() => {
+        modalRef.current.focus();
+      }, 10);
+      return () => clearTimeout(timer);
+    }
+  }, [open, modalRef.current]);
+
   if (!open) return null;
 
   return createPortal(
     <div
-      role="none"
+      role="dialog"
       id="modal-container"
       className="flex items-center justify-center z-[1300] inset-0 fixed"
       onKeyDown={handleKeyDown}
       ref={modalRef}
+      aria-modal="true"
+      tabIndex={-1}
     >
       {closeOnOverlayClick ? (
         <div
@@ -98,7 +109,6 @@ const ModalContainer = ({
           className,
         )}
         style={{ width, height }}
-        tabIndex={-1}
       >
         {children}
       </div>

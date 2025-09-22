@@ -1,97 +1,96 @@
-import React from "react";
-import { Popper } from "../../Displays";
-import TextField from "../TextField";
-import Button from "../Button";
-import Icon from "../../Icon";
-import { useSlate } from "slate-react";
-import { Node, Range, Transforms } from "slate";
+import React from 'react';
+import { Popper } from '../../Displays';
+import TextField from '../TextField';
+import Button from '../Button';
+import Icon from '../../Icon';
+import { useSlate } from 'slate-react';
+import { Range, Transforms } from 'slate';
+import cx from 'classnames';
+import { CustomElement } from '.';
+import Form from '../Form';
+import RichTextToolbarButton from './RichTextToolbarButton';
 
-const RichTextLink = () => {
+interface RichTextLinkProps {
+  disabled: boolean;
+}
+
+type FormData = {
+  hyperlink: string;
+  title: string;
+};
+
+const RichTextLink = ({ disabled }: RichTextLinkProps) => {
   const editor = useSlate();
+  const [openViewer, setOpenViewer] = React.useState(false);
 
-  const [linkModalOpen, setLinkModalOpen] = React.useState(false);
-  const [linkUrl, setLinkUrl] = React.useState("");
-  const [linkName, setLinkName] = React.useState("");
-
-  const handleSubmit = () => {
+  const handleSubmit = (link: FormData) => {
     const { selection } = editor;
     if (!selection) return;
 
     const isCollapsed = Range.isCollapsed(selection);
-    if (!isCollapsed) {
+    if (isCollapsed) {
+      Transforms.insertNodes(editor, {
+        type: 'link',
+        link,
+        children: [{ text: link.title || link.hyperlink }],
+      });
+      Transforms.move(editor, { distance: 1, unit: 'offset' });
+      Transforms.insertText(editor, ' ');
+    } else {
       Transforms.wrapNodes(
         editor,
-        { type: "link", url: linkUrl, children: [] },
-        { split: true, at: selection }
+        {
+          type: 'link',
+          link,
+          children: [],
+        },
+        { split: true, at: selection },
       );
-      Transforms.collapse(editor, { edge: "end" });
-      Transforms.insertText(editor, " ");
-    } else {
-      const linkNode: Node = {
-        type: "link",
-        url: linkUrl,
-        children: [{ text: linkName || linkUrl }],
-      };
-      Transforms.insertNodes(editor, linkNode);
-      const { selection: newSel } = editor;
-      if (newSel) {
-        Transforms.move(editor, { distance: 1, unit: "offset" });
-      }
-      Transforms.insertText(editor, " ");
+      Transforms.collapse(editor, { edge: 'end' });
+      Transforms.insertText(editor, ' ');
     }
 
-    setLinkUrl("");
-    setLinkName("");
-    setLinkModalOpen(false);
+    setOpenViewer(false);
   };
 
   return (
     <Popper
-      offset={8}
-      placement="bottom-left"
-      open={linkModalOpen}
-      onOpen={setLinkModalOpen}
+      placement="bottom"
+      disabled={disabled}
+      open={openViewer}
+      onClickOutside={() => setOpenViewer(false)}
       content={
-        <div
+        <Form
+          onSubmit={handleSubmit}
+          rules={{
+            hyperlink: ['url', 'required'],
+          }}
           className="bg-neutral-10 p-2 rounded shadow-md z-50 flex flex-col gap-2 w-64"
-          onClick={(e) => e.stopPropagation()}
         >
-          <TextField
-            labelPosition="top"
-            placeholder="Enter URL"
-            value={linkUrl}
-            onChange={setLinkUrl}
-            size="default"
-          />
-          <TextField
-            labelPosition="top"
-            placeholder="Enter Link Name"
-            value={linkName}
-            onChange={setLinkName}
-            size="default"
-          />
-          <div className="flex justify-end gap-2">
-            <Button
-              onClick={handleSubmit}
-              variant="contained"
-              color="primary"
-              size="small"
-              disabled={!linkUrl}
-            >
-              Insert
+          <TextField id="hyperlink" placeholder="Enter Link URL" autoFocus />
+          <TextField id="title" placeholder="Enter Link Title" />
+          <div className="flex justify-end">
+            <Button type="submit" size="small">
+              Insert Link
             </Button>
           </div>
-        </div>
+        </Form>
       }
     >
-      <div className="shrink-0 w-8 h-8 flex items-center justify-center hover:border border-neutral-40 bg-neutral-10 dark:bg-neutral-10-dark rounded-md">
-        <Icon
-          name="link"
-          size={20}
-          className="text-neutral-100 dark:text-neutral-100-dark"
-          onClick={() => setLinkModalOpen(true)}
-        />
-      </div>
+      <button
+        type="button"
+        title="Add Link"
+        onClick={() => setOpenViewer(true)}
+        disabled={disabled}
+        className={cx(
+          'shrink-0 w-8 h-8 flex items-center justify-center rounded-md bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-20-dark disabled:cursor-not-allowed',
+          {
+            'hover:border border-neutral-40 ': !disabled,
+          },
+        )}
+      >
+        <Icon name="link" size={20} />
+      </button>
     </Popper>
   );
 };

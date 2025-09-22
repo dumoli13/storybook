@@ -1,19 +1,21 @@
-import React from "react";
-import Icon from "../../Icon";
-import RichTextToolbarButton from "./RichTextToolbarButton";
-import { useSlate } from "slate-react";
-import { Transforms } from "slate";
-import { RichElementDetail } from ".";
+import React from 'react';
+import Icon from '../../Icon';
+import RichTextToolbarButton from './RichTextToolbarButton';
+import { useSlate } from 'slate-react';
+import { Transforms } from 'slate';
+import { CustomElement } from '.';
 
-const RichTextImage = () => {
+interface RichTextImageProps {
+  disabled: boolean;
+}
+
+const RichTextImage = ({ disabled }: RichTextImageProps) => {
   const editor = useSlate();
 
-  const InsertImageFromFile = (e: React.MouseEvent) => {
-    e.preventDefault();
-
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
+  const InsertImageFromFile = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
     input.multiple = true;
     input.onchange = () => {
       const files = input.files;
@@ -28,18 +30,24 @@ const RichTextImage = () => {
               const height = img.naturalHeight;
 
               Transforms.insertNodes(editor, {
-                type: "image",
-                url,
-                title: file.name,
-                width,
-                height,
-                children: [{ text: "" }],
-              } as RichElementDetail);
+                type: 'image',
+                image: {
+                  url,
+                  title: file.name,
+                  hyperlink: null,
+                  width:
+                    height > 200 ? Math.ceil((200 / height) * width) : width,
+                  height: height > 200 ? 200 : height,
+                  originalWidth: width,
+                  originalHeight: height,
+                },
+                children: [{ text: '' }],
+              } as CustomElement);
 
               Transforms.insertNodes(editor, {
-                type: "paragraph",
-                children: [{ text: "" }],
-              } as RichElementDetail);
+                type: 'paragraph',
+                children: [{ text: '' }],
+              } as CustomElement);
             };
             img.src = url;
           };
@@ -51,12 +59,8 @@ const RichTextImage = () => {
   };
 
   return (
-    <RichTextToolbarButton onMouseDown={InsertImageFromFile}>
-      <Icon
-        name="photo"
-        size={20}
-        className="text-neutral-100 dark:text-neutral-100-dark"
-      />
+    <RichTextToolbarButton onClick={InsertImageFromFile} disabled={disabled}>
+      <Icon name="photo" size={20} />
     </RichTextToolbarButton>
   );
 };

@@ -26,6 +26,8 @@ export interface PopperProps {
   offset?: number; // Distance between popper and anchor
   className?: string;
   style?: React.CSSProperties;
+  closeOnClickChild?: boolean;
+  onClickOutside?: () => void;
 }
 
 const Popper = ({
@@ -38,6 +40,8 @@ const Popper = ({
   offset = 8,
   className,
   style,
+  closeOnClickChild = false,
+  onClickOutside,
 }: PopperProps) => {
   const elementRef = React.useRef<HTMLElement>(null);
   const popperRef = React.useRef<HTMLDivElement>(null);
@@ -219,13 +223,14 @@ const Popper = ({
       !elementRef.current?.contains(target)
     ) {
       setOpen(false);
+      onClickOutside?.();
     }
   };
   const handleContentClick = (e: React.MouseEvent) => {
     // Prevent event from bubbling to document
     e.stopPropagation();
     // Close when any content is clicked
-    setOpen(false);
+    if (closeOnClickChild) setOpen(false);
   };
 
   React.useEffect(() => {

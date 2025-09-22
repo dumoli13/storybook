@@ -26,13 +26,11 @@ const preview: Preview = {
       },
     },
     darkMode: {
-      // Optional: these themes help sync with your Tailwind or CSS variables
-      dark: { appBg: '#111111' },
+       dark: { appBg: '#111111' },
       light: { appBg: '#ffffff' },
     },
   },
-  // 👇 This is required for Storybook dark mode toggle
-  globalTypes: {
+   globalTypes: {
     theme: {
       name: 'Theme',
       description: 'Global theme for components',
@@ -41,6 +39,20 @@ const preview: Preview = {
         icon: 'mirror',
         items: ['light', 'dark'],
         showName: true,
+      },
+    },
+    version: {
+      name: 'Version',
+      description: 'Select component version',
+      defaultValue: 'v1',
+      toolbar: {
+        icon: 'layers', 
+        items: [
+          { value: 'v1', title: 'Version 1' },
+          { value: 'v2', title: 'Version 2' },
+          { value: 'v3', title: 'Version 3' },
+        ],
+        showName: true,  
       },
     },
   },

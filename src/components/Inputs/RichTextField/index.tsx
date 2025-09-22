@@ -1,30 +1,115 @@
-import React, { CSSProperties } from "react";
-import cx from "classnames";
-import { Editor, Point, Range, Element, Transforms, createEditor } from "slate";
-import type { BaseEditor } from "slate";
-import { HistoryEditor, withHistory } from "slate-history";
-import { Editable, ReactEditor, Slate, withReact } from "slate-react";
-import type { RenderElementProps, RenderLeafProps } from "slate-react";
-import InputHelper from "../InputHelper";
-import InputLabel from "../InputLabel";
-import RichTextColorPicker from "./RichTextColorPicker";
-import RichTextLink from "./RichTextLink";
-import RichTextStyleButton from "./RichTextStyleButton";
-import { deserializeHTMLFromWord } from "../../../libs/richTextField";
-import Icon from "../../Icon";
-import AlignButton from "./AlignButton";
-import RichTextElement from "./RichTextElement";
-import IconButton from "../IconButton";
-import RichTextLeaf from "./RichTextLeaf";
-import RichTextListButton from "./RichTextListButton";
-import {
-  LIST_TYPES,
-  TABLE_TYPES,
-  TEXT_TAG,
-} from "../../../types/richTextField";
-import RichTextTag from "./RichTextTag";
-import RichTextImage from "./RichTextImage";
-import RichTextTable from "./RichTextTable";
+import React from 'react';
+import cx from 'classnames';
+import { Editor, Point, Range, Element, Transforms, createEditor } from 'slate';
+import type { BaseEditor, Descendant } from 'slate';
+import { withHistory } from 'slate-history';
+import { Editable, ReactEditor, Slate, withReact } from 'slate-react';
+import type { RenderElementProps, RenderLeafProps } from 'slate-react';
+import RichTextColorPicker from './RichTextColorPicker';
+import RichTextLink from './RichTextLink';
+import RichTextStyleButton from './RichTextStyleButton';
+import { deserializeHTMLFromWord } from '../../../libs/richTextField';
+import Icon from '../../Icon';
+import AlignButton from './AlignButton';
+import RichTextElement from './RichTextElement';
+import IconButton from '../IconButton';
+import RichTextLeaf from './RichTextLeaf';
+import RichTextListButton from './RichTextListButton';
+import RichTextTag from './RichTextTag';
+import RichTextImage from './RichTextImage';
+import RichTextTable from './RichTextTable';
+import InputContainer from '../InputContainer';
+import { EMAIL_REGEX, URL_REGEX } from '../../../const/regex';
+
+export type CustomText = {
+  text: string;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  strikethrough?: boolean;
+  code?: boolean;
+  color?: string;
+  table?: string;
+};
+
+export interface TextElement {
+  type:
+    | 'heading-one'
+    | 'heading-two'
+    | 'heading-three'
+    | 'heading-four'
+    | 'heading-five'
+    | 'heading-six'
+    | 'paragraph'
+    | 'block-quote';
+  heading?: CustomElement['type'];
+  children: CustomText[];
+  align?: 'left' | 'center' | 'right' | 'justify';
+  color?: string;
+  style?: React.CSSProperties;
+}
+
+export interface ListItemElement {
+  type: 'list-item';
+  heading?: CustomElement['type'];
+  children: TextElement[]; // keep list-item children as paragraph(s)
+}
+export interface ListElement {
+  type: 'bulleted-list' | 'numbered-list';
+  heading?: CustomElement['type'];
+  children: ListItemElement[];
+}
+
+export interface LinkElement {
+  type: 'link';
+  heading?: CustomElement['type'];
+  link: { hyperlink: string; title?: string };
+  children: CustomText[];
+}
+
+export interface ImageElement {
+  type: 'image';
+  heading?: CustomElement['type'];
+  image: {
+    url: string;
+    title: string;
+    hyperlink: string | null;
+    width: number;
+    height: number;
+    originalWidth: number;
+    originalHeight: number;
+  };
+  children: CustomText[];
+}
+
+export interface TableElement {
+  type: 'table' | 'table-row' | 'table-cell';
+  children: Descendant[];
+  align?: 'left' | 'center' | 'right' | 'justify';
+  isHeader?: boolean;
+  colspan?: number;
+  rowspan?: number;
+}
+
+export type CustomElement =
+  | TextElement
+  | ListElement
+  | ListItemElement
+  | LinkElement
+  | ImageElement
+  | TableElement;
+
+declare module 'slate' {
+  interface CustomTypes {
+    Editor: BaseEditor &
+      ReactEditor &
+      ReturnType<typeof withHistory> & {
+        // optional: add custom helpers if you wrap editor further
+      };
+    Element: CustomElement;
+    Text: CustomText;
+  }
+}
 
 export interface RichTextfieldRef {
   element: HTMLInputElement | null;
@@ -34,150 +119,94 @@ export interface RichTextfieldRef {
   disabled: boolean;
 }
 
-export type RichTextProps = {
-  text: string;
-  bold?: boolean;
-  italic?: boolean;
-  underline?: boolean;
-  strikethrough?: boolean;
-  code?: boolean;
-  color?: string;
-};
-
-export type RichElementDetail =
-  | {
-      type: TEXT_TAG;
-      children: RichTextProps[];
-      style?: CSSProperties;
-      heading?: never;
-      color?: string;
-      url?: never;
-      title?: never;
-      width?: never;
-      height?: never;
-      align?: "left" | "center" | "right" | "justify";
-    }
-  | {
-      type: LIST_TYPES;
-      children: RichElementDetail[];
-      heading?: never;
-      color?: string;
-      url?: never;
-      title?: never;
-      width?: never;
-      height?: never;
-      align?: "left" | "center" | "right" | "justify";
-    }
-  | {
-      type: TABLE_TYPES;
-      children: RichElementDetail[];
-      heading?: never;
-      color?: string;
-      url?: never;
-      title?: never;
-      width?: never;
-      height?: never;
-      align?: "left" | "center" | "right" | "justify";
-    }
-  | {
-      type: "list-item";
-      children: RichElementDetail[];
-      heading?: RichElementDetail["type"];
-      color?: string;
-      url?: never;
-      title?: never;
-      width?: never;
-      height?: never;
-      align?: "left" | "center" | "right" | "justify";
-    }
-  | {
-      type: "link";
-      children: RichTextProps[];
-      heading?: never;
-      url?: never;
-      title?: never;
-      width?: never;
-      height?: never;
-    }
-  | {
-      type: "image";
-      children: RichTextProps[];
-      heading?: never;
-      url: string;
-      title: string;
-      width: number;
-      height: number;
-    };
-
 export interface RichTextRenderElementProps
-  extends Omit<RenderElementProps, "element"> {
-  element: RichElementDetail;
+  extends Omit<RenderElementProps, 'element'> {
+  element: CustomElement;
 }
 
-const withLinks = (editor: Editor) => {
-  const { isInline } = editor;
-  editor.isInline = (element: RichElementDetail) =>
-    Element.isElement(element) && element.type === "link"
-      ? true
-      : isInline(element);
-  return editor;
-};
+const defaultInitialValue: Descendant[] = [
+  {
+    type: 'paragraph',
+    children: [{ text: '' }],
+  },
+];
 
-const withLists = (editor: Editor) => {
-  const { deleteBackward } = editor;
+const Toolbar: React.FC<{ children: React.ReactNode }> = React.memo(
+  ({ children }) => {
+    return (
+      <div className="flex items-center gap-0.5 overflow-x-auto">
+        {children}
+      </div>
+    );
+  },
+);
 
-  editor.deleteBackward = (...args) => {
-    const { selection } = editor;
-    if (selection && Range.isCollapsed(selection)) {
-      const [match] = Editor.nodes(editor, {
-        match: (element: RichElementDetail) =>
-          Element.isElement(element) && element.type === "list-item",
-      });
+// const withLinks = (editor: Editor) => {
+//   const { isInline } = editor;
+//   editor.isInline = (element: CustomElement) =>
+//     Element.isElement(element) && element.type === 'link'
+//       ? true
+//       : isInline(element);
+//   return editor;
+// };
 
-      if (match) {
-        const [, path] = match;
-        const start = Editor.start(editor, path);
+// const withLists = (editor: Editor) => {
+//   const { deleteBackward } = editor;
+//   editor.deleteBackward = (...args) => {
+//     const { selection } = editor;
+//     if (selection && Range.isCollapsed(selection)) {
+//       const [match] = Array.from(
+//         Editor.nodes(editor, {
+//           match: (element: CustomElement) =>
+//             Element.isElement(element) && element.type === 'list-item',
+//         }),
+//       );
 
-        if (Point.equals(selection.anchor, start)) {
-          Transforms.setNodes(editor, {
-            type: "paragraph",
-            heading: undefined,
-          });
-          Transforms.unwrapNodes(editor, {
-            match: (element: RichElementDetail) =>
-              Element.isElement(element) &&
-              (element.type === "bulleted-list" ||
-                element.type === "numbered-list"),
-            split: true,
-          });
-          return;
-        }
-      }
-    }
-    deleteBackward(...args);
-  };
+//       if (match) {
+//         const [, path] = match;
+//         const start = Editor.start(editor, path);
 
-  return editor;
-};
+//         if (Point.equals(selection.anchor, start)) {
+//           Transforms.setNodes(editor, {
+//             type: 'paragraph',
+//             heading: undefined,
+//           } as CustomElement);
 
-const withImages = (editor: Editor) => {
-  const { isVoid } = editor;
-  editor.isVoid = (element: RichElementDetail) =>
-    Element.isElement(element) && element.type === "image"
-      ? true
-      : isVoid(element);
-  return editor;
-};
+//           Transforms.unwrapNodes(editor, {
+//             match: (element: CustomElement) =>
+//               Element.isElement(element) &&
+//               (element.type === 'bulleted-list' ||
+//                 element.type === 'numbered-list'),
+//             split: true,
+//           });
+
+//           return;
+//         }
+//       }
+//     }
+//     deleteBackward(...args);
+//   };
+//   return editor;
+// };
+
+// const withImages = (editor: Editor) => {
+//   const { isVoid } = editor;
+//   editor.isVoid = (element: CustomElement) =>
+//     Element.isElement(element) && element.type === 'image'
+//       ? true
+//       : isVoid(element);
+//   return editor;
+// };
 
 export interface RichTextFieldProps
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
-    "onChange" | "size" | "required" | "checked"
+    'onChange' | 'size' | 'required' | 'checked'
   > {
   value?: string;
   defaultValue?: string;
   label?: string;
-  labelPosition?: "top" | "left";
+  labelPosition?: 'top' | 'left';
   autoHideLabel?: boolean;
   onChange?: (val: string) => void;
   helperText?: React.ReactNode;
@@ -185,7 +214,7 @@ export interface RichTextFieldProps
   inputRef?:
     | React.RefObject<RichTextfieldRef | null>
     | React.RefCallback<RichTextfieldRef | null>;
-  size?: "default" | "large";
+  size?: 'default' | 'large';
   error?: boolean | string;
   success?: boolean;
   loading?: boolean;
@@ -199,52 +228,126 @@ export const RichTextField = ({
   value: valueProp,
   defaultValue,
   label,
-  labelPosition = "top",
+  labelPosition = 'top',
   autoHideLabel = false,
   onChange,
   className,
   helperText,
-  placeholder = "",
+  placeholder = '',
   disabled: disabledProp = false,
   inputRef,
-  size = "default",
-  error: errorProp,
-  success: successProp,
+  size = 'default',
+  error,
+  success,
   loading = false,
   width,
   required,
-  ...props
 }: RichTextFieldProps) => {
   const parentRef = React.useRef<HTMLDivElement>(null);
   const elementRef = React.useRef<HTMLInputElement>(null);
   const [focused, setFocused] = React.useState(false);
-  const [internalValue, setInternalValue] = React.useState<RichElementDetail[]>(
-    defaultValue
-      ? JSON.parse(defaultValue)
-      : [{ type: "paragraph", children: [{ text: "" }] }]
+
+  const parseValue = React.useCallback((raw?: string): Descendant[] => {
+    if (!raw) return defaultInitialValue;
+    try {
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return defaultInitialValue;
+      return parsed;
+    } catch {
+      return defaultInitialValue;
+    }
+  }, []);
+
+  const [internalValue, setInternalValue] = React.useState<Descendant[]>(
+    parseValue(defaultValue),
   );
 
   const isControlled = valueProp !== undefined;
-  const value = isControlled
-    ? valueProp.toString()
-    : JSON.stringify(internalValue);
+  const value = React.useMemo(
+    () => (isControlled ? valueProp ?? '' : JSON.stringify(internalValue)),
+    [isControlled, valueProp, internalValue],
+  );
 
-  const helperMessage =
-    errorProp && typeof errorProp === "string" ? errorProp : helperText;
-  const isError = !!errorProp;
   const disabled = loading || disabledProp;
 
-  React.useImperativeHandle(inputRef, () => ({
-    element: elementRef.current,
-    value,
-    focus: () => {
-      elementRef.current?.focus();
-    },
-    reset: () => {
-      setInternalValue([{ type: "paragraph", children: [{ text: "" }] }]);
-    },
-    disabled,
-  }));
+  React.useImperativeHandle(
+    inputRef,
+    () => ({
+      element: elementRef.current,
+      value,
+      focus: () => elementRef.current?.focus(),
+      reset: () => setInternalValue(defaultInitialValue),
+      disabled,
+    }),
+    [value, disabled],
+  );
+
+  // const editor = React.useMemo(
+  //   () =>
+  //     withLinks(
+  //       withImages(withLists(withHistory(withReact(createEditor())))),
+  //     ) as BaseEditor & ReactEditor & HistoryEditor & CustomElement,
+  //   [],
+  // );
+
+  const [editor] = React.useState(() => {
+    const base = withReact(withHistory(createEditor()));
+    const origIsInline = base.isInline;
+    base.isInline = (element) => {
+      if (Element.isElement(element) && element.type === 'link') {
+        return true;
+      }
+      return origIsInline ? origIsInline.call(base, element) : false;
+    };
+
+    const origIsVoid = base.isVoid;
+    base.isVoid = (element) => {
+      if (Element.isElement(element) && element.type === 'image') {
+        return true;
+      }
+      return origIsVoid ? origIsVoid.call(base, element) : false;
+    };
+
+    // Improve deleteBackward behavior for lists (as your previous withLists)
+    const { deleteBackward } = base;
+    base.deleteBackward = (...args) => {
+      const { selection } = base;
+      if (selection && Range.isCollapsed(selection)) {
+        const [match] = Array.from(
+          Editor.nodes(base, {
+            match: (el) => Element.isElement(el) && el.type === 'list-item',
+          }),
+        );
+        if (match) {
+          const [, path] = match;
+          const start = Editor.start(base, path);
+          if (Point.equals(selection.anchor, start)) {
+            Transforms.setNodes(base, { type: 'paragraph' }, { at: path });
+            Transforms.unwrapNodes(base, {
+              match: (n) =>
+                Element.isElement(n) &&
+                (n.type === 'bulleted-list' || n.type === 'numbered-list'),
+              split: true,
+            });
+            return;
+          }
+        }
+      }
+      return deleteBackward(...args);
+    };
+
+    return base;
+  });
+
+  const renderElement = React.useCallback(
+    (props: RichTextRenderElementProps) => <RichTextElement {...props} />,
+    [],
+  );
+
+  const renderLeaf = React.useCallback(
+    (props: RenderLeafProps) => <RichTextLeaf {...props} />,
+    [],
+  );
 
   const handleFocus = () => {
     if (disabled) return;
@@ -263,7 +366,7 @@ export const RichTextField = ({
     setFocused(false);
   };
 
-  const handleChange = (descendant: RichElementDetail[]) => {
+  const handleChange = (descendant: CustomElement[]) => {
     const newValue = descendant;
     onChange?.(JSON.stringify(newValue));
     if (!isControlled) {
@@ -271,50 +374,50 @@ export const RichTextField = ({
     }
   };
 
-  const inputId = `textfield-${id || name}-${React.useId()}`;
-
-  const editor = React.useMemo(
-    () =>
-      withLinks(
-        withImages(withLists(withHistory(withReact(createEditor()))))
-      ) as unknown as BaseEditor & ReactEditor & HistoryEditor,
-    []
-  );
-
-  const renderElement = React.useCallback(
-    (props: RichTextRenderElementProps) => <RichTextElement {...props} />,
-    []
-  );
-
-  const renderLeaf = React.useCallback(
-    (props: RenderLeafProps) => <RichTextLeaf {...props} />,
-    []
-  );
+  const inputId = `richtextfield-${id || name}-${React.useId()}`;
 
   const [expand, setExpand] = React.useState(false);
 
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
 
-    const html = e.clipboardData.getData("text/html");
-    const text = e.clipboardData.getData("text/plain");
+    const html = e.clipboardData.getData('text/html');
+    const text = e.clipboardData.getData('text/plain');
     const image = e.clipboardData.files?.[0];
 
-    console.log("HTML", html);
-    console.log("TEXT", text);
-    console.log("IMAGE", image);
-
-    if (image?.type.startsWith("image/")) {
+    if (image?.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = (e) => {
         const src = e.target?.result;
-        if (src) {
-          Transforms.insertNodes(editor, {
-            type: "image",
-            url: src,
-            children: [{ text: "" }],
-          } as RichElementDetail);
-        }
+        if (!src) return;
+
+        const url = reader.result as string;
+        const img = new Image();
+
+        img.onload = () => {
+          Editor.withoutNormalizing(editor, () => {
+            const width = img.naturalWidth;
+            const height = img.naturalHeight;
+            const resizedHeight = height > 200 ? 200 : height;
+            const resizedWidth =
+              height > 200 ? Math.ceil((200 / height) * width) : width;
+
+            Transforms.insertNodes(editor, {
+              type: 'image',
+              image: {
+                url,
+                title: image.name,
+                hyperlink: null,
+                width: resizedWidth,
+                height: resizedHeight,
+                originalWidth: width,
+                originalHeight: height,
+              },
+              children: [{ text: '' }],
+            } as CustomElement);
+          });
+        };
+        img.src = url;
       };
       reader.readAsDataURL(image);
       return;
@@ -322,13 +425,15 @@ export const RichTextField = ({
 
     if (html) {
       const fragment = deserializeHTMLFromWord(html);
-      Transforms.insertFragment(editor, fragment);
+      if (fragment?.length) {
+        Editor.withoutNormalizing(editor, () => {
+          Transforms.insertFragment(editor, fragment);
+        });
+      }
       return;
-    }
-
-    if (text) {
+    } else if (text) {
       const lines = text.split(/\r?\n/);
-      let currentListType: "numbered-list" | "bulleted-list" | null = null;
+      let currentListType: 'numbered-list' | 'bulleted-list' | null = null;
       let listItems: any[] = [];
 
       const flushList = () => {
@@ -336,171 +441,195 @@ export const RichTextField = ({
           Transforms.insertNodes(editor, {
             type: currentListType,
             children: listItems,
-          } as RichElementDetail);
+          });
           listItems = [];
           currentListType = null;
         }
       };
 
-      lines.forEach((line) => {
-        const cleanedLine = (line ?? "")
-          .replace(/\u00A0/g, " ")
-          .replace(/[\r\n]+/g, " ")
-          .trim();
+      for (const line of lines) {
+        const cleaned = (line ?? '').replace(/\u00A0|[\r\n]+/g, ' ').trim();
+        if (!cleaned) {
+          flushList();
+          // insert newline/empty paragraph
+          Transforms.insertNodes(editor, {
+            type: 'paragraph',
+            children: [{ text: '' }],
+          });
+          continue;
+        }
 
-        // cek link/email
-        const isUrl = /^https?:\/\/[^\s]+$/i.test(cleanedLine);
-        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(cleanedLine);
+        const isUrl = URL_REGEX.test(cleaned);
+        const isEmail = EMAIL_REGEX.test(cleaned);
 
         if (isUrl || isEmail) {
+          let hyperlink: string = cleaned;
+          if (
+            isUrl &&
+            !/^https?:\/\//i.test(cleaned) &&
+            !/^ftp:\/\//i.test(cleaned)
+          ) {
+            hyperlink = `http://${cleaned}`;
+          } else if (isEmail) {
+            hyperlink = `mailto:${cleaned}`;
+          }
           flushList();
-          const url = isEmail ? `mailto:${cleanedLine}` : cleanedLine;
           Transforms.insertNodes(editor, {
-            type: "link",
-            url,
-            children: [{ text: cleanedLine }],
-          } as RichElementDetail);
+            type: 'link',
+            link: { hyperlink, title: cleaned },
+            children: [{ text: '' }],
+          } as CustomElement);
           return;
         }
 
-        let listType: "numbered-list" | "bulleted-list" | null = null;
-        let textContent = cleanedLine;
+        let listType: 'numbered-list' | 'bulleted-list' | null = null;
+        let textContent = cleaned;
 
-        if (/^\d+\.\s+/.test(cleanedLine)) {
-          listType = "numbered-list";
-          textContent = cleanedLine.replace(/^\d+\.\s+/, "");
-        } else if (/^[-*•]\s+/.test(cleanedLine)) {
-          listType = "bulleted-list";
-          textContent = cleanedLine.replace(/^[-*•]\s+/, "");
+        if (/^\d+\.\s+/.test(cleaned)) {
+          listType = 'numbered-list';
+          textContent = cleaned.replace(/^\d+\.\s+/, '');
+        } else if (/^[-*•]\s+/.test(cleaned)) {
+          listType = 'bulleted-list';
+          textContent = cleaned.replace(/^[-*•]\s+/, '');
         }
 
         if (listType) {
           if (currentListType && currentListType !== listType) flushList();
           currentListType = listType;
           listItems.push({
-            type: "list-item",
+            type: 'list-item',
             children: [
-              {
-                type: "paragraph",
-                children: [{ text: textContent }],
-              },
+              { type: 'paragraph', children: [{ text: textContent }] },
             ],
           });
         } else {
           flushList();
           Transforms.insertNodes(editor, {
-            type: "paragraph",
-            children: [{ text: cleanedLine }],
-          } as RichElementDetail);
+            type: 'paragraph',
+            children: [{ text: cleaned }],
+          } as CustomElement);
         }
-      });
+      }
 
       flushList();
     }
   };
 
   return (
-    <div
-      className={cx(
-        "relative w-full",
-        {
-          "flex items-center gap-4": labelPosition === "left",
-        },
-        className
-      )}
+    <InputContainer
+      inputId={inputId}
+      label={label}
+      labelPosition={labelPosition}
+      autoHideLabel={autoHideLabel}
+      required={required}
+      className={className}
+      focused={focused}
+      error={error}
+      success={success}
+      helperText={helperText}
+      loading={loading}
+      disabled={disabled}
+      size={size}
+      width={width}
+      parentRef={parentRef}
     >
-      {((autoHideLabel && focused) || !autoHideLabel) && label && (
-        <InputLabel id={inputId} size={size} required={required}>
-          {label}
-        </InputLabel>
-      )}
-      <div
-        className={cx("relative border rounded-md flex flex-col w-full", {
-          "border-danger-main dark:border-danger-main-dark focus:ring-danger-focus dark:focus:ring-danger-focus-dark":
-            isError,
-          "border-success-main dark:border-success-main-dark focus:ring-success-focus dark:focus:ring-success-focus-dark":
-            !isError && successProp,
-          "border-neutral-50 dark:border-neutral-50-dark hover:border-primary-hover dark:hover:border-primary-hover-dark focus:ring-primary-main dark:focus:ring-primary-main-dark":
-            !isError && !successProp && !disabled,
-          "bg-neutral-20 dark:bg-neutral-30-dark cursor-not-allowed text-neutral-60 dark:text-neutral-60-dark":
-            disabled,
-          "bg-neutral-10 dark:bg-neutral-10-dark shadow-box-3 focus:ring-3 focus:ring-primary-focus focus:!border-primary-main":
-            !disabled,
-          "ring-3 ring-primary-focus dark:ring-primary-focus-dark !border-primary-main dark:!border-primary-main-dark":
-            focused,
-        })}
-        style={width ? { width } : undefined}
-        ref={parentRef}
+      <Slate
+        editor={editor}
+        initialValue={internalValue}
+        onChange={handleChange}
       >
-        <Slate
-          editor={editor}
-          initialValue={internalValue}
-          onChange={handleChange}
-        >
-          {/* HEADER */}
-          <div className="select-none flex items-center justify-between gap-10 p-2 border-b border-neutral-50 dark:border-neutral-50-dark">
-            <div className="flex items-center gap-0.5 overflow-x-auto">
-              <RichTextTag />
-              <div className="h-8 w-0 border-r border-neutral-30 mx-2" />
-              <RichTextStyleButton format="bold" icon="bold" />
-              <RichTextStyleButton format="italic" icon="italic" />
-              <RichTextStyleButton format="underline" icon="underline" />
-              <RichTextStyleButton
-                format="strikethrough"
-                icon="strikethrough"
+        {/* HEADER */}
+        <div className="select-none flex items-center justify-between gap-10 p-2 border-b border-neutral-50 dark:border-neutral-50-dark">
+          <Toolbar>
+            <RichTextTag disabled={disabled} />
+            <div className="h-8 w-0 border-r border-neutral-30 mx-2" />
+            <RichTextStyleButton
+              format="bold"
+              icon="bold"
+              disabled={disabled}
+            />
+            <RichTextStyleButton
+              format="italic"
+              icon="italic"
+              disabled={disabled}
+            />
+            <RichTextStyleButton
+              format="underline"
+              icon="underline"
+              disabled={disabled}
+            />
+            <RichTextStyleButton
+              format="strikethrough"
+              icon="strikethrough"
+              disabled={disabled}
+            />
+            <RichTextColorPicker disabled={disabled} />
+            <div className="h-8 w-0 border-r border-neutral-30 mx-2" />
+            <RichTextListButton
+              format="bulleted-list"
+              icon="list-bullet"
+              disabled={disabled}
+            />
+            <RichTextListButton
+              format="numbered-list"
+              icon="numbered-list"
+              disabled={disabled}
+            />
+            <div className="h-8 w-0 border-r border-neutral-30 mx-2" />
+            <AlignButton
+              align="left"
+              icon="bars-3-bottom-left"
+              disabled={disabled}
+            />
+            <AlignButton align="center" icon="bars-2" disabled={disabled} />
+            <AlignButton
+              align="right"
+              icon="bars-3-bottom-right"
+              disabled={disabled}
+            />
+            <AlignButton align="justify" icon="bars-3" disabled={disabled} />
+            <div className="h-8 w-0 border-r border-neutral-30 mx-2" />
+            <RichTextLink disabled={disabled} />
+            <RichTextImage disabled={disabled} />
+            <RichTextTable disabled={disabled} />
+          </Toolbar>
+          <IconButton
+            className="flex-1"
+            title={expand ? 'Expand' : 'Collapse'}
+            icon={
+              <Icon
+                name={expand ? 'arrows-pointing-in' : 'arrows-pointing-out'}
+                size={20}
               />
-              <RichTextColorPicker />
-              <div className="h-8 w-0 border-r border-neutral-30 mx-2" />
-              <RichTextListButton format="bulleted-list" icon="list-bullet" />
-              <RichTextListButton format="numbered-list" icon="numbered-list" />
-              <div className="h-8 w-0 border-r border-neutral-30 mx-2" />
-              <AlignButton align="left" icon="bars-3-bottom-left" />
-              <AlignButton align="center" icon="bars-2" />
-              <AlignButton align="right" icon="bars-3-bottom-right" />
-              <AlignButton align="justify" icon="bars-3" />
-              <div className="h-8 w-0 border-r border-neutral-30 mx-2" />
-              <RichTextLink />
-              <RichTextImage />
-              <RichTextTable />
-            </div>
-            <IconButton
-              className="flex-1"
-              title={expand ? "Expand" : "Collapse"}
-              icon={
-                <Icon
-                  name={expand ? "arrows-pointing-in" : "arrows-pointing-out"}
-                  size={20}
-                />
-              }
-              onClick={() => setExpand((prev) => !prev)}
-              variant="outlined"
-            />
-          </div>
+            }
+            onClick={() => setExpand((prev) => !prev)}
+            variant="outlined"
+          />
+        </div>
 
-          {/* BODY */}
-          <div
-            className={cx("flex-1 px-4 overflow-y-auto overflow-x-hidden", {
-              "py-[4px]": size === "default",
-              "py-[9px]": size === "large",
-              "min-h-[25vh] max-h-120": !expand,
-              "min-h-[75vh]": expand,
-            })}
-          >
-            <Editable
-              renderElement={renderElement}
-              renderLeaf={renderLeaf}
-              placeholder={focused ? "" : placeholder}
-              spellCheck
-              className="outline-none w-full flex flex-col gap-2"
-              onPaste={handlePaste}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-            />
-          </div>
-        </Slate>
-      </div>
-      <InputHelper message={helperMessage} error={isError} size={size} />
-    </div>
+        {/* BODY */}
+        <div
+          className={cx('flex-1 px-4 overflow-y-auto overflow-x-hidden', {
+            'py-[4px]': size === 'default',
+            'py-[9px]': size === 'large',
+            'min-h-[25vh] max-h-[120px]': !expand,
+            'h-[75vh] max-h-[75vh]': expand,
+          })}
+        >
+          <Editable
+            renderElement={renderElement}
+            renderLeaf={renderLeaf}
+            placeholder={focused ? '' : placeholder}
+            spellCheck
+            className="outline-none"
+            onPaste={handlePaste}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            disabled={disabled}
+          />
+        </div>
+      </Slate>
+    </InputContainer>
   );
 };
 
