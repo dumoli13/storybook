@@ -41,6 +41,7 @@ export interface InputProps<T> {
   fullWidth?: boolean;
   value?: T;
   defaultValue?: T;
+  initialValue?: T;
   onChange?: (value: T) => void;
   children?: React.ReactNode;
   inputRef?:

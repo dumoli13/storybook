@@ -113,7 +113,7 @@ declare module 'slate' {
 
 export interface RichTextfieldRef {
   element: HTMLInputElement | null;
-  value: string;
+  value: Descendant[];
   focus: () => void;
   reset: () => void;
   disabled: boolean;
@@ -123,13 +123,6 @@ export interface RichTextRenderElementProps
   extends Omit<RenderElementProps, 'element'> {
   element: CustomElement;
 }
-
-const defaultInitialValue: Descendant[] = [
-  {
-    type: 'paragraph',
-    children: [{ text: '' }],
-  },
-];
 
 const Toolbar: React.FC<{ children: React.ReactNode }> = React.memo(
   ({ children }) => {
@@ -201,10 +194,17 @@ const Toolbar: React.FC<{ children: React.ReactNode }> = React.memo(
 export interface RichTextFieldProps
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
-    'onChange' | 'size' | 'required' | 'checked'
+    | 'value'
+    | 'defaultValue'
+    | 'initialValue'
+    | 'onChange'
+    | 'size'
+    | 'required'
+    | 'checked'
   > {
-  value?: string;
-  defaultValue?: string;
+  value?: Descendant[];
+  defaultValue?: Descendant[];
+  initialValue?: Descendant[];
   label?: string;
   labelPosition?: 'top' | 'left';
   autoHideLabel?: boolean;
@@ -227,6 +227,12 @@ export const RichTextField = ({
   name,
   value: valueProp,
   defaultValue,
+  initialValue = [
+    {
+      type: 'paragraph',
+      children: [{ text: '' }],
+    },
+  ],
   label,
   labelPosition = 'top',
   autoHideLabel = false,
@@ -247,24 +253,24 @@ export const RichTextField = ({
   const elementRef = React.useRef<HTMLInputElement>(null);
   const [focused, setFocused] = React.useState(false);
 
-  const parseValue = React.useCallback((raw?: string): Descendant[] => {
-    if (!raw) return defaultInitialValue;
-    try {
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) return defaultInitialValue;
-      return parsed;
-    } catch {
-      return defaultInitialValue;
-    }
-  }, []);
+  // const parseValue = React.useCallback((raw?: string): Descendant[] => {
+  //   if (!raw) return initialValue;
+  //   try {
+  //     const parsed = JSON.parse(raw);
+  //     if (!Array.isArray(parsed)) return initialValue;
+  //     return parsed;
+  //   } catch {
+  //     return initialValue;
+  //   }
+  // }, []);
 
   const [internalValue, setInternalValue] = React.useState<Descendant[]>(
-    parseValue(defaultValue),
+    defaultValue || initialValue,
   );
 
   const isControlled = valueProp !== undefined;
   const value = React.useMemo(
-    () => (isControlled ? valueProp ?? '' : JSON.stringify(internalValue)),
+    () => (isControlled ? valueProp : internalValue),
     [isControlled, valueProp, internalValue],
   );
 
@@ -276,7 +282,7 @@ export const RichTextField = ({
       element: elementRef.current,
       value,
       focus: () => elementRef.current?.focus(),
-      reset: () => setInternalValue(defaultInitialValue),
+      reset: () => setInternalValue(initialValue),
       disabled,
     }),
     [value, disabled],
@@ -385,6 +391,19 @@ export const RichTextField = ({
     const text = e.clipboardData.getData('text/plain');
     const image = e.clipboardData.files?.[0];
 
+    console.log('html', html);
+    console.log('text', text);
+    console.log('image', image);
+
+    if (html) {
+      const fragment = deserializeHTMLFromWord(html);
+      if (fragment?.length) {
+        Editor.withoutNormalizing(editor, () => {
+          Transforms.insertFragment(editor, fragment);
+        });
+      }
+      return;
+    }
     if (image?.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -420,16 +439,6 @@ export const RichTextField = ({
         img.src = url;
       };
       reader.readAsDataURL(image);
-      return;
-    }
-
-    if (html) {
-      const fragment = deserializeHTMLFromWord(html);
-      if (fragment?.length) {
-        Editor.withoutNormalizing(editor, () => {
-          Transforms.insertFragment(editor, fragment);
-        });
-      }
       return;
     } else if (text) {
       const lines = text.split(/\r?\n/);

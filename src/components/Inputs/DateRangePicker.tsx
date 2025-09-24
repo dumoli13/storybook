@@ -1,8 +1,8 @@
 /* eslint-disable react/no-array-index-key */
-import React from "react";
-import cx from "classnames";
-import dayjs from "dayjs";
-import { MONTH_LIST, PickerType, TimeUnit } from "../../const/datePicker";
+import React from 'react';
+import cx from 'classnames';
+import dayjs from 'dayjs';
+import { MONTH_LIST, PickerType, TimeUnit } from '../../const/datePicker';
 import {
   SUNDAY_DATE,
   areDatesEqual,
@@ -10,14 +10,14 @@ import {
   isDateABeforeDateB,
   isDateBetween,
   isToday,
-} from "../../libs";
-import { isValidDate } from "../../libs/inputDate";
-import Icon from "../Icon";
-import { CancelButton } from "./DatePicker";
-import InputDropdown from "./InputDropdown";
-import InputEndIconWrapper from "./InputEndIconWrapper";
-import InputHelper from "./InputHelper";
-import InputLabel from "./InputLabel";
+} from '../../libs';
+import { isValidDate } from '../../libs/inputDate';
+import Icon from '../Icon';
+import { CancelButton } from './DatePicker';
+import InputDropdown from './InputDropdown';
+import InputEndIconWrapper from './InputEndIconWrapper';
+import InputHelper from './InputHelper';
+import InputLabel from './InputLabel';
 
 export type InputDateRangeValue = [Date, Date] | null;
 export interface InputDateRangePickerRef {
@@ -31,13 +31,14 @@ export interface InputDateRangePickerRef {
 export interface DateRangePickerProps
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
-    "value" | "defaultValue" | "onChange" | "size" | "required" | "checked"
+    'value' | 'defaultValue' | 'onChange' | 'size' | 'required' | 'checked'
   > {
   value?: InputDateRangeValue;
   defaultValue?: InputDateRangeValue;
+  initialValue?: InputDateRangeValue;
   clearable?: boolean;
   label?: string;
-  labelPosition?: "top" | "left";
+  labelPosition?: 'top' | 'left';
   autoHideLabel?: boolean;
   onChange?: (value: InputDateRangeValue) => void;
   helperText?: React.ReactNode;
@@ -46,7 +47,7 @@ export interface DateRangePickerProps
   inputRef?:
     | React.RefObject<InputDateRangePickerRef | null>
     | React.RefCallback<InputDateRangePickerRef | null>;
-  size?: "default" | "large";
+  size?: 'default' | 'large';
   error?: boolean | string;
   success?: boolean;
   loading?: boolean;
@@ -66,18 +67,18 @@ const DateRangePicker = ({
   name,
   value: valueProp,
   defaultValue,
+  initialValue,
   label,
-
-  labelPosition = "top",
+  labelPosition = 'top',
   autoHideLabel = false,
   onChange,
   className,
   helperText,
-  placeholder = "Input date",
+  placeholder = 'Input date',
   disabled: disabledProp = false,
   fullWidth,
   inputRef,
-  size = "default",
+  size = 'default',
   clearable = false,
   error: errorProp,
   success: successProp,
@@ -86,7 +87,7 @@ const DateRangePicker = ({
   width,
   showTime = false,
   format: formatProps,
-  picker = "date",
+  picker = 'date',
   required,
   ...props
 }: DateRangePickerProps) => {
@@ -98,19 +99,19 @@ const DateRangePicker = ({
 
   let format = formatProps;
   if (!format) {
-    if (picker === "year") format = "YYYY";
-    else if (picker === "month") format = "M/YYYY";
-    else format = "D/M/YYYY";
+    if (picker === 'year') format = 'YYYY';
+    else if (picker === 'month') format = 'M/YYYY';
+    else format = 'D/M/YYYY';
     if (showTime) format = `${format} HH:mm:ss`;
   }
 
   const [internalValue, setInternalValue] = React.useState(
-    defaultValue || null
+    defaultValue || initialValue || null,
   );
-  const isControlled = typeof valueProp !== "undefined";
+  const isControlled = typeof valueProp !== 'undefined';
   const value = isControlled ? valueProp : internalValue;
   const [tempValue, setTempValue] = React.useState<[Date | null, Date | null]>(
-    value || [null, null]
+    value || [null, null],
   );
   const [timeValue, setTimeValue] = React.useState({
     hours: (tempValue[0] ? value?.[1] : value?.[0])?.getHours() ?? null, // if
@@ -120,23 +121,23 @@ const DateRangePicker = ({
 
   const [calendarView, setCalendarView] = React.useState<PickerType>(picker);
   const [displayedDate, setDisplayedDate] = React.useState(
-    value === null ? new Date() : value[0]
+    value === null ? new Date() : value[0],
   );
   const yearRange = getYearRange(displayedDate.getFullYear());
 
   const firstDate = new Date(
     displayedDate.getFullYear(),
     displayedDate.getMonth(),
-    1
+    1,
   );
   const lastDate = new Date(
     displayedDate.getFullYear(),
     displayedDate.getMonth() + 1,
-    0
+    0,
   );
 
-  const dayFormatter = new Intl.DateTimeFormat("en-US", { weekday: "short" });
-  const monthFormatter = new Intl.DateTimeFormat("en-US", { month: "long" });
+  const dayFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'short' });
+  const monthFormatter = new Intl.DateTimeFormat('en-US', { month: 'long' });
 
   const helperMessage = errorProp ?? helperText;
   const isError = !!errorProp;
@@ -172,10 +173,10 @@ const DateRangePicker = ({
 
             container.scrollTo({
               top: container.scrollTop + offset,
-              behavior: "smooth",
+              behavior: 'smooth',
             });
           }
-        }
+        },
       );
     }, 50); // Small delay for rendering
   }, [dropdownOpen, timeValue.hours, timeValue.minutes, timeValue.seconds]);
@@ -207,9 +208,9 @@ const DateRangePicker = ({
       handleBlur();
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -240,9 +241,9 @@ const DateRangePicker = ({
       new Date(
         SUNDAY_DATE.getFullYear(),
         SUNDAY_DATE.getMonth(),
-        SUNDAY_DATE.getDate() + idx
-      )
-    )
+        SUNDAY_DATE.getDate() + idx,
+      ),
+    ),
   );
 
   const dates = Array.from({ length: lastDate.getDate() }).map(
@@ -250,8 +251,8 @@ const DateRangePicker = ({
       new Date(
         firstDate.getFullYear(),
         firstDate.getMonth(),
-        firstDate.getDate() + idx
-      )
+        firstDate.getDate() + idx,
+      ),
   );
 
   const dateMatrix: Array<Array<Date | null>> = Array(days.length).fill([]);
@@ -267,25 +268,25 @@ const DateRangePicker = ({
     dateMatrix.push(dateRow);
   }
 
-  const handleChangeView = (view: "date" | "month" | "year") => {
+  const handleChangeView = (view: 'date' | 'month' | 'year') => {
     setCalendarView(view);
   };
 
   const handleJumpMonth = (month: number) => {
-    if (picker === "month") {
+    if (picker === 'month') {
       handleSelectDate(new Date(displayedDate.getFullYear(), month));
     } else {
       setDisplayedDate(new Date(displayedDate.getFullYear(), month));
-      handleChangeView("date");
+      handleChangeView('date');
     }
   };
 
   const handleJumpYear = (year: number) => {
-    if (picker === "year") {
+    if (picker === 'year') {
       handleSelectDate(new Date(year, 0)); // january 1, <YEAR>
     } else {
       setDisplayedDate(new Date(year, displayedDate.getMonth()));
-      setCalendarView("month");
+      setCalendarView('month');
     }
   };
 
@@ -311,7 +312,7 @@ const DateRangePicker = ({
 
   const handleChangeYear = (jump: number) => {
     setDisplayedDate(
-      new Date(displayedDate.getFullYear() + jump, displayedDate.getMonth())
+      new Date(displayedDate.getFullYear() + jump, displayedDate.getMonth()),
     );
   };
 
@@ -401,7 +402,7 @@ const DateRangePicker = ({
         date.getDate(),
         selectedTime.hours,
         selectedTime.minutes,
-        selectedTime.seconds
+        selectedTime.seconds,
       );
 
       setTempValue((prev) =>
@@ -409,8 +410,8 @@ const DateRangePicker = ({
           ? prev
           : (prev.map((v, i) => (i === pointer ? newDate : v)) as [
               Date | null,
-              Date | null
-            ])
+              Date | null,
+            ]),
       );
     } else if (pointer === 0) {
       convertDateOnly(date, tempValue[1]);
@@ -437,15 +438,15 @@ const DateRangePicker = ({
       selectedDate.getDate(),
       selectedTime.hours,
       selectedTime.minutes,
-      selectedTime.seconds
+      selectedTime.seconds,
     );
     setTempValue((prev) =>
       prev[pointer] === newDate
         ? prev
         : (prev.map((v, i) => (i === pointer ? newDate : v)) as [
             Date | null,
-            Date | null
-          ])
+            Date | null,
+          ]),
     );
   };
 
@@ -482,16 +483,16 @@ const DateRangePicker = ({
 
   const dropdownContent = (
     <div className="min-w-60">
-      {calendarView === "date" && (
+      {calendarView === 'date' && (
         <>
           <div className="px-4 flex flex-col gap-4 border-b border-neutral-40 dark:border-neutral-40-dark">
             <div className="flex items-center gap-10 text-neutral-100 dark:text-neutral-100-dark font-medium mb-1">
               <button
                 type="button"
-                className={cx("flex-1 border-b-2", {
-                  " border-primary-main dark:border-primary-main-dark":
+                className={cx('flex-1 border-b-2', {
+                  ' border-primary-main dark:border-primary-main-dark':
                     pointer === 0,
-                  "border-transparent": pointer !== 0,
+                  'border-transparent': pointer !== 0,
                 })}
                 onClick={() => handleFocus(0)}
                 disabled={pointer === 0} // disable if alreay focus at pointer 0
@@ -500,15 +501,15 @@ const DateRangePicker = ({
                   Start Date
                 </div>
                 <div>
-                  {tempValue[0] ? dayjs(tempValue[0]).format(format) : "-"}
+                  {tempValue[0] ? dayjs(tempValue[0]).format(format) : '-'}
                 </div>
               </button>
               <button
                 type="button"
-                className={cx("flex-1 border-b-2", {
-                  "border-primary-main dark:border-primary-main-dark":
+                className={cx('flex-1 border-b-2', {
+                  'border-primary-main dark:border-primary-main-dark':
                     pointer === 1,
-                  "border-transparent": pointer !== 1,
+                  'border-transparent': pointer !== 1,
                 })}
                 onClick={() => handleFocus(1)}
                 disabled={pointer === 1 || tempValue[0] === null} // disable if already focus at pointer 1 or start date is not selected
@@ -517,7 +518,7 @@ const DateRangePicker = ({
                   End Date
                 </div>
                 <div>
-                  {tempValue[1] ? dayjs(tempValue[1]).format(format) : "-"}
+                  {tempValue[1] ? dayjs(tempValue[1]).format(format) : '-'}
                 </div>
               </button>
             </div>
@@ -545,14 +546,14 @@ const DateRangePicker = ({
                   <button
                     type="button"
                     className="shrink-0 hover:text-primary-hover dark:hover:text-primary-hover-dark w-[84px]"
-                    onClick={() => handleChangeView("month")}
+                    onClick={() => handleChangeView('month')}
                   >
                     {monthFormatter.format(displayedDate)}
                   </button>
                   <button
                     type="button"
                     className="shrink-0 hover:text-primary-hover dark:hover:text-primary-hover-dark w-10"
-                    onClick={() => handleChangeView("year")}
+                    onClick={() => handleChangeView('year')}
                   >
                     {displayedDate.getFullYear()}
                   </button>
@@ -616,7 +617,7 @@ const DateRangePicker = ({
                             <td
                               key={dateIdx}
                               aria-label={
-                                date ? date.toDateString() : "Disabled date"
+                                date ? date.toDateString() : 'Disabled date'
                               }
                               className="px-0"
                             >
@@ -625,31 +626,31 @@ const DateRangePicker = ({
                                   type="button"
                                   onClick={() => handleSelectDate(date)}
                                   className={cx(
-                                    "w-full text-14px mt-0.5 h-7 transition-colors duration-200 ease-in flex items-center justify-center",
+                                    'w-full text-14px mt-0.5 h-7 transition-colors duration-200 ease-in flex items-center justify-center',
                                     {
-                                      "cursor-not-allowed text-neutral-50 dark:text-neutral-50-dark":
+                                      'cursor-not-allowed text-neutral-50 dark:text-neutral-50-dark':
                                         isDateDisabled,
-                                      "cursor-pointer text-neutral-100 dark:text-neutral-100-dark":
+                                      'cursor-pointer text-neutral-100 dark:text-neutral-100-dark':
                                         !isDateDisabled,
-                                      "hover:bg-neutral-20 dark:hover:bg-neutral-20-dark":
+                                      'hover:bg-neutral-20 dark:hover:bg-neutral-20-dark':
                                         !isDateDisabled &&
                                         !(isStartSelected || isEndSelected),
-                                      "border border-primary-main dark:border-primary-main-dark rounded-md":
+                                      'border border-primary-main dark:border-primary-main-dark rounded-md':
                                         isToday(date) &&
                                         !(
                                           isStartSelected ||
                                           isEndSelected ||
                                           isBetween
                                         ),
-                                      "bg-primary-main dark:bg-primary-main-dark !text-neutral-10 dark:!text-neutral-10-dark":
+                                      'bg-primary-main dark:bg-primary-main-dark !text-neutral-10 dark:!text-neutral-10-dark':
                                         isStartSelected || isEndSelected,
-                                      "rounded-tl-md rounded-bl-md":
+                                      'rounded-tl-md rounded-bl-md':
                                         isStartSelected,
-                                      "rounded-tr-md rounded-br-md":
+                                      'rounded-tr-md rounded-br-md':
                                         isEndSelected,
-                                      "bg-primary-surface dark:bg-primary-surface-dark":
+                                      'bg-primary-surface dark:bg-primary-surface-dark':
                                         isBetween,
-                                    }
+                                    },
                                   )}
                                   disabled={isDateDisabled}
                                 >
@@ -685,15 +686,15 @@ const DateRangePicker = ({
                             ref={(el) => {
                               itemRefs[unit].current[idx] = el;
                             }}
-                            className={cx("w-10 text-center rounded py-0.5", {
-                              "bg-primary-main dark:bg-primary-main-dark text-neutral-10 dark:text-neutral-10-dark cursor-default":
+                            className={cx('w-10 text-center rounded py-0.5', {
+                              'bg-primary-main dark:bg-primary-main-dark text-neutral-10 dark:text-neutral-10-dark cursor-default':
                                 idx === timeValue[unit],
-                              "hover:bg-neutral-20 dark:hover:bg-neutral-20-dark":
+                              'hover:bg-neutral-20 dark:hover:bg-neutral-20-dark':
                                 idx !== timeValue[unit],
                             })}
                             onClick={() => handleSelectTime(unit, idx)}
                           >
-                            {idx.toString().padStart(2, "0")}
+                            {idx.toString().padStart(2, '0')}
                           </button>
                         ))}
                       </div>
@@ -709,9 +710,9 @@ const DateRangePicker = ({
                 type="button"
                 onClick={handleConfirmDateTime}
                 className={cx(
-                  "text-14px py-0.5 px-2 rounded disabled:border",
-                  "text-neutral-10 disabled:border-neutral-40 disabled:text-neutral-60 disabled:bg-neutral-30 bg-primary-main hover:bg-primary-hover active:bg-primary-pressed",
-                  "dark:text-neutral-10-dark dark:disabled:border-neutral-40-dark dark:disabled:text-neutral-60-dark dark:disabled:bg-neutral-30-dark dark:bg-primary-main-dark dark:hover:bg-primary-hover-dark dark:active:bg-primary-pressed-dark"
+                  'text-14px py-0.5 px-2 rounded disabled:border',
+                  'text-neutral-10 disabled:border-neutral-40 disabled:text-neutral-60 disabled:bg-neutral-30 bg-primary-main hover:bg-primary-hover active:bg-primary-pressed',
+                  'dark:text-neutral-10-dark dark:disabled:border-neutral-40-dark dark:disabled:text-neutral-60-dark dark:disabled:bg-neutral-30-dark dark:bg-primary-main-dark dark:hover:bg-primary-hover-dark dark:active:bg-primary-pressed-dark',
                 )}
                 disabled={disabled}
               >
@@ -721,17 +722,17 @@ const DateRangePicker = ({
           )}
         </>
       )}
-      {calendarView === "month" && (
+      {calendarView === 'month' && (
         <>
-          {picker === "month" && (
+          {picker === 'month' && (
             <div className="px-4 flex flex-col gap-4 border-b border-neutral-40 dark:border-neutral-40-dark">
               <div className="shrink-0 flex items-center gap-10 text-neutral-100 dark:text-neutral-100-dark font-medium mb-1">
                 <button
                   type="button"
-                  className={cx("shrink-0 flex-1 border-b-2", {
-                    " border-primary-main dark:border-primary-main-dark":
+                  className={cx('shrink-0 flex-1 border-b-2', {
+                    ' border-primary-main dark:border-primary-main-dark':
                       pointer === 0,
-                    "border-transparent": pointer !== 0,
+                    'border-transparent': pointer !== 0,
                   })}
                   onClick={() => handleFocus(0)}
                   disabled={pointer === 0} // disable if alreay focus at pointer 0
@@ -741,16 +742,16 @@ const DateRangePicker = ({
                   </div>
                   <div className="shrink-0">
                     {tempValue[0]
-                      ? dayjs(tempValue[0]).format("MMM YYYY")
-                      : "-"}
+                      ? dayjs(tempValue[0]).format('MMM YYYY')
+                      : '-'}
                   </div>
                 </button>
                 <button
                   type="button"
-                  className={cx("shrink-0 flex-1 border-b-2", {
-                    "border-primary-main dark:border-primary-main-dark":
+                  className={cx('shrink-0 flex-1 border-b-2', {
+                    'border-primary-main dark:border-primary-main-dark':
                       pointer === 1,
-                    "border-transparent": pointer !== 1,
+                    'border-transparent': pointer !== 1,
                   })}
                   onClick={() => handleFocus(1)}
                   disabled={pointer === 1 || tempValue[0] === null} // disable if already focus at pointer 1 or start date is not selected
@@ -760,8 +761,8 @@ const DateRangePicker = ({
                   </div>
                   <div className="shrink-0">
                     {tempValue[1]
-                      ? dayjs(tempValue[1]).format("MMM YYYY")
-                      : "-"}
+                      ? dayjs(tempValue[1]).format('MMM YYYY')
+                      : '-'}
                   </div>
                 </button>
               </div>
@@ -778,7 +779,7 @@ const DateRangePicker = ({
             <button
               type="button"
               className="text-16px font-medium text-neutral-100 dark:text-neutral-100-dark hover:text-primary-hover dark:hover:text-primary-hover-dark"
-              onClick={() => handleChangeView("year")}
+              onClick={() => handleChangeView('year')}
             >
               {displayedDate.getFullYear()}
             </button>
@@ -795,13 +796,13 @@ const DateRangePicker = ({
               const currentMonth =
                 displayedDate.getFullYear() * 100 + item.value;
               const isDateDisabled =
-                picker === "month" &&
+                picker === 'month' &&
                 disabledDate(
                   new Date(displayedDate.getFullYear(), item.value),
-                  tempValue[0]
+                  tempValue[0],
                 );
               const [start, end] = tempValue?.map((v) =>
-                v ? v.getFullYear() * 100 + v.getMonth() : null
+                v ? v.getFullYear() * 100 + v.getMonth() : null,
               ) ?? [null, null];
 
               const isStartSelected = start !== null && currentMonth === start;
@@ -821,22 +822,22 @@ const DateRangePicker = ({
                     type="button"
                     onClick={() => handleJumpMonth(item.value)}
                     className={cx(
-                      "w-full h-8 transition-colors duration-200 ease-in px-3 py-0.5 flex items-center justify-center",
+                      'w-full h-8 transition-colors duration-200 ease-in px-3 py-0.5 flex items-center justify-center',
                       {
-                        "cursor-not-allowed text-neutral-50 dark:text-neutral-50-dark":
+                        'cursor-not-allowed text-neutral-50 dark:text-neutral-50-dark':
                           isDateDisabled,
-                        "cursor-pointer text-neutral-100 dark:text-neutral-100-dark":
+                        'cursor-pointer text-neutral-100 dark:text-neutral-100-dark':
                           !isDateDisabled,
-                        "hover:bg-neutral-20 dark:hover:bg-neutral-20-dark":
+                        'hover:bg-neutral-20 dark:hover:bg-neutral-20-dark':
                           !isDateDisabled &&
                           !(isStartSelected || isEndSelected),
-                        "bg-primary-main dark:bg-primary-main-dark text-neutral-10 dark:text-neutral-10-dark":
+                        'bg-primary-main dark:bg-primary-main-dark text-neutral-10 dark:text-neutral-10-dark':
                           isStartSelected || isEndSelected,
-                        "rounded-tl-md rounded-bl-md": isStartSelected,
-                        "rounded-tr-md rounded-br-md": isEndSelected,
-                        "bg-primary-surface dark:bg-primary-surface-dark":
+                        'rounded-tl-md rounded-bl-md': isStartSelected,
+                        'rounded-tr-md rounded-br-md': isEndSelected,
+                        'bg-primary-surface dark:bg-primary-surface-dark':
                           isBetween,
-                      }
+                      },
                     )}
                     disabled={isDateDisabled}
                   >
@@ -847,21 +848,21 @@ const DateRangePicker = ({
             })}
           </div>
           <div className="flex justify-end gap-3 px-2">
-            <CancelButton onClick={() => handleChangeView("date")} />
+            <CancelButton onClick={() => handleChangeView('date')} />
           </div>
         </>
       )}
-      {calendarView === "year" && (
+      {calendarView === 'year' && (
         <>
-          {picker === "year" && (
+          {picker === 'year' && (
             <div className="px-4 flex flex-col gap-4 border-b border-neutral-40 dark:border-neutral-40-dark">
               <div className="shrink-0 flex items-center gap-10 text-neutral-100 dark:text-neutral-100-dark font-medium mb-1">
                 <button
                   type="button"
-                  className={cx("shrink-0 flex-1 border-b-2", {
-                    " border-primary-main dark:border-primary-main-dark":
+                  className={cx('shrink-0 flex-1 border-b-2', {
+                    ' border-primary-main dark:border-primary-main-dark':
                       pointer === 0,
-                    "border-transparent": pointer !== 0,
+                    'border-transparent': pointer !== 0,
                   })}
                   onClick={() => handleFocus(0)}
                   disabled={pointer === 0} // disable if alreay focus at pointer 0
@@ -870,15 +871,15 @@ const DateRangePicker = ({
                     Start Year
                   </div>
                   <div className="shrink-0">
-                    {tempValue[0] ? dayjs(tempValue[0]).format("YYYY") : "-"}
+                    {tempValue[0] ? dayjs(tempValue[0]).format('YYYY') : '-'}
                   </div>
                 </button>
                 <button
                   type="button"
-                  className={cx("shrink-0 flex-1 border-b-2", {
-                    "border-primary-main dark:border-primary-main-dark":
+                  className={cx('shrink-0 flex-1 border-b-2', {
+                    'border-primary-main dark:border-primary-main-dark':
                       pointer === 1,
-                    "border-transparent": pointer !== 1,
+                    'border-transparent': pointer !== 1,
                   })}
                   onClick={() => handleFocus(1)}
                   disabled={pointer === 1 || tempValue[0] === null} // disable if already focus at pointer 1 or start date is not selected
@@ -887,7 +888,7 @@ const DateRangePicker = ({
                     End Year
                   </div>
                   <div className="shrink-0">
-                    {tempValue[1] ? dayjs(tempValue[1]).format("YYYY") : "-"}
+                    {tempValue[1] ? dayjs(tempValue[1]).format('YYYY') : '-'}
                   </div>
                 </button>
               </div>
@@ -915,13 +916,13 @@ const DateRangePicker = ({
           <div className="grid grid-cols-3 p-2 gap-y-1 text-14px">
             {yearRange.map((item) => {
               const isDateDisabled =
-                picker === "year" &&
+                picker === 'year' &&
                 disabledDate(
                   new Date(item, displayedDate.getMonth()),
-                  tempValue[0]
+                  tempValue[0],
                 );
               const [start, end] = tempValue?.map(
-                (v) => v?.getFullYear() ?? null
+                (v) => v?.getFullYear() ?? null,
               ) ?? [null, null];
 
               const isStartSelected = start !== null && item === start;
@@ -938,22 +939,22 @@ const DateRangePicker = ({
                     type="button"
                     onClick={() => handleJumpYear(item)}
                     className={cx(
-                      "w-full h-8 transition-colors duration-200 ease-in px-3 py-0.5 flex items-center justify-center",
+                      'w-full h-8 transition-colors duration-200 ease-in px-3 py-0.5 flex items-center justify-center',
                       {
-                        "cursor-not-allowed text-neutral-50 dark:text-neutral-50-dark":
+                        'cursor-not-allowed text-neutral-50 dark:text-neutral-50-dark':
                           isDateDisabled,
-                        "cursor-pointer text-neutral-100 dark:text-neutral-100-dark":
+                        'cursor-pointer text-neutral-100 dark:text-neutral-100-dark':
                           !isDateDisabled,
-                        "hover:bg-neutral-20 dark:hover:bg-neutral-20-dark":
+                        'hover:bg-neutral-20 dark:hover:bg-neutral-20-dark':
                           !isDateDisabled &&
                           !(isStartSelected || isEndSelected),
-                        "bg-primary-main dark:bg-primary-main-dark !text-neutral-10 dark:!text-neutral-10-dark":
+                        'bg-primary-main dark:bg-primary-main-dark !text-neutral-10 dark:!text-neutral-10-dark':
                           isStartSelected || isEndSelected,
-                        "rounded-tl-md rounded-bl-md": isStartSelected,
-                        "rounded-tr-md rounded-br-md": isEndSelected,
-                        "bg-primary-surface dark:bg-primary-surface-dark":
+                        'rounded-tl-md rounded-bl-md': isStartSelected,
+                        'rounded-tr-md rounded-br-md': isEndSelected,
+                        'bg-primary-surface dark:bg-primary-surface-dark':
                           isBetween,
-                      }
+                      },
                     )}
                     disabled={isDateDisabled}
                   >
@@ -964,7 +965,7 @@ const DateRangePicker = ({
             })}
           </div>
           <div className="flex justify-end gap-3 px-2">
-            <CancelButton onClick={() => handleChangeView("date")} />
+            <CancelButton onClick={() => handleChangeView('date')} />
           </div>
         </>
       )}
@@ -976,12 +977,12 @@ const DateRangePicker = ({
   return (
     <div
       className={cx(
-        "relative text-14px",
+        'relative text-14px',
         {
-          "w-full": fullWidth,
-          "flex items-center gap-4": labelPosition === "left",
+          'w-full': fullWidth,
+          'flex items-center gap-4': labelPosition === 'left',
         },
-        className
+        className,
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
@@ -991,35 +992,35 @@ const DateRangePicker = ({
       )}
       <div
         className={cx(
-          "relative px-3 border rounded-md flex gap-2 items-center",
+          'relative px-3 border rounded-md flex gap-2 items-center',
           {
-            "w-full": fullWidth,
-            "border-danger-main dark:border-danger-main-dark focus:ring-danger-focus dark:focus:ring-danger-focus-dark":
+            'w-full': fullWidth,
+            'border-danger-main dark:border-danger-main-dark focus:ring-danger-focus dark:focus:ring-danger-focus-dark':
               isError,
-            "border-success-main dark:border-success-main-dark focus:ring-success-focus dark:focus:ring-success-focus-dark":
+            'border-success-main dark:border-success-main-dark focus:ring-success-focus dark:focus:ring-success-focus-dark':
               !isError && successProp,
-            "border-neutral-50 dark:border-neutral-50-dark hover:border-primary-main dark:hover:border-primary-main-dark focus:ring-primary-main dark:focus:ring-primary-main-dark":
+            'border-neutral-50 dark:border-neutral-50-dark hover:border-primary-main dark:hover:border-primary-main-dark focus:ring-primary-main dark:focus:ring-primary-main-dark':
               !isError && !successProp && !disabled,
-            "bg-neutral-20 dark:bg-neutral-30-dark cursor-not-allowed text-neutral-60 dark:text-neutral-60-dark":
+            'bg-neutral-20 dark:bg-neutral-30-dark cursor-not-allowed text-neutral-60 dark:text-neutral-60-dark':
               disabled,
-            "bg-neutral-10 dark:bg-neutral-10-dark shadow-box-3 focus:ring-3 focus:ring-primary-focus focus:!border-primary-main":
+            'bg-neutral-10 dark:bg-neutral-10-dark shadow-box-3 focus:ring-3 focus:ring-primary-focus focus:!border-primary-main':
               !disabled,
-            "ring-3 ring-primary-focus dark:ring-primary-focus-dark !border-primary-main dark:!border-primary-main-dark":
+            'ring-3 ring-primary-focus dark:ring-primary-focus-dark !border-primary-main dark:!border-primary-main-dark':
               focused,
-            "py-[3px]": size === "default",
-            "py-[9px]": size === "large",
-          }
+            'py-[3px]': size === 'default',
+            'py-[9px]': size === 'large',
+          },
         )}
         ref={elementRef}
         style={width ? { width } : undefined}
       >
         <div
           className={cx(
-            "flex gap-2 items-center truncate flex-1 text-neutral-90 dark:text-neutral-90-dark",
+            'flex gap-2 items-center truncate flex-1 text-neutral-90 dark:text-neutral-90-dark',
             {
-              "text-14px py-0.5": size === "default",
-              "text-18px py-0.5": size === "large",
-            }
+              'text-14px py-0.5': size === 'default',
+              'text-18px py-0.5': size === 'large',
+            },
           )}
         >
           {value ? (
@@ -1029,15 +1030,15 @@ const DateRangePicker = ({
                 tabIndex={!disabled ? 0 : -1}
                 id={inputId}
                 value={
-                  isValidDate(value[0]) ? dayjs(value[0]).format(format) : ""
+                  isValidDate(value[0]) ? dayjs(value[0]).format(format) : ''
                 }
-                placeholder={focused ? "" : placeholder}
+                placeholder={focused ? '' : placeholder}
                 className={cx(
-                  "truncate outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed",
+                  'truncate outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed',
                   {
-                    "text-primary-main dark:text-primary-main-dark":
+                    'text-primary-main dark:text-primary-main-dark':
                       focused && pointer === 0,
-                  }
+                  },
                 )}
                 disabled={disabled}
                 aria-label={label}
@@ -1053,15 +1054,15 @@ const DateRangePicker = ({
                 tabIndex={!disabled ? 0 : -1}
                 id={inputId}
                 value={
-                  isValidDate(value[1]) ? dayjs(value[1]).format(format) : ""
+                  isValidDate(value[1]) ? dayjs(value[1]).format(format) : ''
                 }
-                placeholder={focused ? "" : placeholder}
+                placeholder={focused ? '' : placeholder}
                 className={cx(
-                  "truncate outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed",
+                  'truncate outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed',
                   {
-                    "text-primary-main dark:text-primary-main-dark":
+                    'text-primary-main dark:text-primary-main-dark':
                       focused && pointer === 1,
-                  }
+                  },
                 )}
                 disabled={disabled}
                 aria-label={label}
@@ -1075,15 +1076,15 @@ const DateRangePicker = ({
           ) : (
             <input
               {...props}
-              value={""}
+              value={''}
               tabIndex={!disabled ? 0 : -1}
               id={inputId}
-              placeholder={focused ? "" : placeholder}
+              placeholder={focused ? '' : placeholder}
               className={cx(
-                "truncate outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed",
+                'truncate outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed',
                 {
-                  "font-bold": focused && pointer === 1,
-                }
+                  'font-bold': focused && pointer === 1,
+                },
               )}
               disabled={disabled}
               aria-label={label}

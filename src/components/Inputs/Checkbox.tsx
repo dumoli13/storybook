@@ -14,12 +14,19 @@ export interface CheckboxRef {
 export interface CheckboxProps
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
-    'onChange' | 'size' | 'placeholder' | 'required' | 'value'
+    | 'value'
+    | 'defaultValue'
+    | 'onChange'
+    | 'size'
+    | 'placeholder'
+    | 'required'
+    | 'value'
   > {
   label?: string;
   labelPosition?: 'top' | 'bottom' | 'left' | 'right';
   checked?: boolean;
   defaultChecked?: boolean;
+  initialChecked?: boolean;
   indeterminate?: boolean;
   onChange?: (checked: boolean) => void;
   helperText?: React.ReactNode;
@@ -43,6 +50,7 @@ const Checkbox = ({
   labelPosition = 'right',
   checked: valueProp,
   defaultChecked = false,
+  initialChecked = false,
   indeterminate = false,
   onChange,
   helperText,
@@ -57,7 +65,9 @@ const Checkbox = ({
   ...props
 }: CheckboxProps) => {
   const elementRef = React.useRef<HTMLInputElement>(null);
-  const [internalValue, setInternalValue] = React.useState(defaultChecked);
+  const [internalValue, setInternalValue] = React.useState(
+    defaultChecked || initialChecked,
+  );
   const [isFocused, setIsFocused] = React.useState(false);
   const isControlled = valueProp !== undefined;
   const value = isControlled ? valueProp : internalValue;
@@ -69,12 +79,8 @@ const Checkbox = ({
   React.useImperativeHandle(inputRef, () => ({
     element: elementRef.current,
     value,
-    focus: () => {
-      elementRef.current?.focus();
-    },
-    reset: () => {
-      setInternalValue(false);
-    },
+    focus: () => elementRef.current?.focus(),
+    reset: () => setInternalValue(initialChecked),
     disabled,
   }));
 

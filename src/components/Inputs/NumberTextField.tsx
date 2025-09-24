@@ -32,6 +32,7 @@ export interface NumberTextFieldProps
   id?: string;
   value?: number | null;
   defaultValue?: number | null;
+  initialValue?: number | null;
   label?: string;
   labelPosition?: 'top' | 'left';
   autoHideLabel?: boolean;
@@ -62,7 +63,8 @@ const NumberTextField = ({
   id,
   name,
   value: valueProp,
-  defaultValue = valueProp,
+  defaultValue,
+  initialValue = null,
   label,
   labelPosition = 'top',
   autoHideLabel = false,
@@ -90,10 +92,10 @@ const NumberTextField = ({
   const elementRef = React.useRef<HTMLInputElement>(null);
   const [focused, setFocused] = React.useState(false);
   const [internalValue, setInternalValue] = React.useState<number | null>(
-    defaultValue !== undefined ? defaultValue : null,
+    defaultValue !== undefined ? defaultValue : initialValue,
   );
   const [internalStringValue, setInternalStringValue] = React.useState<string>(
-    defaultValue?.toString() ?? '',
+    (defaultValue || initialValue)?.toString() ?? '',
   );
 
   const isControlled = valueProp !== undefined;
@@ -119,12 +121,10 @@ const NumberTextField = ({
   React.useImperativeHandle(inputRef, () => ({
     element: elementRef.current,
     value,
-    focus: () => {
-      elementRef.current?.focus();
-    },
+    focus: () => elementRef.current?.focus(),
     reset: () => {
-      setInternalValue(null);
-      setInternalStringValue('');
+      setInternalValue(initialValue);
+      setInternalStringValue(initialValue?.toString());
     },
     disabled,
   }));
