@@ -1,7 +1,7 @@
 import React from 'react';
 import { Element, Transforms } from 'slate';
 import { ReactEditor, RenderElementProps, useSlate } from 'slate-react';
-import { CustomElement } from '.';
+import { ImageElement } from '.';
 import ImageViewer from '../../Displays/ImageViewer';
 import { Popper } from '../../Displays';
 import NumberTextField from '../NumberTextField';
@@ -14,7 +14,7 @@ import Form from '../Form';
 
 interface RichTextImageThumbnailProps
   extends Omit<RenderElementProps, 'element'> {
-  element: CustomElement;
+  element: ImageElement;
 }
 
 type FormData = {
@@ -70,7 +70,7 @@ const RichTextImageViewer = ({
           title: value.title,
           hyperlink: value.hyperlink,
         },
-      } as CustomElement,
+      },
       {
         match: (n) => Element.isElement(n),
       },

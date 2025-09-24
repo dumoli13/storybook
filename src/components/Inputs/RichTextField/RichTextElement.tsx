@@ -2,7 +2,12 @@ import React from 'react';
 import { Editor, Element } from 'slate';
 import { ReactEditor, useSlate } from 'slate-react';
 import RichTextImageViewer from './RichTextImageViewer';
-import { RichTextRenderElementProps, CustomElement } from '.';
+import {
+  RichTextRenderElementProps,
+  CustomElement,
+  LinkElement,
+  ImageElement,
+} from '.';
 import cx from 'classnames';
 import RichTextLinkViewer from './RichTextLinkViewer';
 
@@ -185,26 +190,12 @@ const RichTextElement = (props: RichTextRenderElementProps) => {
       );
     }
     case 'link': {
-      return <RichTextLinkViewer {...props} />;
-
-      // return (
-      //   <a
-      //     {...attributes}
-      //     href={(element as any).url}
-      //     className="text-blue-600 underline cursor-pointer"
-      //     target="_blank"
-      //     rel="noreferrer"
-      //     onClick={(e) => {
-      //       e.preventDefault();
-      //       window.open((element as any).url, '_blank');
-      //     }}
-      //   >
-      //     {children}
-      //   </a>
-      // );
+      return <RichTextLinkViewer {...props} element={element as LinkElement} />;
     }
     case 'image':
-      return <RichTextImageViewer {...props} />;
+      return (
+        <RichTextImageViewer {...props} element={element as ImageElement} />
+      );
     case 'table':
       return (
         <div {...attributes} className="my-4 overflow-x-auto">

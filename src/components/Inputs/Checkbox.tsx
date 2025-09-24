@@ -14,12 +14,19 @@ export interface CheckboxRef {
 export interface CheckboxProps
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
-    'onChange' | 'size' | 'placeholder' | 'required' | 'value'
+    | 'value'
+    | 'defaultValue'
+    | 'onChange'
+    | 'size'
+    | 'placeholder'
+    | 'required'
+    | 'value'
   > {
   label?: string;
   labelPosition?: 'top' | 'bottom' | 'left' | 'right';
   checked?: boolean;
   defaultChecked?: boolean;
+  initialChecked?: boolean;
   indeterminate?: boolean;
   onChange?: (checked: boolean) => void;
   helperText?: React.ReactNode;
@@ -43,6 +50,7 @@ const Checkbox = ({
   labelPosition = 'right',
   checked: valueProp,
   defaultChecked = false,
+  initialChecked = false,
   indeterminate = false,
   onChange,
   helperText,
@@ -57,8 +65,10 @@ const Checkbox = ({
   ...props
 }: CheckboxProps) => {
   const elementRef = React.useRef<HTMLInputElement>(null);
-  const [internalValue, setInternalValue] = React.useState(defaultChecked);
-  const [isFocused, setIsFocused] = React.useState(false);
+  const [internalValue, setInternalValue] = React.useState(
+    defaultChecked || initialChecked,
+  );
+  const [focused, setFocused] = React.useState(false);
   const isControlled = valueProp !== undefined;
   const value = isControlled ? valueProp : internalValue;
 
@@ -69,12 +79,8 @@ const Checkbox = ({
   React.useImperativeHandle(inputRef, () => ({
     element: elementRef.current,
     value,
-    focus: () => {
-      elementRef.current?.focus();
-    },
-    reset: () => {
-      setInternalValue(false);
-    },
+    focus: () => elementRef.current?.focus(),
+    reset: () => setInternalValue(initialChecked),
     disabled,
   }));
 
@@ -88,8 +94,11 @@ const Checkbox = ({
     }
   };
 
-  const handleFocus = () => setIsFocused(true);
-  const handleBlur = () => setIsFocused(false);
+  const handleFocus = () => {
+    if (disabled) return;
+    setFocused(true);
+  };
+  const handleBlur = () => setFocused(false);
 
   const inputId = `checkbox-${id || name}-${React.useId()}`;
 
@@ -133,7 +142,7 @@ const Checkbox = ({
                 !disabled,
               'bg-primary-main dark:bg-primary-main-dark border-primary-main dark:border-primary-main-dark':
                 !disabled && value && !indeterminate,
-              'ring-3 ring-primary-focus': isFocused,
+              'ring-3 ring-primary-focus': focused,
             },
           )}
           onKeyDown={(e) => {
@@ -146,18 +155,21 @@ const Checkbox = ({
           }}
         >
           <input
+            {...props}
             id={inputId}
             tabIndex={!disabled ? 0 : -1}
             type="checkbox"
-            className="hidden"
+            className={cx('absolute opacity-0', {
+              'w-5 h-5': size === 'default',
+              'w-7 h-7': size === 'large',
+            })}
             checked={value}
             onChange={handleChange}
             disabled={disabled}
             aria-label={ariaLabel}
-            ref={elementRef}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            {...props}
+            ref={elementRef}
           />
           {loading && (
             <Icon

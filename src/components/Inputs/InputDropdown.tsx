@@ -39,7 +39,7 @@ const InputDropdown = ({
     direction: 'down' | 'up';
   }>({ top: 0, left: 0, width: 0, direction: 'down' });
 
-  const calculateDropdownPosition = React.useCallback(() => {
+  const calculatePosition = React.useCallback(() => {
     if (!elementRef.current || !dropdownRef.current) return;
 
     const anchorRect = elementRef.current.getBoundingClientRect();
@@ -90,15 +90,19 @@ const InputDropdown = ({
   }, [elementRef, dropdownRef, fullWidth]);
 
   React.useEffect(() => {
-    calculateDropdownPosition();
-    const handleScrollOrResize = () => calculateDropdownPosition();
+    calculatePosition();
+    const handleScrollOrResize = () => {
+      if (open) {
+        calculatePosition();
+      }
+    };
     window.addEventListener('scroll', handleScrollOrResize);
     window.addEventListener('resize', handleScrollOrResize);
     return () => {
       window.removeEventListener('scroll', handleScrollOrResize);
       window.removeEventListener('resize', handleScrollOrResize);
     };
-  }, [open, children, calculateDropdownPosition]);
+  }, [open, children, calculatePosition]);
 
   return createPortal(
     <div
@@ -107,8 +111,6 @@ const InputDropdown = ({
       onMouseDown={(e) => e.stopPropagation()}
       ref={dropdownRef}
       style={{
-        // top: position.top,
-        // left: position.left,
         top: 0,
         left: 0,
         transform: `translate(${position.left}px, ${position.top}px)`,
@@ -116,12 +118,11 @@ const InputDropdown = ({
         maxHeight,
       }}
       className={cx(
-        ' bg-neutral-10 dark:bg-neutral-10-dark shadow-box-2 rounded-lg py-1.5 text-neutral-100 dark:text-neutral-100-dark overflow-y-auto cursor-default',
+        'absolute z-[2200] bg-neutral-10 dark:bg-neutral-10-dark shadow-box-2 rounded-lg py-1.5 text-neutral-100 dark:text-neutral-100-dark overflow-y-auto cursor-default',
         {
           'mt-1': position.direction === 'down',
           'mb-1': position.direction === 'up',
-          'absolute z-[2200]': open,
-          hidden: !open,
+          invisible: !open,
         },
       )}
       onKeyDown={(e) => {

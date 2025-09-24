@@ -46,13 +46,7 @@ const Popper = ({
   const elementRef = React.useRef<HTMLElement>(null);
   const popperRef = React.useRef<HTMLDivElement>(null);
   const [open, setOpen] = React.useState(openProp ?? false);
-  const [position, setPosition] = React.useState<{
-    top: number;
-    left: number;
-  }>({
-    top: 0,
-    left: 0,
-  });
+  const [position, setPosition] = React.useState({ top: 0, left: 0 });
 
   const isDropdownOpen = openProp ?? open;
 
@@ -173,19 +167,15 @@ const Popper = ({
         break;
     }
 
-    setPosition({
-      top: newPosition.top,
-      left: newPosition.left,
-    });
-  }, [placement, offset]);
+    setPosition(newPosition);
+  }, [elementRef, placement, offset]);
 
   React.useEffect(() => {
-    if (isDropdownOpen) {
-      calculatePosition();
-    }
+    calculatePosition();
   }, [isDropdownOpen, calculatePosition]);
 
   React.useEffect(() => {
+    calculatePosition();
     const handleScrollOrResize = () => {
       if (isDropdownOpen) {
         calculatePosition();
@@ -278,20 +268,23 @@ const Popper = ({
   return (
     <>
       {anchorElement}
-      {!disabled &&
-        isDropdownOpen &&
+      {open &&
         createPortal(
           <div
             ref={popperRef}
             style={{
-              top: `${position.top}px`,
-              left: `${position.left}px`,
+              top: 0,
+              left: 0,
+              transform: `translate(${position.left}px, ${position.top}px)`,
               ...style,
             }}
             onClick={handleContentClick}
             className={cx(
-              'absolute z-[2100] bg-neutral-10 dark:bg-neutral-30-dark shadow-lg drop-shadow rounded-lg',
+              'absolute z-[2200] bg-neutral-10 dark:bg-neutral-30-dark shadow-box-2 rounded-lg',
               className,
+              {
+                invisible: !open,
+              },
             )}
           >
             {content}

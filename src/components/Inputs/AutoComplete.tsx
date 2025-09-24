@@ -25,6 +25,7 @@ interface BaseProps<T, D = undefined>
   > {
   value?: SelectValue<T, D> | null;
   defaultValue?: T | null;
+  initialValue?: SelectValue<T, D> | null;
   label?: string;
   labelPosition?: 'top' | 'left';
   autoHideLabel?: boolean;
@@ -93,6 +94,7 @@ const AutoComplete = <T, D = undefined>({
   name,
   value: valueProp,
   defaultValue,
+  initialValue = null,
   label,
   labelPosition = 'top',
   autoHideLabel = false,
@@ -152,7 +154,9 @@ const AutoComplete = <T, D = undefined>({
   const [internalValue, setInternalValue] = React.useState<SelectValue<
     T,
     D
-  > | null>(options.find((item) => item.value === defaultValue) || null);
+  > | null>(
+    options.find((item) => item.value === defaultValue) || initialValue,
+  );
 
   const filteredOptions = React.useMemo(
     () =>
@@ -185,7 +189,7 @@ const AutoComplete = <T, D = undefined>({
     element: elementRef.current,
     value: value as SelectValue<T, undefined>,
     focus: () => valueRef.current?.focus(),
-    reset: () => setInternalValue(null),
+    reset: () => setInternalValue(initialValue),
     disabled,
   }));
 

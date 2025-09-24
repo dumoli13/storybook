@@ -1,7 +1,7 @@
 import React from 'react';
-import { Element, Transforms } from 'slate';
-import { RenderElementProps, useSlate } from 'slate-react';
-import { CustomElement } from '.';
+import { Editor, Element, Transforms } from 'slate';
+import { ReactEditor, RenderElementProps, useSlate } from 'slate-react';
+import { LinkElement } from '.';
 import { Popper } from '../../Displays';
 import Button from '../Button';
 import Icon from '../../Icon';
@@ -10,7 +10,7 @@ import Form from '../Form';
 
 interface RichTextImageThumbnailProps
   extends Omit<RenderElementProps, 'element'> {
-  element: CustomElement;
+  element: LinkElement;
 }
 
 type FormData = {
@@ -23,32 +23,79 @@ const RichTextLinkViewer = ({
   element,
 }: RichTextImageThumbnailProps) => {
   const editor = useSlate();
-  console.log('RichTextLinkViewer', editor.children);
   const { hyperlink, title } = element.link;
 
   const [openViewer, setOpenViewer] = React.useState(false);
   const closeModal = () => setOpenViewer(false);
+
+  const handleOpenPopper = (event: React.MouseEvent) => {
+    event.preventDefault();
+
+    const linkEntries = Array.from(
+      Editor.nodes(editor, {
+        at: [],
+        match: (n) =>
+          Element.isElement(n) &&
+          n.type === 'link' &&
+          n.link?.hyperlink === element.link.hyperlink &&
+          n.link?.title === element.link.title,
+      }),
+    );
+
+    console.log('linkEntries', linkEntries);
+
+    if (linkEntries.length > 0) {
+      const [, path] = linkEntries[0];
+
+      // Set selection to this specific link
+      Transforms.select(editor, {
+        anchor: Editor.start(editor, path),
+        focus: Editor.end(editor, path),
+      });
+
+      // Optional: Also set the editor selection state
+      ReactEditor.focus(editor);
+    }
+
+    setOpenViewer(true);
+  };
 
   const handleOpenLink = () => {
     window.open(hyperlink, '_blank');
   };
 
   const handleSubmit = (value: FormData) => {
+    console.log('editor.selection', editor.selection);
     Transforms.setNodes(
       editor,
       {
         link: {
-          hyperlink: value.hyperlink,
-          title: value.title || value.hyperlink,
+          hyperlink: value.hyperlink.trim(),
+          title: value.title.trim(),
         },
-      } as CustomElement,
+      },
       {
-        match: (n) => Element.isElement(n),
-        split: true,
+        match: (n) => Element.isElement(n) && n.type === 'link',
       },
     );
     closeModal();
   };
+
+  // return (
+  //   <a
+  //     {...attributes}
+  //     href={(element as any).url}
+  //     className="text-blue-600 underline cursor-pointer"
+  //     target="_blank"
+  //     rel="noreferrer"
+  //     onClick={(e) => {
+  //       e.preventDefault();
+  //       window.open((element as any).url, '_blank');
+  //     }}
+  //   >
+  //     {children}
+  //   </a>
+  // );
 
   return (
     <Popper
@@ -97,10 +144,9 @@ const RichTextLinkViewer = ({
     >
       <span
         {...attributes}
-        contentEditable={false}
         className="underline"
         style={element.style}
-        onClick={() => setOpenViewer(true)}
+        onClick={handleOpenPopper}
       >
         {title || hyperlink}
       </span>

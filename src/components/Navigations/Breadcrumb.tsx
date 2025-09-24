@@ -81,13 +81,7 @@ const BreadcrumbLink = ({
  * Displays a list of breadcrumb items with support for truncating when the item count exceeds the maximum display value.
  * If more than `maxDisplay` items are provided, it will show the first few, followed by an ellipsis, and then the last few.
  */
-const Breadcrumb = ({
-  items,
-  maxDisplay = 4,
-  // isFormEdited,
-  // onNavigate,
-  ...props
-}: BreadcrumbProps) => {
+const Breadcrumb = ({ items, maxDisplay = 4, ...props }: BreadcrumbProps) => {
   const parsedItem = items.map((item, index) => ({
     key: index,
     label: item.label,
@@ -102,7 +96,7 @@ const Breadcrumb = ({
         <BreadcrumbLink
           item={item}
           key={item.key}
-          isLast={index === parsedItem.length - 1} 
+          isLast={index === parsedItem.length - 1}
           {...props}
         />
       ));
@@ -116,12 +110,7 @@ const Breadcrumb = ({
 
     return [
       ...firstItems.map((item) => (
-        <BreadcrumbLink
-          item={item}
-          key={item.key}
-          isLast={false} 
-          {...props}
-        />
+        <BreadcrumbLink item={item} key={item.key} isLast={false} {...props} />
       )),
       <React.Fragment key="ellipsis">
         <span className="mx-2.5">...</span>
@@ -131,7 +120,7 @@ const Breadcrumb = ({
         <BreadcrumbLink
           item={item}
           key={item.key}
-          isLast={index === lastItems.length - 1} 
+          isLast={index === lastItems.length - 1}
           {...props}
         />
       )),

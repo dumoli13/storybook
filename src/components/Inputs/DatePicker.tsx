@@ -1,14 +1,14 @@
 /* eslint-disable react/no-array-index-key */
-import React from "react";
-import cx from "classnames";
-import dayjs from "dayjs";
-import { MONTH_LIST, PickerType, TimeUnit } from "../../const/datePicker";
-import { SUNDAY_DATE, areDatesEqual, getYearRange, isToday } from "../../libs";
-import Icon from "../Icon";
-import InputDropdown from "./InputDropdown";
-import InputEndIconWrapper from "./InputEndIconWrapper";
-import InputHelper from "./InputHelper";
-import InputLabel from "./InputLabel";
+import React from 'react';
+import cx from 'classnames';
+import dayjs from 'dayjs';
+import { MONTH_LIST, PickerType, TimeUnit } from '../../const/datePicker';
+import { SUNDAY_DATE, areDatesEqual, getYearRange, isToday } from '../../libs';
+import Icon from '../Icon';
+import InputDropdown from './InputDropdown';
+import InputEndIconWrapper from './InputEndIconWrapper';
+import InputHelper from './InputHelper';
+import InputLabel from './InputLabel';
 
 export const CancelButton = ({
   onClick,
@@ -36,13 +36,14 @@ export interface InputDatePickerRef {
 export interface DatePickerProps
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
-    "value" | "defaultValue" | "onChange" | "size" | "required" | "checked"
+    'value' | 'defaultValue' | 'onChange' | 'size' | 'required' | 'checked'
   > {
   value?: InputDateValue;
   defaultValue?: InputDateValue;
+  initialValue?: InputDateValue;
   clearable?: boolean;
   label?: string;
-  labelPosition?: "top" | "left";
+  labelPosition?: 'top' | 'left';
   autoHideLabel?: boolean;
   onChange?: (value: InputDateValue) => void;
   helperText?: React.ReactNode;
@@ -51,7 +52,7 @@ export interface DatePickerProps
   inputRef?:
     | React.RefObject<InputDatePickerRef | null>
     | React.RefCallback<InputDatePickerRef | null>;
-  size?: "default" | "large";
+  size?: 'default' | 'large';
   error?: boolean | string;
   success?: boolean;
   loading?: boolean;
@@ -70,18 +71,19 @@ const DatePicker = ({
   id,
   name,
   value: valueProp,
-  defaultValue = valueProp,
+  defaultValue,
+  initialValue = null,
   label,
-  labelPosition = "top",
+  labelPosition = 'top',
   autoHideLabel = false,
   onChange,
   className,
   helperText,
-  placeholder = "Input date",
+  placeholder = 'Input date',
   disabled: disabledProp = false,
   fullWidth,
   inputRef,
-  size = "default",
+  size = 'default',
   clearable = false,
   error: errorProp,
   success: successProp,
@@ -90,7 +92,7 @@ const DatePicker = ({
   width,
   showTime = false,
   format: formatProps,
-  picker = "date",
+  picker = 'date',
   required,
   ...props
 }: DatePickerProps) => {
@@ -99,18 +101,18 @@ const DatePicker = ({
   const [focused, setFocused] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const [internalValue, setInternalValue] = React.useState(
-    defaultValue || null
+    defaultValue || initialValue,
   );
 
   let format = formatProps;
   if (!format) {
-    if (picker === "year") format = "YYYY";
-    else if (picker === "month") format = "M/YYYY";
-    else format = "D/M/YYYY";
+    if (picker === 'year') format = 'YYYY';
+    else if (picker === 'month') format = 'M/YYYY';
+    else format = 'D/M/YYYY';
     if (showTime) format = `${format} HH:mm:ss`;
   }
 
-  const isControlled = typeof valueProp !== "undefined";
+  const isControlled = typeof valueProp !== 'undefined';
   const value = isControlled && !dropdownOpen ? valueProp : internalValue;
   const [timeValue, setTimeValue] = React.useState({
     hours: value?.getHours() ?? null,
@@ -118,7 +120,7 @@ const DatePicker = ({
     seconds: value?.getSeconds() ?? null,
   });
   const [tempValue, setTempValue] = React.useState<InputDateValue>(
-    value || null
+    value || null,
   );
 
   const [calendarView, setCalendarView] = React.useState<PickerType>(picker);
@@ -128,16 +130,16 @@ const DatePicker = ({
   const firstDate = new Date(
     displayedDate.getFullYear(),
     displayedDate.getMonth(),
-    1
+    1,
   );
   const lastDate = new Date(
     displayedDate.getFullYear(),
     displayedDate.getMonth() + 1,
-    0
+    0,
   );
 
-  const dayFormatter = new Intl.DateTimeFormat("en-US", { weekday: "short" });
-  const monthFormatter = new Intl.DateTimeFormat("en-US", { month: "long" });
+  const dayFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'short' });
+  const monthFormatter = new Intl.DateTimeFormat('en-US', { month: 'long' });
 
   const helperMessage = errorProp ?? helperText;
   const isError = !!errorProp;
@@ -172,10 +174,10 @@ const DatePicker = ({
 
             container.scrollTo({
               top: container.scrollTop + offset,
-              behavior: "smooth",
+              behavior: 'smooth',
             });
           }
-        }
+        },
       );
     }, 50); // Small delay for rendering
   }, [dropdownOpen, timeValue.hours, timeValue.minutes, timeValue.seconds]);
@@ -183,12 +185,8 @@ const DatePicker = ({
   React.useImperativeHandle(inputRef, () => ({
     element: elementRef.current,
     value,
-    focus: () => {
-      elementRef.current?.focus();
-    },
-    reset: () => {
-      setInternalValue(null);
-    },
+    focus: () => elementRef.current?.focus(),
+    reset: () => setInternalValue(initialValue),
     disabled,
   }));
 
@@ -206,9 +204,9 @@ const DatePicker = ({
       handleBlur();
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -246,9 +244,9 @@ const DatePicker = ({
       new Date(
         SUNDAY_DATE.getFullYear(),
         SUNDAY_DATE.getMonth(),
-        SUNDAY_DATE.getDate() + idx
-      )
-    )
+        SUNDAY_DATE.getDate() + idx,
+      ),
+    ),
   );
 
   const dates = Array.from({ length: lastDate.getDate() }).map(
@@ -256,8 +254,8 @@ const DatePicker = ({
       new Date(
         firstDate.getFullYear(),
         firstDate.getMonth(),
-        firstDate.getDate() + idx
-      )
+        firstDate.getDate() + idx,
+      ),
   );
 
   const dateMatrix: Array<Array<InputDateValue>> = Array(days.length).fill([]);
@@ -278,20 +276,20 @@ const DatePicker = ({
   };
 
   const handleJumpMonth = (month: number) => {
-    if (picker === "month") {
+    if (picker === 'month') {
       handleSelectDate(new Date(displayedDate.getFullYear(), month));
     } else {
       setDisplayedDate(new Date(displayedDate.getFullYear(), month));
-      handleChangeView("date");
+      handleChangeView('date');
     }
   };
 
   const handleJumpYear = (year: number) => {
-    if (picker === "year") {
+    if (picker === 'year') {
       handleSelectDate(new Date(year, 0)); // january 1, <YEAR>
     } else {
       setDisplayedDate(new Date(year, displayedDate.getMonth()));
-      setCalendarView("month");
+      setCalendarView('month');
     }
   };
 
@@ -317,7 +315,7 @@ const DatePicker = ({
 
   const handleChangeYear = (jump: number) => {
     setDisplayedDate(
-      new Date(displayedDate.getFullYear() + jump, displayedDate.getMonth())
+      new Date(displayedDate.getFullYear() + jump, displayedDate.getMonth()),
     );
   };
 
@@ -348,7 +346,7 @@ const DatePicker = ({
       selectedDate.getDate(),
       selectedTime.hours,
       selectedTime.minutes,
-      selectedTime.seconds
+      selectedTime.seconds,
     );
     setDisplayedDate(newDate);
     if (showTime) {
@@ -374,7 +372,7 @@ const DatePicker = ({
       selectedDate.getDate(),
       selectedTime.hours,
       selectedTime.minutes,
-      selectedTime.seconds
+      selectedTime.seconds,
     );
     setInternalValue(newDate);
   };
@@ -394,8 +392,8 @@ const DatePicker = ({
         today.getDate(),
         selectedTime.hours,
         selectedTime.minutes,
-        selectedTime.seconds
-      )
+        selectedTime.seconds,
+      ),
     );
   };
 
@@ -416,7 +414,7 @@ const DatePicker = ({
 
   const dropdownContent = (
     <div className="min-w-60">
-      {calendarView === "date" && (
+      {calendarView === 'date' && (
         <>
           <div className="flex">
             <div>
@@ -441,14 +439,14 @@ const DatePicker = ({
                   <button
                     type="button"
                     className="shrink-0 hover:text-primary-hover dark:hover:text-primary-hover-dark w-[84px]"
-                    onClick={() => handleChangeView("month")}
+                    onClick={() => handleChangeView('month')}
                   >
                     {monthFormatter.format(displayedDate)}
                   </button>
                   <button
                     type="button"
                     className="shrink-0 hover:text-primary-hover dark:hover:text-primary-hover-dark w-10"
-                    onClick={() => handleChangeView("year")}
+                    onClick={() => handleChangeView('year')}
                   >
                     {displayedDate.getFullYear()}
                   </button>
@@ -498,7 +496,7 @@ const DatePicker = ({
                             <td
                               key={dateIdx}
                               aria-label={
-                                date ? date.toDateString() : "Disabled date"
+                                date ? date.toDateString() : 'Disabled date'
                               }
                               className="px-0"
                             >
@@ -508,19 +506,19 @@ const DatePicker = ({
                                     type="button"
                                     onClick={() => handleSelectDate(date)}
                                     className={cx(
-                                      "rounded-md text-14px mt-0.5 transition-colors duration-200 ease-in w-7 h-7 flex items-center justify-center",
+                                      'rounded-md text-14px mt-0.5 transition-colors duration-200 ease-in w-7 h-7 flex items-center justify-center',
                                       {
-                                        "cursor-not-allowed text-neutral-50 dark:text-neutral-50-dark":
+                                        'cursor-not-allowed text-neutral-50 dark:text-neutral-50-dark':
                                           isDateDisabled,
-                                        "cursor-pointer text-neutral-100 dark:text-neutral-100-dark":
+                                        'cursor-pointer text-neutral-100 dark:text-neutral-100-dark':
                                           !isDateDisabled,
-                                        "hover:bg-neutral-20 dark:hover:bg-neutral-20-dark":
+                                        'hover:bg-neutral-20 dark:hover:bg-neutral-20-dark':
                                           !isDateDisabled && !isDateSelected,
-                                        "border border-primary-main":
+                                        'border border-primary-main':
                                           isToday(date) && !isDateSelected,
-                                        "bg-primary-main dark:bg-primary-main-dark !text-neutral-10 dark:!text-neutral-10-dark":
+                                        'bg-primary-main dark:bg-primary-main-dark !text-neutral-10 dark:!text-neutral-10-dark':
                                           isDateSelected,
-                                      }
+                                      },
                                     )}
                                     disabled={isDateDisabled}
                                   >
@@ -557,15 +555,15 @@ const DatePicker = ({
                             ref={(el) => {
                               itemRefs[unit].current[idx] = el;
                             }}
-                            className={cx("w-10 text-center rounded py-0.5", {
-                              "bg-primary-main dark:bg-primary-main-dark text-neutral-10 dark:text-neutral-10-dark cursor-default":
+                            className={cx('w-10 text-center rounded py-0.5', {
+                              'bg-primary-main dark:bg-primary-main-dark text-neutral-10 dark:text-neutral-10-dark cursor-default':
                                 idx === timeValue[unit],
-                              "hover:bg-neutral-20 dark:hover:bg-neutral-20-dark":
+                              'hover:bg-neutral-20 dark:hover:bg-neutral-20-dark':
                                 idx !== timeValue[unit],
                             })}
                             onClick={() => handleSelectTime(unit, idx)}
                           >
-                            {idx.toString().padStart(2, "0")}
+                            {idx.toString().padStart(2, '0')}
                           </button>
                         ))}
                       </div>
@@ -588,9 +586,9 @@ const DatePicker = ({
                 type="button"
                 onClick={handleConfirmDateTime}
                 className={cx(
-                  "text-14px py-0.5 px-2 rounded disabled:border",
-                  "text-neutral-10 disabled:border-neutral-40 disabled:text-neutral-60 disabled:bg-neutral-30 bg-primary-main hover:bg-primary-hover active:bg-primary-pressed",
-                  "dark:text-neutral-10-dark dark:disabled:border-neutral-40-dark dark:disabled:text-neutral-60-dark dark:disabled:bg-neutral-30-dark dark:bg-primary-main-dark dark:hover:bg-primary-hover-dark dark:active:bg-primary-pressed-dark"
+                  'text-14px py-0.5 px-2 rounded disabled:border',
+                  'text-neutral-10 disabled:border-neutral-40 disabled:text-neutral-60 disabled:bg-neutral-30 bg-primary-main hover:bg-primary-hover active:bg-primary-pressed',
+                  'dark:text-neutral-10-dark dark:disabled:border-neutral-40-dark dark:disabled:text-neutral-60-dark dark:disabled:bg-neutral-30-dark dark:bg-primary-main-dark dark:hover:bg-primary-hover-dark dark:active:bg-primary-pressed-dark',
                 )}
                 disabled={disabled}
               >
@@ -608,7 +606,7 @@ const DatePicker = ({
           )}
         </>
       )}
-      {calendarView === "month" && (
+      {calendarView === 'month' && (
         <>
           <div className="flex justify-between items-center gap-2 p-2 border-b border-neutral-40 dark:border-neutral-40-dark">
             <Icon
@@ -621,7 +619,7 @@ const DatePicker = ({
             <button
               type="button"
               className="text-16px font-medium text-neutral-100 dark:text-neutral-100-dark hover:text-primary-hover dark:hover:text-primary-hover-dark"
-              onClick={() => handleChangeView("year")}
+              onClick={() => handleChangeView('year')}
             >
               {displayedDate.getFullYear()}
             </button>
@@ -648,13 +646,13 @@ const DatePicker = ({
                     type="button"
                     onClick={() => handleJumpMonth(item.value)}
                     className={cx(
-                      "w-full h-8 transition-colors duration-200 ease-in px-3 py-0.5 flex items-center justify-center rounded-md",
+                      'w-full h-8 transition-colors duration-200 ease-in px-3 py-0.5 flex items-center justify-center rounded-md',
                       {
-                        "hover:bg-neutral-20 dark:hover:bg-neutral-20-dark":
+                        'hover:bg-neutral-20 dark:hover:bg-neutral-20-dark':
                           !isDateSelected,
-                        "bg-primary-main dark:bg-primary-main-dark text-neutral-10 dark:text-neutral-10-dark rounded-md":
+                        'bg-primary-main dark:bg-primary-main-dark text-neutral-10 dark:text-neutral-10-dark rounded-md':
                           isDateSelected,
-                      }
+                      },
                     )}
                   >
                     {item.label}
@@ -663,14 +661,14 @@ const DatePicker = ({
               );
             })}
           </div>
-          {picker === "date" && (
+          {picker === 'date' && (
             <div className="flex justify-end gap-3 px-2">
               <CancelButton onClick={() => handleChangeView(picker)} />
             </div>
           )}
         </>
       )}
-      {calendarView === "year" && (
+      {calendarView === 'year' && (
         <>
           <div className="flex justify-between items-center gap-2 p-2 border-b border-neutral-40 dark:border-neutral-40-dark">
             <Icon
@@ -703,13 +701,13 @@ const DatePicker = ({
                     type="button"
                     onClick={() => handleJumpYear(item)}
                     className={cx(
-                      "w-full h-8 transition-colors duration-200 ease-in px-3 py-0.5 flex items-center justify-center rounded-md",
+                      'w-full h-8 transition-colors duration-200 ease-in px-3 py-0.5 flex items-center justify-center rounded-md',
                       {
-                        "hover:bg-neutral-20 dark:hover:bg-neutral-20-dark":
+                        'hover:bg-neutral-20 dark:hover:bg-neutral-20-dark':
                           !isDateSelected,
-                        "bg-primary-main dark:bg-primary-main-dark text-neutral-10 rounded-md dark:text-neutral-10-dark":
+                        'bg-primary-main dark:bg-primary-main-dark text-neutral-10 rounded-md dark:text-neutral-10-dark':
                           isDateSelected,
-                      }
+                      },
                     )}
                   >
                     {item}
@@ -718,7 +716,7 @@ const DatePicker = ({
               );
             })}
           </div>
-          {(picker === "date" || picker === "month") && (
+          {(picker === 'date' || picker === 'month') && (
             <div className="flex justify-end gap-3 px-2">
               <CancelButton onClick={() => handleChangeView(picker)} />
             </div>
@@ -733,12 +731,12 @@ const DatePicker = ({
   return (
     <div
       className={cx(
-        "relative text-14px",
+        'relative text-14px',
         {
-          "w-full": fullWidth,
-          "flex items-center gap-4": labelPosition === "left",
+          'w-full': fullWidth,
+          'flex items-center gap-4': labelPosition === 'left',
         },
-        className
+        className,
       )}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
@@ -748,24 +746,24 @@ const DatePicker = ({
       )}
       <div
         className={cx(
-          "relative px-3 border rounded-md flex gap-2 items-center",
+          'relative px-3 border rounded-md flex gap-2 items-center',
           {
-            "w-full": fullWidth,
-            "border-danger-main dark:border-danger-main-dark focus:ring-danger-focus dark:focus:ring-danger-focus-dark":
+            'w-full': fullWidth,
+            'border-danger-main dark:border-danger-main-dark focus:ring-danger-focus dark:focus:ring-danger-focus-dark':
               isError,
-            "border-success-main dark:border-success-main-dark focus:ring-success-focus dark:focus:ring-success-focus-dark":
+            'border-success-main dark:border-success-main-dark focus:ring-success-focus dark:focus:ring-success-focus-dark':
               !isError && successProp,
-            "border-neutral-50 dark:border-neutral-50-dark hover:border-primary-main dark:hover:border-primary-main-dark focus:ring-primary-main dark:focus:ring-primary-main-dark":
+            'border-neutral-50 dark:border-neutral-50-dark hover:border-primary-main dark:hover:border-primary-main-dark focus:ring-primary-main dark:focus:ring-primary-main-dark':
               !isError && !successProp && !disabled,
-            "bg-neutral-20 dark:bg-neutral-30-dark cursor-not-allowed text-neutral-60 dark:text-neutral-60-dark":
+            'bg-neutral-20 dark:bg-neutral-30-dark cursor-not-allowed text-neutral-60 dark:text-neutral-60-dark':
               disabled,
-            "bg-neutral-10 dark:bg-neutral-10-dark shadow-box-3 focus:ring-3 focus:ring-primary-focus dark:focus:ring-primary-focus-dark focus:!border-primary-main dark:focus:!border-primary-main-dark":
+            'bg-neutral-10 dark:bg-neutral-10-dark shadow-box-3 focus:ring-3 focus:ring-primary-focus dark:focus:ring-primary-focus-dark focus:!border-primary-main dark:focus:!border-primary-main-dark':
               !disabled,
-            "ring-3 ring-primary-focus dark:ring-primary-focus-dark !border-primary-main dark:!border-primary-main-dark":
+            'ring-3 ring-primary-focus dark:ring-primary-focus-dark !border-primary-main dark:!border-primary-main-dark':
               focused,
-            "py-[3px]": size === "default",
-            "py-[9px]": size === "large",
-          }
+            'py-[3px]': size === 'default',
+            'py-[9px]': size === 'large',
+          },
         )}
         ref={elementRef}
         style={width ? { width } : undefined}
@@ -774,14 +772,14 @@ const DatePicker = ({
           {...props}
           tabIndex={!disabled ? 0 : -1}
           id={inputId}
-          value={value ? dayjs(value).format(format) : ""}
-          placeholder={focused ? "" : placeholder}
+          value={value ? dayjs(value).format(format) : ''}
+          placeholder={focused ? '' : placeholder}
           className={cx(
-            "w-full outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark text-neutral-90 dark:text-neutral-90-dark disabled:cursor-not-allowed",
+            'w-full outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark text-neutral-90 dark:text-neutral-90-dark disabled:cursor-not-allowed',
             {
-              "text-14px py-0.5": size === "default",
-              "text-18px py-0.5": size === "large",
-            }
+              'text-14px py-0.5': size === 'default',
+              'text-18px py-0.5': size === 'large',
+            },
           )}
           disabled={disabled}
           aria-label={label}

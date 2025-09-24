@@ -11,13 +11,7 @@ export * from './Navigations';
 export { useNotification } from './Notification';
 export type { NotificationProps } from './Notification';
 
-export { default as Table } from './Table';
-export type {
-  TableProps,
-  TableColumn,
-  TableSortingProps,
-  TableFilterProps,
-} from './Table';
+export * from './Table';
 
 export { default as Icon } from './Icon';
 export type { IconNames, IconProps } from './Icon';

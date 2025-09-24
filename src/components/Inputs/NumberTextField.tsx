@@ -27,11 +27,21 @@ export interface NumberTextfieldRef {
 export interface NumberTextFieldProps
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
-    'value' | 'defaultValue' | 'onChange' | 'size' | 'required' | 'checked'
+    | 'value'
+    | 'defaultValue'
+    | 'onChange'
+    | 'size'
+    | 'required'
+    | 'checked'
+    | 'max'
+    | 'min'
   > {
   id?: string;
   value?: number | null;
   defaultValue?: number | null;
+  initialValue?: number | null;
+  max?: number;
+  min?: number;
   label?: string;
   labelPosition?: 'top' | 'left';
   autoHideLabel?: boolean;
@@ -62,7 +72,10 @@ const NumberTextField = ({
   id,
   name,
   value: valueProp,
-  defaultValue = valueProp,
+  defaultValue,
+  initialValue = null,
+  max,
+  min,
   label,
   labelPosition = 'top',
   autoHideLabel = false,
@@ -90,10 +103,26 @@ const NumberTextField = ({
   const elementRef = React.useRef<HTMLInputElement>(null);
   const [focused, setFocused] = React.useState(false);
   const [internalValue, setInternalValue] = React.useState<number | null>(
-    defaultValue !== undefined ? defaultValue : null,
+    () => {
+      let initialVal = defaultValue ?? initialValue;
+
+      // Apply min/max constraints to initial value
+      if (initialVal !== null) {
+        if (min !== undefined && initialVal < min) {
+          initialVal = min;
+        } else if (max !== undefined && initialVal > max) {
+          initialVal = max;
+        }
+      }
+
+      return initialVal;
+    },
   );
   const [internalStringValue, setInternalStringValue] = React.useState<string>(
-    defaultValue?.toString() ?? '',
+    internalValue?.toString() ?? '',
+  );
+  const [internalError, setInternalError] = React.useState<string | undefined>(
+    '',
   );
 
   const isControlled = valueProp !== undefined;
@@ -112,19 +141,17 @@ const NumberTextField = ({
     ? value || ''
     : formatValue(internalStringValue);
 
-  const helperMessage = errorProp ?? helperText;
-  const isError = !!errorProp;
+  const helperMessage = (errorProp || internalError) ?? helperText;
+  const isError = !!(errorProp || internalError);
   const disabled = loading || disabledProp;
 
   React.useImperativeHandle(inputRef, () => ({
     element: elementRef.current,
     value,
-    focus: () => {
-      elementRef.current?.focus();
-    },
+    focus: () => elementRef.current?.focus(),
     reset: () => {
-      setInternalValue(null);
-      setInternalStringValue('');
+      setInternalValue(initialValue);
+      setInternalStringValue(initialValue?.toString());
     },
     disabled,
   }));
@@ -154,6 +181,21 @@ const NumberTextField = ({
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    if (!isControlled) {
+      let constrainedValue = internalValue;
+
+      if (internalValue !== null && typeof internalValue === 'number') {
+        if (min !== undefined && internalValue < min) {
+          constrainedValue = min;
+          setInternalStringValue(min.toString());
+        } else if (max !== undefined && internalValue > max) {
+          constrainedValue = max;
+          setInternalStringValue(max.toString());
+        }
+      }
+      setInternalValue(constrainedValue);
+    }
+
     onBlur?.(event);
     const relatedTarget = event.relatedTarget;
 
@@ -180,11 +222,23 @@ const NumberTextField = ({
           ? null
           : Number(inputValue);
 
-      onChange?.(newValue);
+      let constrainedValue = newValue;
 
-      if (!isControlled) {
-        setInternalValue(newValue);
+      if (newValue !== null && typeof newValue === 'number') {
+        if (min !== undefined && newValue < min) {
+          constrainedValue = min;
+          setInternalError(`Must be at least asdfasf${min}`);
+        } else if (max !== undefined && newValue > max) {
+          constrainedValue = max;
+          setInternalError(`Must be no more than asfasf${max}`);
+        } else if (internalError) {
+          setInternalError('');
+        }
       }
+
+      setInternalStringValue(newValue.toString());
+      if (!isControlled) setInternalValue(newValue);
+      onChange?.(constrainedValue);
     }
   };
 

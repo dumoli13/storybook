@@ -32,7 +32,13 @@ export type CustomText = {
   table?: string;
 };
 
-export interface TextElement {
+interface BaseElement {
+  heading?: CustomElement['type'];
+  style?: React.CSSProperties;
+  align?: 'left' | 'center' | 'right' | 'justify';
+  color?: string;
+}
+export interface TextElement extends BaseElement {
   type:
     | 'heading-one'
     | 'heading-two'
@@ -42,34 +48,25 @@ export interface TextElement {
     | 'heading-six'
     | 'paragraph'
     | 'block-quote';
-  heading?: CustomElement['type'];
   children: CustomText[];
-  align?: 'left' | 'center' | 'right' | 'justify';
-  color?: string;
-  style?: React.CSSProperties;
 }
-
-export interface ListItemElement {
+export interface ListItemElement extends BaseElement {
   type: 'list-item';
-  heading?: CustomElement['type'];
   children: TextElement[]; // keep list-item children as paragraph(s)
 }
-export interface ListElement {
+export interface ListElement extends BaseElement {
   type: 'bulleted-list' | 'numbered-list';
-  heading?: CustomElement['type'];
   children: ListItemElement[];
 }
 
-export interface LinkElement {
+export interface LinkElement extends BaseElement {
   type: 'link';
-  heading?: CustomElement['type'];
   link: { hyperlink: string; title?: string };
   children: CustomText[];
 }
 
-export interface ImageElement {
+export interface ImageElement extends BaseElement {
   type: 'image';
-  heading?: CustomElement['type'];
   image: {
     url: string;
     title: string;
@@ -82,7 +79,7 @@ export interface ImageElement {
   children: CustomText[];
 }
 
-export interface TableElement {
+export interface TableElement extends BaseElement {
   type: 'table' | 'table-row' | 'table-cell';
   children: Descendant[];
   align?: 'left' | 'center' | 'right' | 'justify';
@@ -113,7 +110,7 @@ declare module 'slate' {
 
 export interface RichTextfieldRef {
   element: HTMLInputElement | null;
-  value: string;
+  value: Descendant[];
   focus: () => void;
   reset: () => void;
   disabled: boolean;
@@ -123,13 +120,6 @@ export interface RichTextRenderElementProps
   extends Omit<RenderElementProps, 'element'> {
   element: CustomElement;
 }
-
-const defaultInitialValue: Descendant[] = [
-  {
-    type: 'paragraph',
-    children: [{ text: '' }],
-  },
-];
 
 const Toolbar: React.FC<{ children: React.ReactNode }> = React.memo(
   ({ children }) => {
@@ -201,14 +191,21 @@ const Toolbar: React.FC<{ children: React.ReactNode }> = React.memo(
 export interface RichTextFieldProps
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
-    'onChange' | 'size' | 'required' | 'checked'
+    | 'value'
+    | 'defaultValue'
+    | 'initialValue'
+    | 'onChange'
+    | 'size'
+    | 'required'
+    | 'checked'
   > {
-  value?: string;
-  defaultValue?: string;
+  value?: Descendant[];
+  defaultValue?: Descendant[];
+  initialValue?: Descendant[];
   label?: string;
   labelPosition?: 'top' | 'left';
   autoHideLabel?: boolean;
-  onChange?: (val: string) => void;
+  onChange?: (val: Descendant[]) => void;
   helperText?: React.ReactNode;
   placeholder?: string;
   inputRef?:
@@ -227,6 +224,12 @@ export const RichTextField = ({
   name,
   value: valueProp,
   defaultValue,
+  initialValue = [
+    {
+      type: 'paragraph',
+      children: [{ text: '' }],
+    },
+  ],
   label,
   labelPosition = 'top',
   autoHideLabel = false,
@@ -247,24 +250,24 @@ export const RichTextField = ({
   const elementRef = React.useRef<HTMLInputElement>(null);
   const [focused, setFocused] = React.useState(false);
 
-  const parseValue = React.useCallback((raw?: string): Descendant[] => {
-    if (!raw) return defaultInitialValue;
-    try {
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) return defaultInitialValue;
-      return parsed;
-    } catch {
-      return defaultInitialValue;
-    }
-  }, []);
+  // const parseValue = React.useCallback((raw?: string): Descendant[] => {
+  //   if (!raw) return initialValue;
+  //   try {
+  //     const parsed = JSON.parse(raw);
+  //     if (!Array.isArray(parsed)) return initialValue;
+  //     return parsed;
+  //   } catch {
+  //     return initialValue;
+  //   }
+  // }, []);
 
   const [internalValue, setInternalValue] = React.useState<Descendant[]>(
-    parseValue(defaultValue),
+    defaultValue || initialValue,
   );
 
   const isControlled = valueProp !== undefined;
   const value = React.useMemo(
-    () => (isControlled ? valueProp ?? '' : JSON.stringify(internalValue)),
+    () => (isControlled ? valueProp : internalValue),
     [isControlled, valueProp, internalValue],
   );
 
@@ -276,7 +279,7 @@ export const RichTextField = ({
       element: elementRef.current,
       value,
       focus: () => elementRef.current?.focus(),
-      reset: () => setInternalValue(defaultInitialValue),
+      reset: () => setInternalValue(initialValue),
       disabled,
     }),
     [value, disabled],
@@ -366,9 +369,8 @@ export const RichTextField = ({
     setFocused(false);
   };
 
-  const handleChange = (descendant: CustomElement[]) => {
-    const newValue = descendant;
-    onChange?.(JSON.stringify(newValue));
+  const handleChange = (descendant: Descendant[]) => {
+    onChange?.(descendant);
     if (!isControlled) {
       setInternalValue(descendant);
     }
@@ -385,6 +387,15 @@ export const RichTextField = ({
     const text = e.clipboardData.getData('text/plain');
     const image = e.clipboardData.files?.[0];
 
+    if (html) {
+      const fragment = deserializeHTMLFromWord(html);
+      if (fragment?.length) {
+        Editor.withoutNormalizing(editor, () => {
+          Transforms.insertFragment(editor, fragment);
+        });
+      }
+      return;
+    }
     if (image?.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -420,16 +431,6 @@ export const RichTextField = ({
         img.src = url;
       };
       reader.readAsDataURL(image);
-      return;
-    }
-
-    if (html) {
-      const fragment = deserializeHTMLFromWord(html);
-      if (fragment?.length) {
-        Editor.withoutNormalizing(editor, () => {
-          Transforms.insertFragment(editor, fragment);
-        });
-      }
       return;
     } else if (text) {
       const lines = text.split(/\r?\n/);
@@ -514,6 +515,8 @@ export const RichTextField = ({
       flushList();
     }
   };
+
+  console.log('internalValue', internalValue);
 
   return (
     <InputContainer

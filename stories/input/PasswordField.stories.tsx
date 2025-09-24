@@ -1,42 +1,50 @@
-import React, { useMemo, useRef, useState } from "react";
-import type { Meta, StoryObj } from "@storybook/react";
+import React, { useMemo, useRef, useState } from 'react';
+import type { Meta, StoryObj } from '@storybook/react';
 import {
   Icon,
   IconNames,
   PasswordField,
   PasswordFieldRef,
   type PasswordFieldProps,
-} from "../../src/components";
-import "../../src/output.css";
-import { iconNames } from "../../const/icon";
+} from '../../src/components';
+import '../../src/output.css';
+import { iconNames } from '../../const/icon';
 
-const sizeOption = ["default", "large"];
-const labelPositionOption = ["top", "left"];
+const sizeOption = ['default', 'large'];
+const labelPositionOption = ['top', 'left'];
 
 const meta: Meta<PasswordFieldProps> = {
-  title: "Input/PasswordField",
+  title: 'Input/PasswordField',
   component: PasswordField,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {
     value: {
-      control: "text",
-      description: "Controlled input value",
+      control: 'text',
+      description: 'Controlled input value',
       table: {
-        type: { summary: "string" },
+        type: { summary: 'string' },
       },
     },
     defaultValue: {
-      control: "text",
-      description: "Uncontrolled initial value",
+      control: 'text',
+      description: 'Uncontrolled initial value',
       table: {
-        type: { summary: "string" },
+        type: { summary: 'string' },
+      },
+    },
+    initialValue: {
+      control: 'text',
+      description:
+        'The initial value of the input when default value or value isnot provided. This is useful when user want to reset field/form and it will return to initial value',
+      table: {
+        type: { summary: 'string' },
       },
     },
     onChange: {
-      action: "changed",
-      description: "Callback when input value changes",
+      action: 'changed',
+      description: 'Callback when input value changes',
       table: {
-        type: { summary: "(value: string) => void" },
+        type: { summary: '(value: string) => void' },
       },
     },
     inputRef: {
@@ -46,124 +54,124 @@ const meta: Meta<PasswordFieldProps> = {
       },
     },
     label: {
-      control: "text",
-      description: "Label text displayed above or beside the input",
+      control: 'text',
+      description: 'Label text displayed above or beside the input',
       table: {
-        type: { summary: "string" },
+        type: { summary: 'string' },
       },
     },
     labelPosition: {
-      control: "select",
+      control: 'select',
       options: labelPositionOption,
-      description: "Position of the label relative to the input field",
+      description: 'Position of the label relative to the input field',
       table: {
-        defaultValue: { summary: "top" },
+        defaultValue: { summary: 'top' },
         type: { summary: "'top' | 'left'" },
       },
     },
     autoHideLabel: {
-      control: "boolean",
-      description: "Hide label automatically when input is focused",
+      control: 'boolean',
+      description: 'Hide label automatically when input is focused',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     required: {
-      control: "boolean",
-      description: "A flag to set if input is required.",
+      control: 'boolean',
+      description: 'A flag to set if input is required.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     placeholder: {
-      control: "text",
-      description: "Placeholder text shown inside the input field",
+      control: 'text',
+      description: 'Placeholder text shown inside the input field',
       table: {
-        type: { summary: "string" },
+        type: { summary: 'string' },
       },
     },
     helperText: {
-      control: "text",
-      description: "Helper message displayed below the input",
+      control: 'text',
+      description: 'Helper message displayed below the input',
       table: {
-        type: { summary: "ReactNode" },
+        type: { summary: 'ReactNode' },
       },
     },
     className: {
       control: false,
-      description: "Additional class names to customize the component style.",
+      description: 'Additional class names to customize the component style.',
       table: {
-        type: { summary: "string" },
+        type: { summary: 'string' },
       },
     },
     error: {
-      control: "text",
-      description: "Error message or flag indicating error state",
+      control: 'text',
+      description: 'Error message or flag indicating error state',
       table: {
-        type: { summary: "boolean | string" },
+        type: { summary: 'boolean | string' },
       },
     },
     success: {
-      control: "boolean",
-      description: "Display success state",
+      control: 'boolean',
+      description: 'Display success state',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     loading: {
-      control: "boolean",
-      description: "Display loading state with spinner",
+      control: 'boolean',
+      description: 'Display loading state with spinner',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     disabled: {
-      control: "boolean",
-      description: "A flag that disables input field if set to true.",
+      control: 'boolean',
+      description: 'A flag that disables input field if set to true.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     startIcon: {
       control: false,
-      description: "Optional icon at the beginning of the input",
+      description: 'Optional icon at the beginning of the input',
       table: {
-        type: { summary: "ReactNode" },
+        type: { summary: 'ReactNode' },
       },
     },
     endIcon: {
       control: false,
-      description: "Optional icon at the end of the input",
+      description: 'Optional icon at the end of the input',
       table: {
-        type: { summary: "ReactNode" },
+        type: { summary: 'ReactNode' },
       },
     },
     fullWidth: {
-      control: "boolean",
-      description: "Make the input take full width of its container",
+      control: 'boolean',
+      description: 'Make the input take full width of its container',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     width: {
-      control: "number",
-      description: "Custom width of the input in pixels",
+      control: 'number',
+      description: 'Custom width of the input in pixels',
       table: {
-        type: { summary: "number" },
+        type: { summary: 'number' },
       },
     },
     size: {
-      control: "select",
+      control: 'select',
       options: sizeOption,
-      description: "The size of the input field.",
+      description: 'The size of the input field.',
       table: {
-        defaultValue: { summary: "default" },
+        defaultValue: { summary: 'default' },
         type: { summary: "'default' | 'large'" },
       },
     },
@@ -178,23 +186,23 @@ type Story = StoryObj<PasswordFieldProps>;
 
 export const Playground: Story = {
   args: {
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
-    size: "default",
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
+    size: 'default',
     fullWidth: false,
     loading: false,
     success: false,
-    error: "",
-    labelPosition: "top",
+    error: '',
+    labelPosition: 'top',
   },
 };
 
 export const DefaultValue: Story = {
   args: {
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
   },
   render: (args) => {
     const InputRef = useRef<PasswordFieldRef>(null);
@@ -213,7 +221,7 @@ export const DefaultValue: Story = {
     docs: {
       description: {
         story:
-          "This story demonstrates a uncontrolled PasswordField. to access the input field and its value, use the inputRef.",
+          'This story demonstrates a uncontrolled PasswordField. to access the input field and its value, use the inputRef.',
       },
       source: {
         code: `
@@ -240,12 +248,12 @@ export default UncontrolledValue;
 
 export const ControlledValue: Story = {
   args: {
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
   },
   render: (args) => {
-    const [value, setValue] = useState<string>("");
+    const [value, setValue] = useState<string>('');
 
     return <PasswordField {...args} value={value} onChange={setValue} />;
   },
@@ -257,7 +265,7 @@ export const ControlledValue: Story = {
     docs: {
       description: {
         story:
-          "This story demonstrates a controlled PasswordField with internal state using useState.",
+          'This story demonstrates a controlled PasswordField with internal state using useState.',
       },
       source: {
         code: `
@@ -286,7 +294,7 @@ export const Sizes: Story = {
           <PasswordField
             key={size}
             {...args}
-            size={size as PasswordFieldProps["size"]}
+            size={size as PasswordFieldProps['size']}
             label={`Size ${size}`}
           />
         ))}
@@ -294,7 +302,7 @@ export const Sizes: Story = {
     );
   },
   args: {
-    placeholder: "Input Placeholder...",
+    placeholder: 'Input Placeholder...',
   },
   argTypes: {
     size: { control: false },
@@ -309,7 +317,7 @@ export const LabelPosition: Story = {
         <PasswordField
           key={position}
           {...args}
-          labelPosition={position as PasswordFieldProps["labelPosition"]}
+          labelPosition={position as PasswordFieldProps['labelPosition']}
           label={`Position ${position}`}
           width={500}
         />
@@ -317,8 +325,8 @@ export const LabelPosition: Story = {
     </div>
   ),
   args: {
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
   },
   argTypes: {
     size: { control: false },
@@ -355,8 +363,8 @@ export const SuccessAndError: Story = {
     </div>
   ),
   args: {
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
   },
   argTypes: {
     success: { control: false },
@@ -370,27 +378,27 @@ type WithIconControls = PasswordFieldProps & {
 };
 export const WithIcon: StoryObj<WithIconControls> = {
   args: {
-    startIconName: "arrow-up",
-    endIconName: "arrow-down",
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
+    startIconName: 'arrow-up',
+    endIconName: 'arrow-down',
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
   },
   argTypes: {
     startIconName: {
-      control: { type: "select" },
+      control: { type: 'select' },
       options: iconNames,
-      description: "Name of the start icon",
+      description: 'Name of the start icon',
       table: {
-        category: "Icons",
+        category: 'Icons',
       },
     },
     endIconName: {
-      control: { type: "select" },
+      control: { type: 'select' },
       options: iconNames,
-      description: "Name of the end icon",
+      description: 'Name of the end icon',
       table: {
-        category: "Icons",
+        category: 'Icons',
       },
     },
   },
@@ -398,11 +406,11 @@ export const WithIcon: StoryObj<WithIconControls> = {
     const { startIconName, endIconName, ...rest } = args;
     const start = useMemo(
       () => <Icon name={startIconName} color="currentColor" />,
-      [startIconName]
+      [startIconName],
     );
     const end = useMemo(
       () => <Icon name={endIconName} color="currentColor" />,
-      [endIconName]
+      [endIconName],
     );
 
     return <PasswordField {...rest} startIcon={start} endIcon={end} />;

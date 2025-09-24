@@ -1,155 +1,159 @@
-import React, { useMemo, useRef, useState } from "react";
-import type { Meta, StoryObj } from "@storybook/react";
-import {
-  Icon,
-  IconNames,
-  TextField,
-  TextfieldRef,
-  type TextFieldProps,
-} from "../../src/components";
-import "../../src/output.css";
-import { iconNames } from "../../const/icon";
+import React, { useMemo, useRef, useState } from 'react';
+import type { Meta, StoryObj } from '@storybook/react';
+import { Icon, IconNames, type TextFieldProps } from '../../src/components';
+import '../../src/output.css';
+import { iconNames } from '../../const/icon';
 import RichTextField, {
   RichTextFieldProps,
-} from "../../src/components/Inputs/RichTextField";
+  RichTextfieldRef,
+} from '../../src/components/Inputs/RichTextField';
+import { Descendant } from 'slate';
 
-const sizeOption = ["default", "large"];
-const labelPositionOption = ["top", "left"];
+const sizeOption = ['default', 'large'];
+const labelPositionOption = ['top', 'left'];
 
 const meta: Meta<RichTextFieldProps> = {
-  title: "Input/RichTextField",
+  title: 'Input/RichTextField',
   component: RichTextField,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {
     value: {
-      control: "text",
-      description: "Controlled input value",
+      control: 'text',
+      description: 'Controlled input value',
       table: {
-        type: { summary: "string | number" },
+        type: { summary: 'string | number' },
       },
     },
     defaultValue: {
-      control: "text",
+      control: 'text',
       description:
-        "The initial value of the input field when the component is uncontrolled.",
+        'The initial value of the input field when the component is uncontrolled.',
       table: {
-        type: { summary: "string | number" },
+        type: { summary: 'string | number' },
+      },
+    },
+    initialValue: {
+      control: 'text',
+      description:
+        'The initial value of the input when default value or value isnot provided. This is useful when user want to reset field/form and it will return to initial value',
+      table: {
+        type: { summary: 'string | number' },
       },
     },
     onChange: {
-      action: "changed",
-      description: "Callback function to handle input changes.",
+      action: 'changed',
+      description: 'Callback function to handle input changes.',
       table: {
-        type: { summary: "(value: string) => void" },
+        type: { summary: '(value: string) => void' },
       },
     },
     inputRef: {
       control: false,
       description:
-        "A reference to access the input field and its value programmatically.",
+        'A reference to access the input field and its value programmatically.',
       table: { disable: true },
     },
     label: {
-      control: "text",
-      description: "The label text displayed above or beside the input field",
+      control: 'text',
+      description: 'The label text displayed above or beside the input field',
       table: {
-        type: { summary: "string" },
+        type: { summary: 'string' },
       },
     },
     labelPosition: {
-      control: "select",
+      control: 'select',
       options: labelPositionOption,
-      description: "The position of the label relative to the field",
+      description: 'The position of the label relative to the field',
       table: {
-        defaultValue: { summary: "top" },
-        type: { summary: "top | left" },
+        defaultValue: { summary: 'top' },
+        type: { summary: 'top | left' },
       },
     },
     autoHideLabel: {
-      control: "boolean",
+      control: 'boolean',
       description:
-        "A flag to set if label should automatically hide when the input is focused.",
+        'A flag to set if label should automatically hide when the input is focused.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     required: {
-      control: "boolean",
-      description: "A flag to set if input is required.",
+      control: 'boolean',
+      description: 'A flag to set if input is required.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     placeholder: {
-      control: "text",
+      control: 'text',
       description:
-        "Placeholder text displayed inside the input field when it is empty.",
+        'Placeholder text displayed inside the input field when it is empty.',
       table: {
-        type: { summary: "string" },
+        type: { summary: 'string' },
       },
     },
     helperText: {
-      control: "text",
-      description: "A helper message displayed below the input field.",
+      control: 'text',
+      description: 'A helper message displayed below the input field.',
       table: {
-        type: { summary: "ReactNode" },
+        type: { summary: 'ReactNode' },
       },
     },
     className: {
       control: false,
-      description: "Additional class names to customize the component style.",
+      description: 'Additional class names to customize the component style.',
       table: {
-        type: { summary: "string" },
+        type: { summary: 'string' },
       },
     },
     error: {
-      control: "text",
+      control: 'text',
       description:
-        "A flag to display error of input field. If set to string, it will be displayed as error message.",
+        'A flag to display error of input field. If set to string, it will be displayed as error message.',
       table: {
-        type: { summary: "boolean | string" },
+        type: { summary: 'boolean | string' },
       },
     },
     success: {
-      control: "boolean",
-      description: "A flag to display success of input field if set to true.",
+      control: 'boolean',
+      description: 'A flag to display success of input field if set to true.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     loading: {
-      control: "boolean",
-      description: "A flag to display loading state if set to true.",
+      control: 'boolean',
+      description: 'A flag to display loading state if set to true.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     disabled: {
-      control: "boolean",
-      description: "A flag that disables input field if set to true.",
+      control: 'boolean',
+      description: 'A flag that disables input field if set to true.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     size: {
-      control: "select",
+      control: 'select',
       options: sizeOption,
-      description: "The size of the input field.",
+      description: 'The size of the input field.',
       table: {
-        defaultValue: { summary: "default" },
-        type: { summary: "default | large" },
+        defaultValue: { summary: 'default' },
+        type: { summary: 'default | large' },
       },
     },
     width: {
-      control: "number",
-      description: "Optional custom width for the input field (in px).",
+      control: 'number',
+      description: 'Optional custom width for the input field (in px).',
       table: {
-        type: { summary: "number" },
+        type: { summary: 'number' },
       },
     },
   },
@@ -163,22 +167,22 @@ type Story = StoryObj<RichTextFieldProps>;
 
 export const Playground: Story = {
   args: {
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
-    size: "default",
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
+    size: 'default',
     loading: false,
     success: false,
-    error: "",
-    labelPosition: "top",
+    error: '',
+    labelPosition: 'top',
   },
 };
 
 export const DualField: Story = {
   args: {
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
   },
   render: (args) => {
     return (
@@ -196,7 +200,7 @@ export const DualField: Story = {
     docs: {
       description: {
         story:
-          "This story demonstrates a uncontrolled Textfield. to access the input field and its value, use the inputRef.",
+          'This story demonstrates a uncontrolled Textfield. to access the input field and its value, use the inputRef.',
       },
       source: {
         code: `
@@ -210,7 +214,7 @@ const UncontrolledValue = () => {
     }
 
     return (
-        <TextField inputRef={InputRef} />
+        <RichTextField inputRef={InputRef} />
     );
 };
 
@@ -223,18 +227,58 @@ export default UncontrolledValue;
 
 export const DefaultValue: Story = {
   args: {
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
+    defaultValue: [
+      {
+        type: 'paragraph',
+        children: [
+          {
+            text: '',
+          },
+          {
+            type: 'link',
+            link: {
+              hyperlink: 'https://google.com/',
+              title: 'Ng Symptoms',
+            },
+            children: [
+              {
+                text: '',
+              },
+            ],
+          },
+          {
+            text: ' ',
+          },
+          {
+            type: 'link',
+            link: {
+              hyperlink: 'https://google.com/',
+              title: 'Ng Symptoms',
+            },
+            children: [
+              {
+                text: '',
+              },
+            ],
+          },
+          {
+            text: '',
+          },
+        ],
+      },
+    ],
   },
   render: (args) => {
-    const InputRef = useRef<TextfieldRef>(null);
+    const InputRef = useRef<RichTextfieldRef>(null);
 
     const getValueByRef = () => {
       return InputRef.current?.value; // string
     };
 
-    return <TextField {...args} inputRef={InputRef} />;
+    return <RichTextField {...args} inputRef={InputRef} />;
   },
   argTypes: {
     value: { control: false },
@@ -244,7 +288,7 @@ export const DefaultValue: Story = {
     docs: {
       description: {
         story:
-          "This story demonstrates a uncontrolled Textfield. to access the input field and its value, use the inputRef.",
+          'This story demonstrates a uncontrolled Textfield. to access the input field and its value, use the inputRef.',
       },
       source: {
         code: `
@@ -258,7 +302,7 @@ const UncontrolledValue = () => {
     }
 
     return (
-        <TextField inputRef={InputRef} />
+        <RichTextField inputRef={InputRef} />
     );
 };
 
@@ -271,14 +315,39 @@ export default UncontrolledValue;
 
 export const ControlledValue: Story = {
   args: {
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
   },
   render: (args) => {
-    const [value, setValue] = useState<string>("");
+    const [value, setValue] = useState<Descendant[]>([
+      {
+        type: 'paragraph',
+        children: [
+          {
+            text: '',
+          },
+          {
+            type: 'link',
+            link: {
+              hyperlink:
+                'http://localhost:6006/?path=/story/input-richtextfield--playground',
+              title: '1',
+            },
+            children: [
+              {
+                text: '',
+              },
+            ],
+          },
+          {
+            text: '',
+          },
+        ],
+      },
+    ]);
 
-    return <TextField {...args} value={value} onChange={setValue} />;
+    return <RichTextField {...args} value={value} onChange={setValue} />;
   },
   argTypes: {
     value: { control: false },
@@ -288,7 +357,7 @@ export const ControlledValue: Story = {
     docs: {
       description: {
         story:
-          "This story demonstrates a controlled TextField with internal state using useState.",
+          'This story demonstrates a controlled RichTextField with internal state using useState.',
       },
       source: {
         code: `
@@ -298,7 +367,7 @@ const ControlledValue = () => {
     const [value, setValue] = useState<string>('');
 
     return (
-        <TextField value={value} onChange={setValue}/>
+        <RichTextField value={value} onChange={setValue}/>
     );
 };
 
@@ -314,10 +383,10 @@ export const Sizes: Story = {
     return (
       <div className="flex gap-10 flex-wrap">
         {sizeOption.map((size) => (
-          <TextField
+          <RichTextField
             key={size}
             {...args}
-            size={size as TextFieldProps["size"]}
+            size={size as RichTextFieldProps['size']}
             label={`Size ${size}`}
           />
         ))}
@@ -325,7 +394,7 @@ export const Sizes: Story = {
     );
   },
   args: {
-    placeholder: "Input Placeholder...",
+    placeholder: 'Input Placeholder...',
   },
   argTypes: {
     size: { control: false },
@@ -337,10 +406,10 @@ export const LabelPosition: Story = {
   render: (args) => (
     <div className="flex gap-10 flex-wrap">
       {labelPositionOption.map((position) => (
-        <TextField
+        <RichTextField
           key={position}
           {...args}
-          labelPosition={position as TextFieldProps["labelPosition"]}
+          labelPosition={position as RichTextFieldProps['labelPosition']}
           label={`Position ${position}`}
           width={500}
         />
@@ -348,8 +417,8 @@ export const LabelPosition: Story = {
     </div>
   ),
   args: {
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
   },
   argTypes: {
     size: { control: false },
@@ -360,20 +429,24 @@ export const LabelPosition: Story = {
 export const SuccessAndError: Story = {
   render: (args) => (
     <div className="flex flex-col gap-10">
-      <TextField {...args} label="Neutral Text Field size" className="flex-1" />
-      <TextField
+      <RichTextField
+        {...args}
+        label="Neutral Text Field size"
+        className="flex-1"
+      />
+      <RichTextField
         {...args}
         label="Success Text Field size"
         className="flex-1"
         success
       />
-      <TextField
+      <RichTextField
         {...args}
         label="Success Text Field size"
         className="flex-1"
         error
       />
-      <TextField
+      <RichTextField
         {...args}
         label="Success Text Field size"
         className="flex-1"
@@ -382,56 +455,11 @@ export const SuccessAndError: Story = {
     </div>
   ),
   args: {
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
   },
   argTypes: {
     success: { control: false },
     error: { control: false },
-  },
-};
-
-type WithIconControls = TextFieldProps & {
-  startIconName: IconNames;
-  endIconName: IconNames;
-};
-export const WithIcon: StoryObj<WithIconControls> = {
-  args: {
-    startIconName: "arrow-up",
-    endIconName: "arrow-down",
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
-  },
-  argTypes: {
-    startIconName: {
-      control: { type: "select" },
-      options: iconNames,
-      description: "Name of the start icon",
-      table: {
-        category: "Icons",
-      },
-    },
-    endIconName: {
-      control: { type: "select" },
-      options: iconNames,
-      description: "Name of the end icon",
-      table: {
-        category: "Icons",
-      },
-    },
-  },
-  render: (args) => {
-    const { startIconName, endIconName, ...rest } = args;
-    const start = useMemo(
-      () => <Icon name={startIconName} color="currentColor" />,
-      [startIconName]
-    );
-    const end = useMemo(
-      () => <Icon name={endIconName} color="currentColor" />,
-      [endIconName]
-    );
-
-    return <TextField {...rest} startIcon={start} endIcon={end} />;
   },
 };

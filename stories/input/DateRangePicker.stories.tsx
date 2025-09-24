@@ -1,176 +1,184 @@
-import React, { useRef, useState } from "react";
-import type { Meta, StoryObj } from "@storybook/react";
+import React, { useRef, useState } from 'react';
+import type { Meta, StoryObj } from '@storybook/react';
 import {
   DateRangePicker,
   DateRangePickerProps,
   InputDateRangePickerRef,
   InputDateRangeValue,
-} from "../../src/components";
-import "../../src/output.css";
+} from '../../src/components';
+import '../../src/output.css';
 
-const sizeOption = ["default", "large"];
-const labelPositionOption = ["top", "left"];
-const pickerOption = ["date", "month", "year"];
+const sizeOption = ['default', 'large'];
+const labelPositionOption = ['top', 'left'];
+const pickerOption = ['date', 'month', 'year'];
 
 const meta: Meta<DateRangePickerProps> = {
-  title: "Input/DateRangePicker",
+  title: 'Input/DateRangePicker',
   component: DateRangePicker,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {
     value: {
-      control: "text",
-      description: "Controlled input value",
+      control: 'text',
+      description: 'Controlled input value',
       table: {
-        type: { summary: "InputDateValue" },
+        type: { summary: 'InputDateValue' },
       },
     },
     defaultValue: {
-      control: "text",
+      control: 'text',
       description:
-        "The initial value of the input field when the component is uncontrolled.",
+        'The initial value of the input field when the component is uncontrolled.',
       table: {
-        type: { summary: "InputDateValue" },
+        type: { summary: 'InputDateValue' },
+      },
+    },
+    initialValue: {
+      control: 'text',
+      description:
+        'The initial value of the input when default value or value isnot provided. This is useful when user want to reset field/form and it will return to initial value',
+      table: {
+        type: { summary: 'InputDateValue' },
       },
     },
     onChange: {
-      action: "changed",
-      description: "Callback function to handle input changes.",
+      action: 'changed',
+      description: 'Callback function to handle input changes.',
       table: {
-        type: { summary: "(value: InputDateValue) => void" },
+        type: { summary: '(value: InputDateValue) => void' },
       },
     },
     inputRef: {
       control: false,
       description:
-        "A reference to access the input field and its value programmatically.",
+        'A reference to access the input field and its value programmatically.',
       table: { disable: true },
     },
     label: {
-      control: "text",
-      description: "The label text displayed above or beside the input field",
+      control: 'text',
+      description: 'The label text displayed above or beside the input field',
       table: {
-        type: { summary: "string" },
+        type: { summary: 'string' },
       },
     },
     labelPosition: {
-      control: "select",
+      control: 'select',
       options: labelPositionOption,
-      description: "The position of the label relative to the field",
+      description: 'The position of the label relative to the field',
       table: {
-        defaultValue: { summary: "top" },
-        type: { summary: "top | left" },
+        defaultValue: { summary: 'top' },
+        type: { summary: 'top | left' },
       },
     },
     autoHideLabel: {
-      control: "boolean",
+      control: 'boolean',
       description:
-        "A flag to set if label should automatically hide when the input is focused.",
+        'A flag to set if label should automatically hide when the input is focused.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     required: {
-      control: "boolean",
-      description: "A flag to set if input is required.",
+      control: 'boolean',
+      description: 'A flag to set if input is required.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     helperText: {
-      control: "text",
-      description: "A helper message displayed below the input field.",
+      control: 'text',
+      description: 'A helper message displayed below the input field.',
       table: {
-        type: { summary: "ReactNode" },
+        type: { summary: 'ReactNode' },
       },
     },
     placeholder: {
-      control: "text",
+      control: 'text',
       description:
-        "Placeholder text displayed inside the input field when it is empty.",
+        'Placeholder text displayed inside the input field when it is empty.',
       table: {
-        type: { summary: "string" },
+        type: { summary: 'string' },
       },
     },
     className: {
       control: false,
-      description: "Additional class names to customize the component style.",
+      description: 'Additional class names to customize the component style.',
       table: {
-        type: { summary: "string" },
+        type: { summary: 'string' },
       },
     },
     error: {
-      control: "text",
+      control: 'text',
       description:
-        "A flag to display error of input field. If set to string, it will be displayed as error message.",
+        'A flag to display error of input field. If set to string, it will be displayed as error message.',
       table: {
-        type: { summary: "boolean | string" },
+        type: { summary: 'boolean | string' },
       },
     },
     success: {
-      control: "boolean",
-      description: "A flag to display success of input field if set to true.",
+      control: 'boolean',
+      description: 'A flag to display success of input field if set to true.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     loading: {
-      control: "boolean",
-      description: "A flag to display loading state if set to true.",
+      control: 'boolean',
+      description: 'A flag to display loading state if set to true.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     disabled: {
-      control: "boolean",
-      description: "A flag that disables input field if set to true.",
+      control: 'boolean',
+      description: 'A flag that disables input field if set to true.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     size: {
-      control: "select",
+      control: 'select',
       options: sizeOption,
-      description: "The size of the input field.",
+      description: 'The size of the input field.',
       table: {
-        defaultValue: { summary: "default" },
-        type: { summary: "default | large" },
+        defaultValue: { summary: 'default' },
+        type: { summary: 'default | large' },
       },
     },
     fullWidth: {
-      control: "boolean",
-      description: "A flag that expand to full container width if set to true.",
+      control: 'boolean',
+      description: 'A flag that expand to full container width if set to true.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     width: {
-      control: "number",
-      description: "Optional custom width for the input field (in px).",
+      control: 'number',
+      description: 'Optional custom width for the input field (in px).',
       table: {
-        type: { summary: "number" },
+        type: { summary: 'number' },
       },
     },
     disabledDate: {
       control: false,
       description:
-        "A function to determine if a specific date is disabled (not selectable).",
+        'A function to determine if a specific date is disabled (not selectable).',
       table: {
-        type: { summary: "(date: Date) => boolean" },
+        type: { summary: '(date: Date) => boolean' },
       },
     },
     clearable: {
-      control: "boolean",
+      control: 'boolean',
       description:
-        "A flag that show clear button of input field if set to true",
+        'A flag that show clear button of input field if set to true',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
   },
@@ -184,25 +192,25 @@ type Story = StoryObj<DateRangePickerProps>;
 
 export const Playground: Story = {
   args: {
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
-    size: "default",
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
+    size: 'default',
     clearable: false,
     fullWidth: false,
     loading: false,
     success: false,
-    error: "",
-    labelPosition: "top",
+    error: '',
+    labelPosition: 'top',
   },
 };
 
 export const DefaultValue: Story = {
   args: {
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
-    defaultValue: [new Date("2023-12-01"), new Date("2023-12-10")],
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
+    defaultValue: [new Date('2023-12-01'), new Date('2023-12-10')],
   },
   render: (args) => {
     const InputRef = useRef<InputDateRangePickerRef>(null);
@@ -217,7 +225,7 @@ export const DefaultValue: Story = {
     docs: {
       description: {
         story:
-          "This story demonstrates a uncontrolled DateRangePicker. to access the input field and its value, use the inputRef.",
+          'This story demonstrates a uncontrolled DateRangePicker. to access the input field and its value, use the inputRef.',
       },
       source: {
         code: `
@@ -240,9 +248,9 @@ export default UncontrolledValue;
 
 export const ControlledValue: Story = {
   args: {
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
   },
   render: (args) => {
     const [value, setValue] = useState<InputDateRangeValue>(null);
@@ -257,7 +265,7 @@ export const ControlledValue: Story = {
     docs: {
       description: {
         story:
-          "This story demonstrates a controlled DateRangePicker with internal state using useState.",
+          'This story demonstrates a controlled DateRangePicker with internal state using useState.',
       },
       source: {
         code: `
@@ -285,14 +293,14 @@ export const Sizes: Story = {
         <DateRangePicker
           key={size}
           {...args}
-          size={size as DateRangePickerProps["size"]}
+          size={size as DateRangePickerProps['size']}
           label={`Size ${size}`}
         />
       ))}
     </div>
   ),
   args: {
-    placeholder: "Input Placeholder...",
+    placeholder: 'Input Placeholder...',
   },
   argTypes: {
     size: { control: false },
@@ -308,7 +316,7 @@ export const Picker: Story = {
           <DateRangePicker
             key={picker}
             {...args}
-            picker={picker as DateRangePickerProps["picker"]}
+            picker={picker as DateRangePickerProps['picker']}
             label={`Picker type ${picker}`}
           />
         ))}
@@ -318,7 +326,7 @@ export const Picker: Story = {
           <DateRangePicker
             key={picker}
             {...args}
-            picker={picker as DateRangePickerProps["picker"]}
+            picker={picker as DateRangePickerProps['picker']}
             label={`Custom Picker format ${picker} (MMMM DD, YYYY)`}
             format="MMMM DD, YYYY"
           />
@@ -327,7 +335,7 @@ export const Picker: Story = {
     </div>
   ),
   args: {
-    placeholder: "Input Placeholder...",
+    placeholder: 'Input Placeholder...',
   },
   argTypes: {
     picker: { control: false },
@@ -342,7 +350,7 @@ export const LabelPosition: Story = {
         <DateRangePicker
           key={position}
           {...args}
-          labelPosition={position as DateRangePickerProps["labelPosition"]}
+          labelPosition={position as DateRangePickerProps['labelPosition']}
           label={`Position ${position}`}
           width={500}
         />
@@ -350,8 +358,8 @@ export const LabelPosition: Story = {
     </div>
   ),
   args: {
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
   },
   argTypes: {
     size: { control: false },
@@ -388,8 +396,8 @@ export const SuccessAndError: Story = {
     </div>
   ),
   args: {
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
   },
   argTypes: {
     success: { control: false },
@@ -399,9 +407,9 @@ export const SuccessAndError: Story = {
 
 export const DisabledDate: Story = {
   args: {
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
     disabledDate: (date) => date.getDate() % 2 === 1,
   },
   render: (args) => (
@@ -415,7 +423,7 @@ export const DisabledDate: Story = {
     docs: {
       description: {
         story:
-          "This story demonstrates DateRangePicker that has disabled dates.",
+          'This story demonstrates DateRangePicker that has disabled dates.',
       },
       source: {
         code: `

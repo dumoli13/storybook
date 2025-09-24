@@ -7,8 +7,9 @@ import { useSlate } from 'slate-react';
 import { Range, Transforms } from 'slate';
 import cx from 'classnames';
 import { CustomElement } from '.';
-import Form from '../Form';
+import Form, { FormRef } from '../Form';
 import RichTextToolbarButton from './RichTextToolbarButton';
+import { FormProps } from 'react-router-dom';
 
 interface RichTextLinkProps {
   disabled: boolean;
@@ -22,6 +23,7 @@ type FormData = {
 const RichTextLink = ({ disabled }: RichTextLinkProps) => {
   const editor = useSlate();
   const [openViewer, setOpenViewer] = React.useState(false);
+  const formRef = React.useRef<FormRef<FormProps>>(null);
 
   const handleSubmit = (link: FormData) => {
     const { selection } = editor;
@@ -50,6 +52,7 @@ const RichTextLink = ({ disabled }: RichTextLinkProps) => {
       Transforms.insertText(editor, ' ');
     }
 
+    formRef.current?.reset();
     setOpenViewer(false);
   };
 
@@ -66,6 +69,7 @@ const RichTextLink = ({ disabled }: RichTextLinkProps) => {
             hyperlink: ['url', 'required'],
           }}
           className="bg-neutral-10 p-2 rounded shadow-md z-50 flex flex-col gap-2 w-64"
+          formRef={formRef}
         >
           <TextField id="hyperlink" placeholder="Enter Link URL" autoFocus />
           <TextField id="title" placeholder="Enter Link Title" />

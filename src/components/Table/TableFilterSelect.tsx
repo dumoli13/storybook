@@ -7,7 +7,7 @@ import AutoComplete from '../Inputs/AutoComplete';
 import IconButton from '../Inputs/IconButton';
 import Select, { SelectRef } from '../Inputs/Select';
 
-interface FilterSearchProps<T, D> {
+export interface TableFilterSelectProps<T, D> {
   type: 'select' | 'autocomplete';
   value?: SelectValue<T, D> | null;
   option: Array<SelectValue<T, D>>;
@@ -31,13 +31,13 @@ interface FilterSearchProps<T, D> {
  *
  */
 
-const FilterSelect = <T extends { [key: string]: any }, D>({
+const TableFilterSelect = <T, D>({
   type,
   value,
   option,
   label,
   onChange,
-}: FilterSearchProps<T, D>) => {
+}: TableFilterSelectProps<T, D>) => {
   const inputRef = React.useRef<SelectRef<T>>(null);
   const [open, setOpen] = React.useState(false);
 
@@ -106,9 +106,10 @@ const FilterSelect = <T extends { [key: string]: any }, D>({
             value,
         })}
         title="Search by Option"
+        size="small"
       />
     </Popper>
   );
 };
 
-export default FilterSelect;
+export default TableFilterSelect;

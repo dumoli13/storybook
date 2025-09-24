@@ -1,13 +1,13 @@
 import React from 'react';
 import { useDebouncedCallback } from 'use-debounce';
+import { EMAIL_REGEX, URL_REGEX } from '../../const/regex';
 import { InputProps, InputPropsRefType } from '../../types/input';
 import { ButtonProps } from './Button';
-import { EMAIL_REGEX, URL_REGEX } from '../../const/regex';
 
 export interface FormRef<T> {
   submit: () => Promise<void>;
   reset: () => void;
-  validate: () => boolean;
+  validate: () => string[];
   getValues: () => Partial<T>;
   getErrors: () => Record<string, string | undefined>;
   setErrors: (errors: Record<string, string | undefined>) => void;
@@ -25,7 +25,7 @@ export type FormRule =
       min?: number;
       max?: number;
       equal?: any;
-      validate?: (value: any) => boolean | string;
+      validate?: (value: any) => string[];
       message?: string;
     }
   | 'required'
@@ -132,7 +132,7 @@ const Form = <T,>({
     setIsSubmitting(true);
     const isValid = validate();
 
-    if (isValid) {
+    if (isValid.length === 0) {
       const result = {} as T;
       for (const key in inputRefsRef.current) {
         // inputRefsRef.current[key] may be undefined if user remove it in the jsx
@@ -141,12 +141,11 @@ const Form = <T,>({
 
       onSubmit?.(result);
     } else {
-      for (const key of inputOrderRef.current) {
-        const input = inputRefsRef.current[key];
-        if (input && !input.disabled) {
-          input.focus?.();
-          break;
-        }
+      const firstInvalid = isValid.find(
+        (id) => inputRefsRef.current[id] && !inputRefsRef.current[id]?.disabled,
+      );
+      if (firstInvalid) {
+        inputRefsRef.current[firstInvalid]?.focus?.();
       }
     }
     setIsSubmitting(false);
@@ -242,7 +241,7 @@ const Form = <T,>({
         }
 
         if (
-          normalizedRule.max !== undefined &&
+          normalizedRule.max &&
           typeof value === 'number' &&
           Number(value) > normalizedRule.max
         ) {
@@ -274,7 +273,7 @@ const Form = <T,>({
 
         if (normalizedRule.validate) {
           const result = normalizedRule.validate(value);
-          if (result !== true) {
+          if (result.length > 0) {
             newErrors[fieldName] =
               typeof result === 'string' ? result : 'Invalid value';
             break;
@@ -284,7 +283,7 @@ const Form = <T,>({
     });
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return Object.keys(newErrors);
   }, [rules]);
 
   const handleInputKeyDown = (
@@ -342,7 +341,7 @@ const Form = <T,>({
 
   const debounceSubmit = useDebouncedCallback(() => {
     const isValid = validate();
-    if (isValid) {
+    if (isValid.length === 0) {
       const result = {} as T;
       for (const key in inputRefsRef.current) {
         result[key as keyof T] = inputRefsRef.current[key].value as T[keyof T];
