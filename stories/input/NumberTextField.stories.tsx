@@ -6,7 +6,7 @@ import {
   NumberTextField,
   NumberTextFieldProps,
   NumberTextfieldRef,
-} from '../../src/components';
+} from '../../src';
 import '../../src/output.css';
 import { iconNames } from '../../const/icon';
 
@@ -19,40 +19,18 @@ const meta: Meta<NumberTextFieldProps> = {
   tags: ['autodocs'],
   argTypes: {
     value: {
-      control: 'number',
+      control: 'text',
       description: 'Controlled input value',
       table: {
         type: { summary: 'string | number' },
       },
     },
     defaultValue: {
-      control: 'number',
+      control: 'text',
       description:
         'The initial value of the input field when the component is uncontrolled.',
       table: {
         type: { summary: 'string | number' },
-      },
-    },
-    initialValue: {
-      control: 'number',
-      description:
-        'The initial value of the input when default value or value isnot provided. This is useful when user want to reset field/form and it will return to initial value',
-      table: {
-        type: { summary: 'string | number' },
-      },
-    },
-    max: {
-      control: 'number',
-      description: 'The maximum value of the input field.',
-      table: {
-        type: { summary: 'number' },
-      },
-    },
-    min: {
-      control: 'number',
-      description: 'The minimum value of the input field.',
-      table: {
-        type: { summary: 'number' },
       },
     },
     onChange: {
@@ -233,8 +211,6 @@ export const DefaultValue: Story = {
     placeholder: 'Input Placeholder...',
     helperText: 'Input helper text',
     defaultValue: 888,
-    min: 11,
-    max: 444,
   },
   render: (args) => {
     const InputRef = useRef<NumberTextfieldRef>(null);
@@ -243,15 +219,11 @@ export const DefaultValue: Story = {
       return InputRef.current?.value; // number | null
     };
 
-    const handleChange = (value: number | null) => {
-      console.log('handleChange', value);
-    };
-    return (
-      <NumberTextField {...args} inputRef={InputRef} onChange={handleChange} />
-    );
+    return <NumberTextField {...args} inputRef={InputRef} />;
   },
   argTypes: {
     value: { control: false },
+    defaultValue: { control: false },
   },
   parameters: {
     docs: {

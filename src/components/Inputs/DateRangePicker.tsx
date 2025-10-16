@@ -2,7 +2,7 @@
 import React from 'react';
 import cx from 'classnames';
 import dayjs from 'dayjs';
-import { MONTH_LIST, PickerType, TimeUnit } from '../../const/datePicker';
+import { MONTH_LIST, TimeUnit } from '../../const/datePicker';
 import {
   SUNDAY_DATE,
   areDatesEqual,
@@ -18,46 +18,7 @@ import InputDropdown from './InputDropdown';
 import InputEndIconWrapper from './InputEndIconWrapper';
 import InputHelper from './InputHelper';
 import InputLabel from './InputLabel';
-
-export type InputDateRangeValue = [Date, Date] | null;
-export interface InputDateRangePickerRef {
-  element: HTMLDivElement | null;
-  value: InputDateRangeValue;
-  focus: () => void;
-  reset: () => void;
-  disabled: boolean;
-}
-
-export interface DateRangePickerProps
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    'value' | 'defaultValue' | 'onChange' | 'size' | 'required' | 'checked'
-  > {
-  value?: InputDateRangeValue;
-  defaultValue?: InputDateRangeValue;
-  initialValue?: InputDateRangeValue;
-  clearable?: boolean;
-  label?: string;
-  labelPosition?: 'top' | 'left';
-  autoHideLabel?: boolean;
-  onChange?: (value: InputDateRangeValue) => void;
-  helperText?: React.ReactNode;
-  placeholder?: string;
-  fullWidth?: boolean;
-  inputRef?:
-    | React.RefObject<InputDateRangePickerRef | null>
-    | React.RefCallback<InputDateRangePickerRef | null>;
-  size?: 'default' | 'large';
-  error?: boolean | string;
-  success?: boolean;
-  loading?: boolean;
-  disabledDate?: (date: Date, firstSelectedDate: Date | null) => boolean;
-  width?: number;
-  showTime?: boolean;
-  picker?: PickerType;
-  format?: string;
-  required?: boolean;
-}
+import { DateRangePickerProps, DateRangeValue, PickerType } from '../../types';
 
 /**
  * The Date Range Picker lets the user select a range of dates.
@@ -108,13 +69,13 @@ const DateRangePicker = ({
   const [internalValue, setInternalValue] = React.useState(
     defaultValue || initialValue || null,
   );
-  const isControlled = typeof valueProp !== 'undefined';
+  const isControlled = valueProp !== undefined;
   const value = isControlled ? valueProp : internalValue;
   const [tempValue, setTempValue] = React.useState<[Date | null, Date | null]>(
     value || [null, null],
   );
   const [timeValue, setTimeValue] = React.useState({
-    hours: (tempValue[0] ? value?.[1] : value?.[0])?.getHours() ?? null, // if
+    hours: (tempValue[0] ? value?.[1] : value?.[0])?.getHours() ?? null,
     minutes: (tempValue[0] ? value?.[1] : value?.[0])?.getMinutes() ?? null,
     seconds: (tempValue[0] ? value?.[1] : value?.[0])?.getSeconds() ?? null,
   });
@@ -184,9 +145,7 @@ const DateRangePicker = ({
   React.useImperativeHandle(inputRef, () => ({
     element: elementRef.current,
     value,
-    focus: () => {
-      elementRef.current?.focus();
-    },
+    focus: () => elementRef.current?.focus(),
     reset: () => {
       setTempValue([null, null]);
       setInternalValue(null);
@@ -255,7 +214,7 @@ const DateRangePicker = ({
       ),
   );
 
-  const dateMatrix: Array<Array<Date | null>> = Array(days.length).fill([]);
+  const dateMatrix: Array<Array<Date | null>> = new Array(days.length).fill([]);
 
   while (dates.length > 0) {
     const dateRow = days.map((_, idx) => {
@@ -459,7 +418,7 @@ const DateRangePicker = ({
     }
   };
 
-  const handleChange = (newValue: InputDateRangeValue) => {
+  const handleChange = (newValue: DateRangeValue) => {
     onChange?.(newValue);
     if (!isControlled) {
       setInternalValue(newValue);
@@ -1027,8 +986,9 @@ const DateRangePicker = ({
             <>
               <input
                 {...props}
-                tabIndex={!disabled ? 0 : -1}
+                tabIndex={disabled ? -1 : 0}
                 id={inputId}
+                name={name}
                 value={
                   isValidDate(value[0]) ? dayjs(value[0]).format(format) : ''
                 }
@@ -1051,14 +1011,15 @@ const DateRangePicker = ({
               <div>-</div>
               <input
                 {...props}
-                tabIndex={!disabled ? 0 : -1}
+                tabIndex={disabled ? -1 : 0}
                 id={inputId}
+                name={name}
                 value={
                   isValidDate(value[1]) ? dayjs(value[1]).format(format) : ''
                 }
                 placeholder={focused ? '' : placeholder}
                 className={cx(
-                  'truncate outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed',
+                  'w-full truncate outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed',
                   {
                     'text-primary-main dark:text-primary-main-dark':
                       focused && pointer === 1,
@@ -1077,11 +1038,12 @@ const DateRangePicker = ({
             <input
               {...props}
               value={''}
-              tabIndex={!disabled ? 0 : -1}
+              tabIndex={disabled ? -1 : 0}
               id={inputId}
+              name={name}
               placeholder={focused ? '' : placeholder}
               className={cx(
-                'truncate outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed',
+                'w-full truncate outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed',
                 {
                   'font-bold': focused && pointer === 1,
                 },
@@ -1091,7 +1053,6 @@ const DateRangePicker = ({
               autoComplete="off"
               onBlur={handleBlur}
               onFocus={() => handleFocus(0)}
-              onClick={() => handleFocus(0)}
               onChange={() => {}}
             />
           )}

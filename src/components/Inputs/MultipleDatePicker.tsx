@@ -2,7 +2,7 @@
 import React from 'react';
 import cx from 'classnames';
 import dayjs from 'dayjs';
-import { MONTH_LIST, PickerType } from '../../const/datePicker';
+import { MONTH_LIST } from '../../const/datePicker';
 import { SUNDAY_DATE, areDatesEqual, getYearRange, isToday } from '../../libs';
 import { Tag } from '../Displays';
 import Icon from '../Icon';
@@ -11,46 +11,11 @@ import InputDropdown from './InputDropdown';
 import InputEndIconWrapper from './InputEndIconWrapper';
 import InputHelper from './InputHelper';
 import InputLabel from './InputLabel';
-
-export type InputMultipleDateValue = Date[];
-export interface InputMultipleDatePickerRef {
-  element: HTMLDivElement | null;
-  value: InputMultipleDateValue;
-  focus: () => void;
-  reset: () => void;
-  disabled: boolean;
-}
-export interface MultipleDatePickerProps
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    'value' | 'defaultValue' | 'onChange' | 'size' | 'required'
-  > {
-  value?: InputMultipleDateValue;
-  defaultValue?: InputMultipleDateValue;
-  initialValue?: InputMultipleDateValue;
-  label?: string;
-  labelPosition?: 'top' | 'left';
-  autoHideLabel?: boolean;
-  onChange?: (value: InputMultipleDateValue) => void;
-  helperText?: React.ReactNode;
-  placeholder?: string;
-  fullWidth?: boolean;
-  inputRef?:
-    | React.RefObject<InputMultipleDatePickerRef | null>
-    | React.RefCallback<InputMultipleDatePickerRef | null>;
-  size?: 'default' | 'large';
-  error?: boolean | string;
-  success?: boolean;
-  loading?: boolean;
-  disabledDate?: (
-    date: Date,
-    firstSelectedDate: InputMultipleDateValue,
-  ) => boolean;
-  width?: number;
-  picker?: PickerType;
-  format?: string;
-  required?: boolean;
-}
+import {
+  MultipleDateValue,
+  MultipleDatePickerProps,
+  PickerType,
+} from '../../types/inputs';
 
 /**
  * The Multiple Date Picker component lets users select multiple date.
@@ -91,9 +56,9 @@ const MultipleDatePicker = ({
   const [internalValue, setInternalValue] = React.useState(
     defaultValue || initialValue,
   );
-  const isControlled = typeof valueProp !== 'undefined';
+  const isControlled = valueProp !== undefined;
   const value = isControlled ? valueProp : internalValue;
-  const [tempValue, setTempValue] = React.useState<InputMultipleDateValue>([]);
+  const [tempValue, setTempValue] = React.useState<MultipleDateValue>([]);
 
   const [calendarView, setCalendarView] = React.useState<PickerType>(picker);
   const [displayedDate, setDisplayedDate] = React.useState(
@@ -256,7 +221,7 @@ const MultipleDatePicker = ({
     );
   };
 
-  const handleChange = (newValue: InputMultipleDateValue) => {
+  const handleChange = (newValue: MultipleDateValue) => {
     onChange?.(newValue);
     if (!isControlled) {
       setInternalValue(newValue);

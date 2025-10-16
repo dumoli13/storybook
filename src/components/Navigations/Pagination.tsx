@@ -11,13 +11,26 @@ export interface PaginationButtonProps {
 }
 
 export type PaginationDataType = { page: number; limit: number };
-export interface PaginationProps {
-  total: number;
+
+interface BasePaginationProps {
   currentPage: number;
   pageSize?: number;
   itemPerPage?: Array<number>;
   onPageChange?: (data: PaginationDataType) => void;
 }
+interface PaginationWithTotal {
+  total: number;
+  hasNext?: never;
+}
+
+interface PaginationWithoutTotal {
+  total?: never;
+  hasNext: boolean;
+}
+
+export type PaginationProps =
+  | (BasePaginationProps & PaginationWithTotal)
+  | (BasePaginationProps & PaginationWithoutTotal);
 
 const navButtonStyle = cx(
   'text-14px text-neutral-100 dark:text-neutral-100-dark px-2 shadow-box-1 rounded-md border border-neutral-40 dark:border-neutral-40-dark bg-neutral-10 dark:bg-neutral-10-dark h-8 flex items-center gap-2',
@@ -65,6 +78,7 @@ const NextButton = ({ onClick, disabled }: PaginationButtonProps) => {
  */
 const Pagination = ({
   total,
+  hasNext,
   currentPage,
   itemPerPage = DEFAULT_ITEMS_PER_PAGE,
   pageSize,
@@ -73,7 +87,7 @@ const Pagination = ({
   const [itemsPerPage, setItemsPerPage] = React.useState(
     pageSize ?? itemPerPage[0],
   );
-  const totalPages = Math.ceil(total / itemsPerPage);
+  const totalPages = total ? Math.ceil(total / itemsPerPage) : -1;
 
   const handlePageChange = (page: number) => {
     onPageChange?.({ page: page, limit: itemsPerPage });
@@ -86,9 +100,7 @@ const Pagination = ({
   };
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      handlePageChange(currentPage + 1);
-    }
+    handlePageChange(currentPage + 1);
   };
 
   const handleItemsPerPageChange = (
@@ -219,9 +231,11 @@ const Pagination = ({
 
   return (
     <div
-      className={`flex gap-4 md:gap-10 items-start justify-between ${totalPages > 1 ? 'flex-row' : 'flex-row-reverse'}`}
+      className={`flex gap-4 md:gap-10 items-start justify-between ${
+        totalPages > 1 || totalPages < 0 ? 'flex-row' : 'flex-row-reverse'
+      }`}
     >
-      {totalPages > 1 && (
+      {totalPages > 1 ? (
         <div className="flex item-center flex-wrap gap-2">
           <PrevButton onClick={handlePrevPage} disabled={currentPage === 1} />
           {renderPageNumbers()}
@@ -229,6 +243,11 @@ const Pagination = ({
             onClick={handleNextPage}
             disabled={currentPage === totalPages}
           />
+        </div>
+      ) : (
+        <div className="flex item-center flex-wrap gap-2">
+          <PrevButton onClick={handlePrevPage} disabled={currentPage === 1} />
+          <NextButton onClick={handleNextPage} disabled={!hasNext} />
         </div>
       )}
 

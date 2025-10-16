@@ -2,13 +2,14 @@
 import React from 'react';
 import cx from 'classnames';
 import dayjs from 'dayjs';
-import { MONTH_LIST, PickerType, TimeUnit } from '../../const/datePicker';
+import { MONTH_LIST, TimeUnit } from '../../const/datePicker';
 import { SUNDAY_DATE, areDatesEqual, getYearRange, isToday } from '../../libs';
 import Icon from '../Icon';
 import InputDropdown from './InputDropdown';
 import InputEndIconWrapper from './InputEndIconWrapper';
 import InputHelper from './InputHelper';
 import InputLabel from './InputLabel';
+import { DatePickerProps, DateValue, PickerType } from '../../types';
 
 export const CancelButton = ({
   onClick,
@@ -23,46 +24,6 @@ export const CancelButton = ({
     Cancel
   </button>
 );
-
-export type InputDateValue = Date | null;
-
-export interface InputDatePickerRef {
-  element: HTMLDivElement | null;
-  value: InputDateValue;
-  focus: () => void;
-  reset: () => void;
-  disabled: boolean;
-}
-export interface DatePickerProps
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    'value' | 'defaultValue' | 'onChange' | 'size' | 'required' | 'checked'
-  > {
-  value?: InputDateValue;
-  defaultValue?: InputDateValue;
-  initialValue?: InputDateValue;
-  clearable?: boolean;
-  label?: string;
-  labelPosition?: 'top' | 'left';
-  autoHideLabel?: boolean;
-  onChange?: (value: InputDateValue) => void;
-  helperText?: React.ReactNode;
-  placeholder?: string;
-  fullWidth?: boolean;
-  inputRef?:
-    | React.RefObject<InputDatePickerRef | null>
-    | React.RefCallback<InputDatePickerRef | null>;
-  size?: 'default' | 'large';
-  error?: boolean | string;
-  success?: boolean;
-  loading?: boolean;
-  disabledDate?: (date: Date) => boolean;
-  width?: number;
-  showTime?: boolean;
-  picker?: PickerType;
-  format?: string;
-  required?: boolean;
-}
 
 /**
  * The Date Picker component lets users select a date. User can also set a time of the date.
@@ -112,16 +73,14 @@ const DatePicker = ({
     if (showTime) format = `${format} HH:mm:ss`;
   }
 
-  const isControlled = typeof valueProp !== 'undefined';
+  const isControlled = valueProp !== undefined;
   const value = isControlled && !dropdownOpen ? valueProp : internalValue;
   const [timeValue, setTimeValue] = React.useState({
     hours: value?.getHours() ?? null,
     minutes: value?.getMinutes() ?? null,
     seconds: value?.getSeconds() ?? null,
   });
-  const [tempValue, setTempValue] = React.useState<InputDateValue>(
-    value || null,
-  );
+  const [tempValue, setTempValue] = React.useState<DateValue>(value || null);
 
   const [calendarView, setCalendarView] = React.useState<PickerType>(picker);
   const [displayedDate, setDisplayedDate] = React.useState(value ?? new Date());
@@ -227,6 +186,7 @@ const DatePicker = ({
     if (dropdownContainsTarget || selectElementContainsTarget) {
       return;
     }
+
     setFocused(false);
     setDropdownOpen(false);
   };
@@ -258,7 +218,7 @@ const DatePicker = ({
       ),
   );
 
-  const dateMatrix: Array<Array<InputDateValue>> = Array(days.length).fill([]);
+  const dateMatrix: Array<Array<DateValue>> = new Array(days.length).fill([]);
 
   while (dates.length > 0) {
     const dateRow = days.map((_, idx) => {
@@ -319,7 +279,7 @@ const DatePicker = ({
     );
   };
 
-  const handleChange = (newValue: InputDateValue) => {
+  const handleChange = (newValue: DateValue) => {
     onChange?.(newValue);
     if (!isControlled) {
       setInternalValue(newValue);
@@ -772,6 +732,7 @@ const DatePicker = ({
           {...props}
           tabIndex={!disabled ? 0 : -1}
           id={inputId}
+          name={name}
           value={value ? dayjs(value).format(format) : ''}
           placeholder={focused ? '' : placeholder}
           className={cx(

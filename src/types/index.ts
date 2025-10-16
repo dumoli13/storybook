@@ -1,1 +1,1 @@
-export { SelectValue } from './input';
+export * from './inputs';

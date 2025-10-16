@@ -1,6 +1,5 @@
 import React from 'react';
 import cx from 'classnames';
-import { SelectValue } from '../../types/input';
 import Tag from '../Displays/Tag';
 import Icon from '../Icon';
 import InputDropdown from './InputDropdown';
@@ -10,88 +9,12 @@ import InputLabel from './InputLabel';
 import { useInView } from 'react-intersection-observer';
 import { FETCH_LIMIT } from '../../const/select';
 import { useDebouncedCallback } from 'use-debounce';
-
-export interface AutoCompleteMultipleRef<T, D = undefined> {
-  element: HTMLDivElement | null;
-  value: SelectValue<T, D>[];
-  focus: () => void;
-  reset: () => void;
-  disabled: boolean;
-}
-
-interface BaseAutoCompleteMultipleProps<T, D = undefined>
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    'onChange' | 'value' | 'defaultValue' | 'size' | 'required' | 'checked'
-  > {
-  value?: SelectValue<T, D>[];
-  defaultValue?: T[];
-  initialValue?: SelectValue<T, D>[];
-  label?: string;
-  labelPosition?: 'top' | 'left';
-  autoHideLabel?: boolean;
-  placeholder?: string;
-  onChange?: (value: SelectValue<T, D>[]) => void;
-  helperText?: React.ReactNode;
-  disabled?: boolean;
-  fullWidth?: boolean;
-  startIcon?: React.ReactNode;
-  endIcon?: React.ReactNode;
-  inputRef?:
-    | React.RefObject<AutoCompleteMultipleRef<T> | null>
-    | React.RefCallback<AutoCompleteMultipleRef<T> | null>;
-  size?: 'default' | 'large';
-  error?: boolean | string;
-  success?: boolean;
-  clearable?: boolean;
-  width?: number;
-  required?: boolean;
-  renderOption?: (
-    option: Array<SelectValue<T, D>>,
-    onClick: (value: SelectValue<T, D>) => void,
-    selected: Array<SelectValue<T, D>>,
-  ) => React.ReactNode;
-}
-
-interface WithoutAppendProps<T, D = undefined>
-  extends BaseAutoCompleteMultipleProps<T, D> {
-  appendIfNotFound?: false;
-  onAppend?: (input: SelectValue<T, D>) => never;
-}
-interface WithAppendProps<T, D = undefined>
-  extends BaseAutoCompleteMultipleProps<T, D> {
-  appendIfNotFound: true;
-  onAppend: (input: SelectValue<T>) => void;
-}
-
-interface AsyncProps<T, D> {
-  async: true;
-  fetchOptions: (
-    keyword: string,
-    page: number,
-    limit: number,
-  ) => Promise<SelectValue<T, D>[]>;
-  options?: never;
-  loading?: never;
-}
-
-interface NonAsyncProps<T, D> {
-  async?: false;
-  fetchOptions?: never;
-  options: SelectValue<T, D>[];
-  loading?: boolean;
-}
-
-export type AutoCompleteMultipleProps<T, D = undefined> =
-  | (WithoutAppendProps<T, D> & AsyncProps<T, D>)
-  | (WithoutAppendProps<T, D> & NonAsyncProps<T, D>)
-  | (WithAppendProps<T, D> & AsyncProps<T, D>)
-  | (WithAppendProps<T, D> & NonAsyncProps<T, D>);
+import { AutoCompleteMultipleProps, SelectValue } from '../../types';
 
 /**
  * An autocomplete where multiple options can be selected
  */
-const AutoCompleteMultiple = <T, D = undefined>({
+const AutoCompleteMultiple = <T, D>({
   id,
   name,
   value: valueProp,
@@ -127,17 +50,17 @@ const AutoCompleteMultiple = <T, D = undefined>({
   const elementRef = React.useRef<HTMLDivElement>(null);
   const valueRef = React.useRef<HTMLInputElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const { ref: refInView, inView } = useInView({ threshold: 0.1 });
 
   const [focused, setFocused] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
-
-  const { ref: refInView, inView } = useInView({ threshold: 0.1 });
+  const [highlightedIndex, setHighlightedIndex] = React.useState<number>(-1);
   const [loadingFetchOptions, setLoadingFetchOptions] = React.useState(!!async);
   const [stopAsyncFetch, setStopAsyncFetch] = React.useState(false);
-  const [inheritOptions, setInheritOptions] = React.useState<
-    SelectValue<T, D>[]
-  >(optionsProp || []);
-  const [injectOptions, setInjectOptions] = React.useState<SelectValue<T, D>[]>(
+  const [asyncOptions, setAsyncOptions] = React.useState<SelectValue<T, D>[]>(
+    optionsProp || [],
+  );
+  const [appendOptions, setAppendOptions] = React.useState<SelectValue<T, D>[]>(
     [],
   );
 
@@ -145,29 +68,27 @@ const AutoCompleteMultiple = <T, D = undefined>({
   const [page, setPage] = React.useState(0);
 
   const options = React.useMemo(() => {
-    const sourceOptions = async ? inheritOptions : optionsProp;
-    const combinedOptions = [...injectOptions, ...sourceOptions];
+    const sourceOptions = async ? asyncOptions : optionsProp;
+    const combinedOptions = [...appendOptions, ...sourceOptions];
 
     return Array.from(
       new Map(combinedOptions.map((item) => [item.label, item])).values(),
     );
-  }, [async, optionsProp, inheritOptions, injectOptions]);
+  }, [async, optionsProp, asyncOptions, appendOptions]);
 
   const [internalValue, setInternalValue] = React.useState<SelectValue<T, D>[]>(
     options.filter((item) => defaultValue.includes(item.value)) || initialValue,
   );
 
-  const filteredOptions = React.useMemo(
-    () =>
-      async
-        ? options
-        : options.filter(
-            (option) =>
-              !inputValue ||
-              option.label.toLowerCase().includes(inputValue.toLowerCase()),
-          ),
-    [inputValue, options],
-  );
+  const filteredOptions = React.useMemo(() => {
+    if (async) return options;
+
+    const filterKeyword = inputValue.trim().toLowerCase();
+    return options.filter(
+      (option) =>
+        !inputValue || option.label.toLowerCase().includes(filterKeyword),
+    );
+  }, [async, inputValue, options]);
 
   React.useEffect(() => {
     setInternalValue(
@@ -186,7 +107,7 @@ const AutoCompleteMultiple = <T, D = undefined>({
 
   React.useImperativeHandle(inputRef, () => ({
     element: elementRef.current,
-    value: value as SelectValue<T, undefined>[],
+    value,
     focus: () => valueRef.current?.focus(),
     reset: () => setInternalValue(initialValue),
     disabled,
@@ -219,7 +140,7 @@ const AutoCompleteMultiple = <T, D = undefined>({
       if (response.length < FETCH_LIMIT) {
         setStopAsyncFetch(true);
       }
-      setInheritOptions((prev) => [...prev, ...response]);
+      setAsyncOptions((prev) => [...prev, ...response]);
       setLoadingFetchOptions(false);
     };
 
@@ -228,7 +149,7 @@ const AutoCompleteMultiple = <T, D = undefined>({
 
   const handleFetchOption = async (keyword: string) => {
     // Fetch new options and reset page
-    setInheritOptions([]);
+    setAsyncOptions([]);
     setStopAsyncFetch(false);
     setLoadingFetchOptions(true);
     const newPage = 1;
@@ -237,7 +158,7 @@ const AutoCompleteMultiple = <T, D = undefined>({
     if (response.length < FETCH_LIMIT) {
       setStopAsyncFetch(true);
     }
-    setInheritOptions(response);
+    setAsyncOptions(response);
     setLoadingFetchOptions(false);
   };
 
@@ -265,6 +186,8 @@ const AutoCompleteMultiple = <T, D = undefined>({
 
     setFocused(false);
     setDropdownOpen(false);
+    setHighlightedIndex(-1);
+    setInputValue('');
   };
 
   const handleDropdown = () => {
@@ -280,6 +203,7 @@ const AutoCompleteMultiple = <T, D = undefined>({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
+    setHighlightedIndex(e.target.value ? 0 : -1);
 
     const input = e.target.value.toLowerCase();
     if (async) {
@@ -289,20 +213,22 @@ const AutoCompleteMultiple = <T, D = undefined>({
         ({ label }) => label.toLowerCase() === input,
       );
       if (filtered) {
-        handleOptionSelect(filtered);
+        handleSelectOption(filtered);
       }
     }
   };
 
-  const handleOptionSelect = (option: SelectValue<T, D>) => {
-    const newValue = [...(value || []), option];
-    if (!isControlled) setInternalValue(newValue); // Update internal state if uncontrolled
-    onChange?.(newValue);
-  };
+  const handleSelectOption = (option: SelectValue<T, D>) => {
+    const selected = value?.some((v) => v.value === option.value);
 
-  const handleRemoveSelected = (option: SelectValue<T, D>) => {
-    const newValue = value.filter((v) => v.value !== option.value);
-    if (!isControlled) setInternalValue(newValue);
+    let newValue: SelectValue<T, D>[];
+    if (selected) {
+      newValue = value.filter((v) => v.value !== option.value);
+    } else {
+      newValue = [...(value || []), option];
+    }
+
+    if (!isControlled) setInternalValue(newValue); // Update internal state if uncontrolled
     onChange?.(newValue);
   };
 
@@ -313,9 +239,41 @@ const AutoCompleteMultiple = <T, D = undefined>({
       label: inputValue,
       value: inputValue as T,
     };
-    setInjectOptions((prev) => [...prev, newValue]);
-    handleOptionSelect(newValue);
+    setAppendOptions((prev) => [...prev, newValue]);
+    handleSelectOption(newValue);
     onAppend(newValue);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const maxIndex = filteredOptions.length - 1;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev < maxIndex ? prev + 1 : 0));
+        break;
+
+      case 'ArrowUp':
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : maxIndex));
+        break;
+
+      case 'Enter':
+        e.preventDefault();
+        if (highlightedIndex >= 0 && filteredOptions[highlightedIndex]) {
+          handleSelectOption(filteredOptions[highlightedIndex]);
+        }
+        break;
+
+      case 'Escape':
+        e.preventDefault();
+        setDropdownOpen(false);
+        setHighlightedIndex(-1);
+        break;
+
+      default:
+        break;
+    }
   };
 
   const dropdownContent = (
@@ -338,45 +296,44 @@ const AutoCompleteMultiple = <T, D = undefined>({
           </button>
         )}
       {renderOption
-        ? renderOption(filteredOptions, handleOptionSelect, value)
-        : filteredOptions.map((option) => {
+        ? renderOption(
+            filteredOptions,
+            handleSelectOption,
+            value,
+            highlightedIndex,
+          )
+        : filteredOptions.map((option, index) => {
             const selected = value?.some((v) => v.value === option.value);
 
-            return selected ? (
+            return (
               <div
                 role="button"
                 key={String(option.value)}
-                onMouseDown={() => handleRemoveSelected(option)}
+                onClick={() => handleSelectOption(option)}
+                onMouseOver={() => setHighlightedIndex(index)}
+                data-highlighted={index === highlightedIndex}
                 className={cx(
-                  'cursor-pointer py-1.5 px-4 hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-left break-words flex items-center justify-between gap-2.5 bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark',
+                  'cursor-pointer py-1.5 px-4 hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-left break-words',
                   {
                     'text-14px': size === 'default',
                     'text-18px': size === 'large',
+                    '!bg-neutral-20 !dark:bg-neutral-20-dark':
+                      index === highlightedIndex,
+                    'flex items-center justify-between gap-2.5 bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark':
+                      selected,
+                    ' text-neutral-100 dark:text-neutral-100-dark': !selected,
                   },
                 )}
               >
                 <span>{option.label}</span>
-                <Icon
-                  name="check"
-                  size={10}
-                  strokeWidth={3}
-                  className="text-primary-main dark:text-primary-main-dark"
-                />
-              </div>
-            ) : (
-              <div
-                role="button"
-                key={String(option.value)}
-                onMouseDown={() => handleOptionSelect(option)}
-                className={cx(
-                  'cursor-pointer py-1.5 px-4 hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-left break-words text-neutral-100 dark:text-neutral-100-dark',
-                  {
-                    'text-14px': size === 'default',
-                    'text-18px': size === 'large',
-                  },
+                {selected && (
+                  <Icon
+                    name="check"
+                    size={10}
+                    strokeWidth={3}
+                    className="text-primary-main dark:text-primary-main-dark"
+                  />
                 )}
-              >
-                {option.label}
               </div>
             );
           })}
@@ -404,6 +361,21 @@ const AutoCompleteMultiple = <T, D = undefined>({
     </>
   );
 
+  React.useEffect(() => {
+    if (!dropdownRef.current || highlightedIndex < 0) return;
+
+    // Find any element that is marked as the highlighted one
+    const activeItem = dropdownRef.current.querySelector(
+      '[data-highlighted="true"]',
+    ) as HTMLElement | null;
+
+    if (activeItem) {
+      activeItem.scrollIntoView({
+        block: 'nearest',
+      });
+    }
+  }, [highlightedIndex, dropdownContent]);
+
   const inputId = `autocompletemultiple-${id || name}-${React.useId()}`;
 
   return (
@@ -416,6 +388,7 @@ const AutoCompleteMultiple = <T, D = undefined>({
         },
         className,
       )}
+      onKeyDown={handleKeyDown}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
         <InputLabel id={inputId} size={size} required={required}>
@@ -465,6 +438,7 @@ const AutoCompleteMultiple = <T, D = undefined>({
             {...props}
             tabIndex={!disabled ? 0 : -1}
             id={inputId}
+            name={name}
             value={focused ? inputValue : ''}
             onChange={handleInputChange}
             placeholder={focused ? '' : placeholder}

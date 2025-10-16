@@ -1,10 +1,14 @@
 /* eslint-disable react/no-array-index-key */
-import React from 'react';
+import React, { useEffect } from 'react';
 import cx from 'classnames';
 import { SelectValue } from '../../types/input';
 import Checkbox from '../Inputs/Checkbox';
 import TableFilterSearch from './TableFilterSearch';
 import TableFilterSelect from './TableFilterSelect';
+import { FETCH_LIMIT } from '../../const/select';
+import { Pagination, PaginationDataType } from '../Navigations';
+import { useDebouncedCallback } from 'use-debounce';
+import { DEFAULT_ITEMS_PER_PAGE } from '../Navigations/Pagination';
 
 type BaseColumnCommon = {
   key: string;
@@ -72,13 +76,8 @@ export type TableSortingProps<T> = {
   key: keyof T;
 };
 
-export type TableFilterProps<T> = {
-  [key in keyof T]?: string | SelectValue<T[keyof T]> | null;
-};
-
-export interface TableProps<T> {
+interface BaseProps<T> {
   columns: TableColumn<T>[];
-  data: T[];
   stickyHeader?: boolean;
   maxHeight?: number | string;
   selectedRows?: number[];
@@ -95,17 +94,36 @@ export interface TableProps<T> {
   onRowClick?: (record: T, index: number) => void;
 }
 
+interface AsyncProps<T> {
+  async: true;
+  fetchData: (
+    keyword: Record<keyof T, string>,
+    pagination: PaginationDataType,
+    ordering: TableSortingProps<T>,
+  ) => Promise<T[]>;
+  data?: never;
+}
+
+interface NonAsyncProps<T> {
+  async?: false;
+  fetchData?: never;
+  data: T[];
+}
+
+export type TableProps<T> =
+  | (BaseProps<T> & AsyncProps<T>)
+  | (BaseProps<T> & NonAsyncProps<T>);
+
 /**
  * Tables display sets of data. They can be fully customized.
  */
 const Table = <T extends { [key: string]: any }>({
   columns,
-  data,
   stickyHeader = false,
   maxHeight = 680,
   selectedRows: selectedRowsProp,
   onRowSelect,
-  sorting,
+  sorting = { key: columns[0].key, direction: null },
   rowClassName,
   rowStyle,
   onSort,
@@ -115,23 +133,90 @@ const Table = <T extends { [key: string]: any }>({
   verticalAlign,
   style = 'default',
   onRowClick,
+  data: dataProps,
+  async,
+  fetchData,
 }: TableProps<T>) => {
-  const [sortConfig, setSortConfig] = React.useState<TableSortingProps<T>>(
-    sorting || { key: columns[0].key, direction: null },
+  const tableRef = React.useRef<HTMLDivElement>(null);
+
+  const [focused, setFocused] = React.useState(false);
+  const [highlightedIndex, setHighlightedIndex] = React.useState<number>(-1);
+
+  const [loadingFetchData, setLoadingFetchData] = React.useState(!!async);
+  const [data, setData] = React.useState<T[]>(async ? [] : dataProps);
+  const [pagination, setPagination] = React.useState<PaginationDataType>({
+    page: 1,
+    limit: DEFAULT_ITEMS_PER_PAGE[1],
+  });
+  console.log(pagination);
+  const [filter, setFilter] = React.useState<Record<keyof T, string>>(
+    columns.reduce<Record<keyof T, string>>((acc, col) => {
+      const value = col.filterValue;
+      if ('filterValue' in col && value) {
+        acc[col.key as keyof T] = String(
+          typeof value === 'object' && 'value' in value ? value.value : value,
+        );
+      }
+      return acc;
+    }, {} as Record<keyof T, string>),
   );
+  const [ordering, setOrdering] = React.useState<TableSortingProps<T>>(sorting);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const maxIndex = data.length - 1;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev < maxIndex ? prev + 1 : 0));
+        break;
+
+      case 'ArrowUp':
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : maxIndex));
+        break;
+
+      case 'Enter':
+        e.preventDefault();
+        onRowClick(data[highlightedIndex], highlightedIndex);
+        break;
+
+      case 'Escape':
+        e.preventDefault();
+        setHighlightedIndex(-1);
+        setFocused(false);
+        break;
+
+      default:
+        break;
+    }
+  };
 
   const [internalSelectedRows, setInternalSelectedRows] = React.useState<
     number[]
   >([]);
+
   const isControlled = selectedRowsProp !== undefined;
   const selectedRows = isControlled ? selectedRowsProp : internalSelectedRows;
+
+  const handleFilter = (columnKey: keyof T, value: string) => {
+    setFilter((prev) => {
+      const next = { ...prev };
+      if (value === '') {
+        delete next[columnKey];
+      } else {
+        next[columnKey] = value;
+      }
+      return next;
+    });
+  };
 
   const handleSort = (columnKey: keyof T) => {
     let newConfig: TableSortingProps<T>;
 
-    if (sortConfig.key === columnKey) {
+    if (ordering.key === columnKey) {
       let direction: 'asc' | 'desc' | null;
-      switch (sortConfig.direction) {
+      switch (ordering.direction) {
         case 'asc':
           direction = 'desc';
           break;
@@ -150,7 +235,7 @@ const Table = <T extends { [key: string]: any }>({
     } else {
       newConfig = { key: columnKey, direction: 'asc' };
     }
-    setSortConfig(newConfig);
+    setOrdering(newConfig);
     onSort?.(newConfig);
   };
 
@@ -165,15 +250,53 @@ const Table = <T extends { [key: string]: any }>({
     }
   };
 
+  React.useEffect(() => {
+    if (!tableRef.current || highlightedIndex < 0) return;
+
+    // Find any element that is marked as the highlighted one
+    const activeItem = tableRef.current.querySelector(
+      '[data-highlighted="true"]',
+    ) as HTMLElement | null;
+
+    if (activeItem) {
+      activeItem.scrollIntoView({
+        block: 'end',
+      });
+    }
+  }, [highlightedIndex]);
+
+  const fetchDebounced = useDebouncedCallback(async () => {
+    setLoadingFetchData(true);
+    const newData = await fetchData(filter, pagination, ordering);
+    setData(newData);
+    setLoadingFetchData(false);
+  }, 1000);
+
+  useEffect(() => {
+    fetchDebounced();
+    return () => fetchDebounced.cancel();
+  }, [filter, pagination, ordering]);
+
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-pressed="true"
       className={cx(
-        'text-neutral-100 dark:text-neutral-100-dark overflow-x-auto',
-        { 'w-full': fullwidth },
+        'outline-none cursor-default text-neutral-100 dark:text-neutral-100-dark overflow-x-auto',
+        {
+          'w-full': fullwidth,
+          'rounded-md ring-3 ring-primary-focus dark:ring-primary-focus-dark !border-primary-main dark:!border-primary-main-dark':
+            focused,
+        },
       )}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      onKeyDown={handleKeyDown}
+      ref={tableRef}
     >
       <div
-        className="overflow-y-auto border border-neutral-30 dark:border-neutral-30-dark rounded-md"
+        className="overflow-y-auto border border-neutral-30 dark:border-neutral-30-dark rounded-md mb-4"
         style={stickyHeader ? { maxHeight } : undefined}
       >
         <table
@@ -260,16 +383,16 @@ const Table = <T extends { [key: string]: any }>({
                         <div className="flex flex-col gap-0.5">
                           <span
                             className={`w-0 h-0 border-l-4 border-l-transparent dark:border-l-transparent border-r-4 border-r-transparent dark:border-r-transparent border-b-8 transition-colors duration-300 ${
-                              col.key === sortConfig.key &&
-                              sortConfig.direction === 'asc'
+                              col.key === ordering.key &&
+                              ordering.direction === 'asc'
                                 ? 'border-primary-main dark:border-primary-main-dark'
                                 : 'border-neutral-60 dark:border-neutral-60-dark'
                             }`}
                           />
                           <span
                             className={`w-0 h-0 border-l-4 border-l-transparent dark:border-l-transparent border-r-4 border-r-transparent dark:border-r-transparent border-t-8 transition-colors duration-300 ${
-                              col.key === sortConfig.key &&
-                              sortConfig.direction === 'desc'
+                              col.key === ordering.key &&
+                              ordering.direction === 'desc'
                                 ? 'border-primary-main dark:border-primary-main-dark'
                                 : 'border-neutral-60 dark:border-neutral-60-dark'
                             }`}
@@ -307,7 +430,10 @@ const Table = <T extends { [key: string]: any }>({
                         <TableFilterSearch
                           label={col.label}
                           value={col.filterValue}
-                          onChange={(value) => col.onChange?.(value)}
+                          onChange={(value) => {
+                            handleFilter(col.key, value);
+                            col.onChange?.(value);
+                          }}
                         />
                       )}
                     {'filter' in col &&
@@ -320,9 +446,10 @@ const Table = <T extends { [key: string]: any }>({
                             col.filterValue as SelectValue<T[keyof T]> | null
                           }
                           option={col.option || []}
-                          onChange={(value) =>
-                            col.onChange?.(value as SelectValue<T[keyof T]>)
-                          }
+                          onChange={(value) => {
+                            handleFilter(col.key, value.value);
+                            col.onChange?.(value as SelectValue<T[keyof T]>);
+                          }}
                         />
                       )}
                   </div>
@@ -339,6 +466,7 @@ const Table = <T extends { [key: string]: any }>({
               return (
                 <tr
                   key={rowIndex}
+                  data-highlighted={rowIndex === highlightedIndex}
                   className={cx(
                     'group border-b border-neutral-30 last:border-none',
                     {
@@ -350,6 +478,8 @@ const Table = <T extends { [key: string]: any }>({
                         style === 'default',
                       'bg-neutral-10 dark:bg-neutral-10-dark':
                         style === 'simple',
+                      '!bg-primary-surface !dark:bg-primary-surface-dark':
+                        rowIndex === highlightedIndex,
                       'cursor-pointer': !!onRowClick,
                     },
                     isCustomRowClassName,
@@ -427,6 +557,13 @@ const Table = <T extends { [key: string]: any }>({
           </tbody>
         </table>
       </div>
+      <Pagination
+        itemPerPage={DEFAULT_ITEMS_PER_PAGE}
+        currentPage={pagination.page}
+        pageSize={pagination.limit}
+        onPageChange={setPagination}
+        hasNext={data.length === pagination.limit}
+      />
     </div>
   );
 };

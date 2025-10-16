@@ -18,5 +18,3 @@ export enum TimeUnit {
   minutes = 'minutes',
   seconds = 'seconds',
 }
-
-export type PickerType = 'date' | 'month' | 'year';

@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
+import '../../src/output.css';
+import MisDesignProvider from '../../src/context';
 import {
+  DateValue,
+  FormProps,
+  SelectValue,
+  AutoComplete,
   Button,
   DatePicker,
   Form,
-  FormProps,
-  InputDateValue,
-  NumberTextField,
-  Select,
   TextField,
   useNotification,
-} from '../../src/components';
-import '../../src/output.css';
-import MisDesignProvider from '../../src/context';
-import { SelectValue } from '../../src';
+  NumberTextField,
+} from '../../src';
 
 const meta: Meta<FormProps<any>> = {
   title: 'Input/Form',
@@ -82,7 +82,7 @@ export const ControlledValue: Story = {
   render: (args) => {
     type FormComposition = {
       name: string;
-      date: InputDateValue;
+      date: DateValue;
       fruit: SelectValue<string>;
     };
 
@@ -108,21 +108,20 @@ export const ControlledValue: Story = {
           onSubmit={handleSubmit}
           rules={{
             name: ['required'],
-            maxnum: [{ required: true }, { max: 444 }, { min: 11 }],
             email: ['required', 'email'],
-            website: [{ required: true, url: true }],
+            website: [{ required: true }, { url: true, email: true }],
             phone: [{ required: true }, { pattern: /^(62|0)8[1-9]\d{6,9}$/ }],
             date: [{ required: true }],
             fruit: ['required'],
+            luckyNumber: [{ equal: 42, message: "It's not the lucky number" }],
           }}
         >
           <TextField name="name" label="Name" placeholder="Enter your name" />
-          <NumberTextField
-            name="maxnum"
-            label="Max Min Number"
-            placeholder="Enter number max: 444, min: 11"
-            min={11}
-            max={444}
+          <AutoComplete
+            name="fruit"
+            label="Fruit"
+            options={options}
+            placeholder="Select your favorite fruit"
           />
           <TextField
             name="email"
@@ -144,13 +143,11 @@ export const ControlledValue: Story = {
             label="Date"
             placeholder="Enter your birthday"
           />
-          <Select
-            name="fruit"
-            label="Fruit"
-            options={options}
-            placeholder="Select your favorite fruit"
+          <NumberTextField
+            name="luckyNumber"
+            label="Lucky Number"
+            placeholder="Enter your lucky number (42)"
           />
-
           <Button type="submit">Submit</Button>
         </Form>
       </MisDesignProvider>
@@ -184,7 +181,7 @@ export const AutoSubmit: Story = {
   render: (args) => {
     type FormComposition = {
       name: string;
-      date: InputDateValue;
+      date: DateValue;
       fruit: SelectValue<string>;
     };
 
@@ -219,6 +216,12 @@ export const AutoSubmit: Story = {
           }}
         >
           <TextField name="name" label="Name" placeholder="Enter your name" />
+          <AutoComplete
+            name="fruit"
+            label="Fruit"
+            options={options}
+            placeholder="Select your favorite fruit"
+          />
           <TextField
             name="email"
             label="Email"
@@ -239,13 +242,6 @@ export const AutoSubmit: Story = {
             label="Date"
             placeholder="Enter your birthday"
           />
-          <Select
-            name="fruit"
-            label="Fruit"
-            options={options}
-            placeholder="Select your favorite fruit"
-          />
-
           <Button type="submit">Submit</Button>
         </Form>
       </MisDesignProvider>

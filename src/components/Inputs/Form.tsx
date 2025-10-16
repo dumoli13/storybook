@@ -1,38 +1,9 @@
 import React from 'react';
 import { useDebouncedCallback } from 'use-debounce';
 import { EMAIL_REGEX, URL_REGEX } from '../../const/regex';
-import { InputProps, InputPropsRefType } from '../../types/input';
-import { ButtonProps } from './Button';
-
-export interface FormRef<T> {
-  submit: () => Promise<void>;
-  reset: () => void;
-  validate: () => string[];
-  getValues: () => Partial<T>;
-  getErrors: () => Record<string, string | undefined>;
-  setErrors: (errors: Record<string, string | undefined>) => void;
-}
-
-export type FormRule =
-  | {
-      required?: boolean;
-      email?: boolean;
-      url?: boolean;
-      pattern?: RegExp | string;
-      minLength?: number;
-      maxLength?: number;
-      exactLength?: number;
-      min?: number;
-      max?: number;
-      equal?: any;
-      validate?: (value: any) => string[];
-      message?: string;
-    }
-  | 'required'
-  | 'email'
-  | 'url';
-
-export type FormRules = Record<string, FormRule[]>;
+import { ButtonProps, FormRule } from '../../types/inputs';
+import { FormProps } from '../../types';
+import { InputProps, InputPropsRefType } from '../../types/inputs/form';
 
 const normalizeRule = (rule: FormRule) => {
   if (typeof rule === 'string') {
@@ -49,18 +20,6 @@ const normalizeRule = (rule: FormRule) => {
   }
   return rule;
 };
-
-export interface FormProps<T> {
-  onSubmit?: (values: T) => Promise<void> | void;
-  onReset?: () => void;
-  className?: string;
-  children: React.ReactNode;
-  rules?: FormRules;
-  disabled?: boolean;
-  formRef?: React.Ref<FormRef<T>>;
-  submitOnChange?: boolean;
-  focusOnLastFieldEnter?: boolean;
-}
 
 /**
  * List of predefined rule. Other than this, user can add rule in pattern
@@ -182,7 +141,7 @@ const Form = <T,>({
             value === null || // Check for null
             value === '' || // Check for empty string
             (Array.isArray(value) && value.length === 0) || // Check for empty array
-            (value instanceof Date && isNaN(value.getTime()))) // Check for invalid Dayjs instance
+            (value instanceof Date && Number.isNaN(value.getTime()))) // Check for invalid Dayjs instance
         ) {
           // Do not show required error if submitOnChange is true since user need time to fill all fields
           if (!submitOnChange) {
@@ -249,7 +208,11 @@ const Form = <T,>({
           break;
         }
 
-        if (normalizedRule.email && !EMAIL_REGEX.test(String(value))) {
+        if (
+          normalizedRule.email &&
+          typeof value === 'string' &&
+          !EMAIL_REGEX.test(value)
+        ) {
           newErrors[fieldName] = getErrorMessage(rule, 'email');
           break;
         }
@@ -294,36 +257,47 @@ const Form = <T,>({
       e.preventDefault();
       const order = inputOrderRef.current;
       const currentIndex = order.indexOf(currentKey);
-
       if (currentIndex === -1) return;
 
-      // Find the next enabled input
-      let nextEnabledInputIndex = -1;
-      for (let i = currentIndex + 1; i < order.length; i++) {
-        const nextKey = order[i];
-        const ref = inputRefsRef.current[nextKey];
+      let nextIndex = -1;
 
-        if (ref && typeof ref.focus === 'function' && !ref.disabled) {
-          nextEnabledInputIndex = i;
-          break;
+      if (e.shiftKey && e.key === 'Tab') {
+        // 🔹 Go backward when Shift + Tab
+        for (let i = currentIndex - 1; i >= 0; i--) {
+          const prevKey = order[i];
+          const ref = inputRefsRef.current[prevKey];
+          if (ref && typeof ref.focus === 'function' && !ref.disabled) {
+            nextIndex = i;
+            break;
+          }
+        }
+      } else {
+        // 🔹 Normal Tab or Enter → go forward
+        for (let i = currentIndex + 1; i < order.length; i++) {
+          const nextKey = order[i];
+          const ref = inputRefsRef.current[nextKey];
+          if (ref && typeof ref.focus === 'function' && !ref.disabled) {
+            nextIndex = i;
+            break;
+          }
         }
       }
 
-      // If found, focus on the next enabled input
-      if (nextEnabledInputIndex > -1) {
-        const nextKey = order[nextEnabledInputIndex];
-        const ref = inputRefsRef.current[nextKey];
-        ref.focus?.();
+      if (nextIndex > -1) {
+        const targetRef = inputRefsRef.current[order[nextIndex]];
+        targetRef.focus?.();
         return;
       }
 
-      // No more enabled inputs found
-      if (focusOnLastFieldEnter) {
-        if (submitButtonRef.current && !submitButtonRef.current.disabled) {
-          submitButtonRef.current.focus();
+      // 🔹 No more enabled inputs
+      if (!e.shiftKey) {
+        if (focusOnLastFieldEnter) {
+          if (submitButtonRef.current && !submitButtonRef.current.disabled) {
+            submitButtonRef.current.focus();
+          }
+        } else {
+          handleSubmit();
         }
-      } else {
-        handleSubmit();
       }
     }
   };
