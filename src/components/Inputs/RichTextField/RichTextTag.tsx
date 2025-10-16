@@ -4,7 +4,7 @@ import { useSlate } from 'slate-react';
 import AutoComplete from '../AutoComplete';
 import { CustomElement } from '.';
 import { isTextTag } from '../../../libs/richTextField';
-import { TEXT_TAG } from '../../../types/richTextField';
+import { TEXT_TAG } from '../../../types/inputs/richTextField';
 import { SelectValue } from '../../../types';
 
 const headings = [

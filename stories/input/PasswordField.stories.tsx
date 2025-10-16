@@ -4,9 +4,9 @@ import {
   Icon,
   IconNames,
   PasswordField,
+  PasswordFieldProps,
   PasswordFieldRef,
-  type PasswordFieldProps,
-} from '../../src/components';
+} from '../../src';
 import '../../src/output.css';
 import { iconNames } from '../../const/icon';
 
@@ -28,14 +28,6 @@ const meta: Meta<PasswordFieldProps> = {
     defaultValue: {
       control: 'text',
       description: 'Uncontrolled initial value',
-      table: {
-        type: { summary: 'string' },
-      },
-    },
-    initialValue: {
-      control: 'text',
-      description:
-        'The initial value of the input when default value or value isnot provided. This is useful when user want to reset field/form and it will return to initial value',
       table: {
         type: { summary: 'string' },
       },

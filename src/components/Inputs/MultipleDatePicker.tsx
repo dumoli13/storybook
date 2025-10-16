@@ -1,9 +1,9 @@
 /* eslint-disable react/no-array-index-key */
-import React from 'react';
+import React, { useMemo } from 'react';
 import cx from 'classnames';
 import dayjs from 'dayjs';
-import { MONTH_LIST, PickerType } from '../../const/datePicker';
-import { SUNDAY_DATE, areDatesEqual, getYearRange, isToday } from '../../libs';
+import { DAYS_OF_WEEK, MONTH_OF_YEAR } from '../../const/datePicker';
+import { areDatesEqual, getYearRange, isToday } from '../../libs';
 import { Tag } from '../Displays';
 import Icon from '../Icon';
 import { CancelButton } from './DatePicker';
@@ -11,46 +11,13 @@ import InputDropdown from './InputDropdown';
 import InputEndIconWrapper from './InputEndIconWrapper';
 import InputHelper from './InputHelper';
 import InputLabel from './InputLabel';
-
-export type InputMultipleDateValue = Date[];
-export interface InputMultipleDatePickerRef {
-  element: HTMLDivElement | null;
-  value: InputMultipleDateValue;
-  focus: () => void;
-  reset: () => void;
-  disabled: boolean;
-}
-export interface MultipleDatePickerProps
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    'value' | 'defaultValue' | 'onChange' | 'size' | 'required'
-  > {
-  value?: InputMultipleDateValue;
-  defaultValue?: InputMultipleDateValue;
-  initialValue?: InputMultipleDateValue;
-  label?: string;
-  labelPosition?: 'top' | 'left';
-  autoHideLabel?: boolean;
-  onChange?: (value: InputMultipleDateValue) => void;
-  helperText?: React.ReactNode;
-  placeholder?: string;
-  fullWidth?: boolean;
-  inputRef?:
-    | React.RefObject<InputMultipleDatePickerRef | null>
-    | React.RefCallback<InputMultipleDatePickerRef | null>;
-  size?: 'default' | 'large';
-  error?: boolean | string;
-  success?: boolean;
-  loading?: boolean;
-  disabledDate?: (
-    date: Date,
-    firstSelectedDate: InputMultipleDateValue,
-  ) => boolean;
-  width?: number;
-  picker?: PickerType;
-  format?: string;
-  required?: boolean;
-}
+import {
+  MultipleDateValue,
+  MultipleDatePickerProps,
+  PickerType,
+  DateValue,
+} from '../../types/inputs';
+import { useDebouncedCallback } from 'use-debounce';
 
 /**
  * The Multiple Date Picker component lets users select multiple date.
@@ -74,6 +41,7 @@ const MultipleDatePicker = ({
   fullWidth,
   inputRef,
   size = 'default',
+  clearable,
   error: errorProp,
   success: successProp,
   loading = false,
@@ -82,8 +50,11 @@ const MultipleDatePicker = ({
   format = 'D/M/YYYY',
   picker = 'date',
   required,
+  onKeyDown,
+  ...props
 }: MultipleDatePickerProps) => {
   const elementRef = React.useRef<HTMLDivElement>(null);
+  const valueRef = React.useRef<HTMLInputElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const [focused, setFocused] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
@@ -91,9 +62,10 @@ const MultipleDatePicker = ({
   const [internalValue, setInternalValue] = React.useState(
     defaultValue || initialValue,
   );
-  const isControlled = typeof valueProp !== 'undefined';
+  const isControlled = valueProp !== undefined;
   const value = isControlled ? valueProp : internalValue;
-  const [tempValue, setTempValue] = React.useState<InputMultipleDateValue>([]);
+  const [inputValue, setInputValue] = React.useState('');
+  const [tempValue, setTempValue] = React.useState<MultipleDateValue>([]);
 
   const [calendarView, setCalendarView] = React.useState<PickerType>(picker);
   const [displayedDate, setDisplayedDate] = React.useState(
@@ -101,18 +73,6 @@ const MultipleDatePicker = ({
   );
   const yearRange = getYearRange(displayedDate.getFullYear());
 
-  const firstDate = new Date(
-    displayedDate.getFullYear(),
-    displayedDate.getMonth(),
-    1,
-  );
-  const lastDate = new Date(
-    displayedDate.getFullYear(),
-    displayedDate.getMonth() + 1,
-    0,
-  );
-
-  const dayFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'short' });
   const monthFormatter = new Intl.DateTimeFormat('en-US', { month: 'long' });
 
   const helperMessage = errorProp ?? helperText;
@@ -122,7 +82,7 @@ const MultipleDatePicker = ({
   React.useImperativeHandle(inputRef, () => ({
     element: elementRef.current,
     value,
-    focus: () => elementRef.current?.focus(),
+    focus: () => valueRef.current?.focus(),
     reset: () => setInternalValue(initialValue),
     disabled,
   }));
@@ -155,7 +115,7 @@ const MultipleDatePicker = ({
   };
 
   const handleBlur = (event?: React.FocusEvent<HTMLDivElement>) => {
-    const relatedTarget = event?.relatedTarget;
+    const relatedTarget = event?.relatedTarget as Node | null;
 
     const dropdownContainsTarget = dropdownRef.current?.contains(relatedTarget);
     const selectElementContainsTarget =
@@ -176,37 +136,33 @@ const MultipleDatePicker = ({
     });
   };
 
-  const days: Array<string> = Array.from({ length: 7 }).map((_, idx) =>
-    dayFormatter.format(
-      new Date(
-        SUNDAY_DATE.getFullYear(),
-        SUNDAY_DATE.getMonth(),
-        SUNDAY_DATE.getDate() + idx,
-      ),
-    ),
-  );
+  const dateMatrix = useMemo(() => {
+    const year = displayedDate.getFullYear();
+    const month = displayedDate.getMonth();
 
-  const dates = Array.from({ length: lastDate.getDate() }).map(
-    (_, idx) =>
-      new Date(
-        firstDate.getFullYear(),
-        firstDate.getMonth(),
-        firstDate.getDate() + idx,
-      ),
-  );
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const totalDays = new Date(year, month + 1, 0).getDate();
 
-  const dateMatrix: Array<Array<Date | null>> = Array(days.length).fill([]);
+    const matrix: DateValue[][] = [];
+    let currentDay = 1 - firstDayIndex;
 
-  while (dates.length > 0) {
-    const dateRow = days.map((_, idx) => {
-      if (dates.length > 0 && dates[0].getDay() === idx) {
-        const currentDate = dates.shift();
-        return currentDate ?? null;
+    for (let week = 0; week < 6; week++) {
+      const weekRow: DateValue[] = [];
+      for (let day = 0; day < 7; day++) {
+        const date = new Date(year, month, currentDay);
+
+        if (currentDay < 1 || currentDay > totalDays) {
+          weekRow.push(null);
+        } else {
+          weekRow.push(date);
+        }
+        currentDay++;
       }
-      return null;
-    });
-    dateMatrix.push(dateRow);
-  }
+      matrix.push(weekRow);
+    }
+
+    return matrix;
+  }, [displayedDate]);
 
   const handleChangeView = (view: 'date' | 'month' | 'year') => {
     setCalendarView(view);
@@ -256,7 +212,7 @@ const MultipleDatePicker = ({
     );
   };
 
-  const handleChange = (newValue: InputMultipleDateValue) => {
+  const handleChange = (newValue: MultipleDateValue) => {
     onChange?.(newValue);
     if (!isControlled) {
       setInternalValue(newValue);
@@ -270,7 +226,6 @@ const MultipleDatePicker = ({
       ? value.filter((date) => date.getTime() !== timestamp)
       : [...value, selectedDate];
 
-    // newValue.sort((a, b) => a.getTime() - b.getTime());
     handleChange(newValue);
   };
 
@@ -278,10 +233,36 @@ const MultipleDatePicker = ({
     handleChange([]);
   };
 
+  const debounceTextToDate = useDebouncedCallback((input: string) => {
+    const parsed = dayjs(inputValue, format, true);
+
+    if (parsed.isValid()) {
+      const newDate = parsed.toDate();
+      handleSelectDate(newDate);
+      setInputValue('');
+    }
+  }, 500);
+
+  const handleChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    debounceTextToDate(e.target.value);
+  };
+
   React.useEffect(() => {
     setTempValue(value);
     setDisplayedDate(value[value.length - 1] || new Date());
   }, [value, dropdownOpen]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown' || e.key === 'arrowUp') {
+      e.preventDefault();
+      if (!dropdownOpen) {
+        handleDropdown();
+      }
+    } else {
+      onKeyDown?.(e);
+    }
+  };
 
   const dropdownContent = (
     <div className="min-w-60">
@@ -341,7 +322,7 @@ const MultipleDatePicker = ({
             <table className="w-full">
               <thead>
                 <tr>
-                  {days.map((day) => (
+                  {DAYS_OF_WEEK.map((day) => (
                     <th key={day}>
                       <div className="text-center p-1 font-normal w-8">
                         {day}
@@ -436,7 +417,7 @@ const MultipleDatePicker = ({
             </button>
           </div>
           <div className="grid grid-cols-3 p-2 gap-1 text-14px">
-            {MONTH_LIST.map((item) => {
+            {MONTH_OF_YEAR.map((item) => {
               const isDateDisabled =
                 picker === 'month' &&
                 disabledDate(
@@ -601,7 +582,7 @@ const MultipleDatePicker = ({
       >
         <div
           role="button"
-          tabIndex={!disabled ? 0 : -1}
+          tabIndex={disabled ? -1 : 0}
           aria-pressed="true"
           className={cx('flex flex-1 gap-x-2 gap-y-1 items-center flex-wrap', {
             'w-full': fullWidth,
@@ -635,28 +616,41 @@ const MultipleDatePicker = ({
               </div>
             );
           })}
-          {value.length === 0 && (
-            <div
-              className={cx(
-                'w-full outline-none truncate text-neutral-70 dark:text-neutral-70-dark',
-                {
-                  'text-14px py-0.5': size === 'default',
-                  'text-18px py-0.5': size === 'large',
-                },
-              )}
-            >
-              {placeholder}
-            </div>
-          )}
+          <input
+            {...props}
+            tabIndex={disabled ? -1 : 0}
+            id={inputId}
+            name={name}
+            value={inputValue}
+            placeholder={focused ? '' : placeholder || format}
+            className={cx(
+              'outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark text-neutral-90 dark:text-neutral-90-dark disabled:cursor-not-allowed',
+              {
+                'text-14px py-0.5': size === 'default',
+                'text-18px py-0.5': size === 'large',
+              },
+            )}
+            disabled={disabled}
+            aria-label={label}
+            autoComplete="off"
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onClick={handleFocus}
+            onChange={handleChangeInput}
+            ref={valueRef}
+            onKeyDown={handleKeyDown}
+          />
         </div>
         <InputEndIconWrapper
           loading={loading}
           error={isError}
           success={successProp}
-          clearable={focused && !!value}
+          clearable={clearable && focused && !!value}
           onClear={handleClearValue}
         >
-          {(!focused || !value) && (
+          {(!clearable ||
+            (clearable && !focused) ||
+            (clearable && focused && !value)) && (
             <Icon
               name="calendar"
               strokeWidth={2}
@@ -670,7 +664,7 @@ const MultipleDatePicker = ({
       <InputHelper message={helperMessage} error={isError} size={size} />
       <InputDropdown
         open={dropdownOpen}
-        elementRef={elementRef}
+        elementRef={valueRef}
         dropdownRef={dropdownRef}
         maxHeight={320}
       >

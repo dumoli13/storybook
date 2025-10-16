@@ -1,8 +1,8 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import Icon from '../Icon';
-import { ConfirmModalProps } from './ConfirmModal';
 import ModalConfirmContainer from './ModalConfirmContainer';
+import { ConfirmModalProps } from '../../types';
 
 const WarningModal = ({
   icon = (

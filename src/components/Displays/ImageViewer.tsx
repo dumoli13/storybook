@@ -1,53 +1,18 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { useDebouncedCallback } from 'use-debounce';
 import Icon from '../Icon';
+import { ImageViewerProps } from '../../types';
 
-interface ImageViewerProps {
-  open: boolean;
-  onClose: () => void;
-  url: string | null;
-}
-
-/**
- * ImageViewer Component
- *
- * This component renders an image viewer that allows users to zoom in and out of an image and drag to reposition it within a modal. It provides controls to zoom in, zoom out, and view the image in its original size. The viewer is opened or closed based on the `open` prop.
- *
- * @interface ImageViewerProps
- * @property {boolean} open - A flag to determine if the image viewer should be displayed.
- * @property {() => void} onClose - A function to close the image viewer.
- * @property {string | null} url - The URL of the image to be displayed in the viewer.
- *
- * @example Basic Usage:
- * ```tsx
- * import ImageViewer from './ImageViewer';
- *
- * const MyComponent = () => {
- *   const [open, setOpen] = useState(false);
- *   const imageUrl = "/path/to/image.jpg";
- *
- *   return (
- *     <div>
- *       <button onClick={() => setOpen(true)}>Open Image Viewer</button>
- *       <ImageViewer open={open} onClose={() => setOpen(false)} url={imageUrl} />
- *     </div>
- *   );
- * };
- * ```
- *
- * @property {ImageViewerProps} props - The props for the ImageViewer component.
- * @returns {JSX.Element} An image viewer with zoom and drag functionality.
- */
 const ImageViewer = ({ open, onClose, url }: ImageViewerProps) => {
-  const [tempScale, setTempScale] = useState(100);
-  const [scale, setScale] = useState(100);
-  const viewerRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const [tempScale, setTempScale] = React.useState(100);
+  const [scale, setScale] = React.useState(100);
+  const viewerRef = React.useRef<HTMLDivElement>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const imgRef = React.useRef<HTMLImageElement>(null);
 
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const dragState = useRef<{
+  const [position, setPosition] = React.useState({ x: 0, y: 0 });
+  const dragState = React.useRef<{
     isDragging: boolean;
     startX: number;
     startY: number;
@@ -58,7 +23,7 @@ const ImageViewer = ({ open, onClose, url }: ImageViewerProps) => {
   });
 
   // Calculate max drag boundaries based on image size and scale
-  const getDragBoundaries = useCallback(() => {
+  const getDragBoundaries = React.useCallback(() => {
     if (!imgRef.current || !containerRef.current) return { maxX: 0, maxY: 0 };
 
     const imgWidth = imgRef.current.naturalWidth * (scale / 100);
@@ -72,7 +37,7 @@ const ImageViewer = ({ open, onClose, url }: ImageViewerProps) => {
     };
   }, [scale]);
 
-  const handleZoom = useCallback((zoomIn: boolean) => {
+  const handleZoom = React.useCallback((zoomIn: boolean) => {
     setScale((prev) => {
       const newScale = Math.max(
         50,
@@ -108,7 +73,7 @@ const ImageViewer = ({ open, onClose, url }: ImageViewerProps) => {
     }
   };
 
-  const handleWheel = useCallback(
+  const handleWheel = React.useCallback(
     (e: WheelEvent) => {
       e.preventDefault();
       const zoomIn = e.deltaY < 0; // Scroll up to zoom in, scroll down to zoom out
@@ -129,7 +94,7 @@ const ImageViewer = ({ open, onClose, url }: ImageViewerProps) => {
     document.body.style.cursor = 'grabbing';
   };
 
-  const handleMouseMove = useCallback(
+  const handleMouseMove = React.useCallback(
     (e: MouseEvent) => {
       if (!dragState.current.isDragging) return;
 
@@ -145,12 +110,12 @@ const ImageViewer = ({ open, onClose, url }: ImageViewerProps) => {
     [getDragBoundaries],
   );
 
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = React.useCallback(() => {
     dragState.current.isDragging = false;
     document.body.style.cursor = '';
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const observer = new MutationObserver(() => {
       const viewer = viewerRef.current;
       if (viewer) {
@@ -168,7 +133,7 @@ const ImageViewer = ({ open, onClose, url }: ImageViewerProps) => {
   }, []);
 
   // Reset on close/open
-  useEffect(() => {
+  React.useEffect(() => {
     if (open) {
       setScale(100);
       setTempScale(100);
@@ -177,7 +142,7 @@ const ImageViewer = ({ open, onClose, url }: ImageViewerProps) => {
   }, [open]);
 
   // Event listeners
-  useEffect(() => {
+  React.useEffect(() => {
     if (!open) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {

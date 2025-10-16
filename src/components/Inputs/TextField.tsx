@@ -3,43 +3,7 @@ import cx from 'classnames';
 import InputEndIconWrapper from './InputEndIconWrapper';
 import InputHelper from './InputHelper';
 import InputLabel from './InputLabel';
-
-export interface TextfieldRef {
-  element: HTMLInputElement | null;
-  value: string;
-  focus: () => void;
-  reset: () => void;
-  disabled: boolean;
-}
-
-export interface TextFieldProps
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    'onChange' | 'size' | 'required' | 'checked'
-  > {
-  value?: string | number;
-  defaultValue?: string | number;
-  initialValue?: string | number;
-  label?: string;
-  labelPosition?: 'top' | 'left';
-  autoHideLabel?: boolean;
-  onChange?: (value: string) => void;
-  helperText?: React.ReactNode;
-  placeholder?: string;
-  fullWidth?: boolean;
-  startIcon?: React.ReactNode;
-  endIcon?: React.ReactNode;
-  inputRef?:
-    | React.RefObject<TextfieldRef | null>
-    | React.RefCallback<TextfieldRef | null>;
-  size?: 'default' | 'large';
-  clearable?: boolean;
-  error?: boolean | string;
-  success?: boolean;
-  loading?: boolean;
-  width?: number;
-  required?: boolean;
-}
+import { TextFieldProps } from '../../types';
 
 /**
  * The Text Field component is used for collecting text from users.
@@ -174,8 +138,9 @@ const TextField = ({
         )}
         <input
           {...props}
-          tabIndex={!disabled ? 0 : -1}
+          tabIndex={disabled ? -1 : 0}
           id={inputId}
+          name={name}
           value={value}
           onChange={handleChange}
           placeholder={focused ? '' : placeholder}

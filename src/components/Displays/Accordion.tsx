@@ -1,23 +1,7 @@
 import React from 'react';
 import cx from 'classnames';
 import Icon from '../Icon';
-
-export interface AccordionItem {
-  key: string | number;
-  title: React.ReactNode;
-  content: React.ReactNode;
-}
-
-export interface AccordionProps {
-  items: AccordionItem[];
-  collapsible?: 'icon' | 'header';
-  singleCollapse?: boolean;
-  defaultActiveKey?: Array<string | number>;
-  activeKey?: Array<string | number>;
-  onChangeActiveKey?: (key: Array<string | number>) => void;
-  size?: 'default' | 'large';
-  className?: string;
-}
+import { AccordionProps } from '../../types';
 
 /**
  *
@@ -101,7 +85,7 @@ const Accordion = ({
         return (
           <div
             key={item.key}
-            className="accordion-item border-b border-neutral-40 dark:border-neutral-40-dark last:border-b-0 transition-all duration-300"
+            className="border-b border-neutral-40 dark:border-neutral-40-dark last:border-b-0 transition-all duration-300"
           >
             {/* Title section */}
             {collapsible === 'icon' ? (

@@ -1,41 +1,9 @@
 import React from 'react';
 import cx from 'classnames';
+import { SwitchProps } from '../../types';
 import Icon from '../Icon';
 import InputHelper from './InputHelper';
 import InputLabel from './InputLabel';
-
-export interface SwitchRef {
-  element: HTMLInputElement | null;
-  value: boolean;
-  focus: () => void;
-  reset: () => void;
-  disabled: boolean;
-}
-
-export interface SwitchProps
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    'defaultChecked' | 'onChange' | 'size' | 'required'
-  > {
-  defaultChecked?: boolean;
-  initialChecked?: boolean;
-  label?: string;
-  labelPosition?: 'top' | 'left';
-  autoHideLabel?: boolean;
-  onChange?: (checked: boolean) => void;
-  helperText?: React.ReactNode;
-  inputRef?:
-    | React.RefObject<SwitchRef | null>
-    | React.RefCallback<SwitchRef | null>;
-  size?: 'default' | 'large';
-  fullWidth?: boolean;
-  error?: boolean | string;
-  trueLabel?: string;
-  falseLabel?: string;
-  width?: number;
-  loading?: boolean;
-  required?: boolean;
-}
 
 /**
  * The Switch component is used for toggling between two states. Most commonly used for setting on or off.
@@ -61,6 +29,7 @@ const Switch = ({
   width,
   loading = false,
   required,
+  onKeyDown,
   ...props
 }: SwitchProps) => {
   const elementRef = React.useRef<HTMLInputElement>(null);
@@ -69,6 +38,7 @@ const Switch = ({
   );
   const isControlled = checkedProp !== undefined;
   const value = isControlled ? checkedProp : internalChecked;
+  const [focused, setFocused] = React.useState(false);
 
   React.useImperativeHandle(inputRef, () => ({
     element: elementRef.current,
@@ -82,11 +52,29 @@ const Switch = ({
   const isError = !!errorProp;
   const disabled = loading || disabledProp;
 
+  const handleFocus = () => {
+    if (disabled) return;
+    setFocused(true);
+  };
+
+  const handleBlur = () => {
+    setFocused(false);
+  };
+
   const handleChange = () => {
     const newChecked = !value;
     onChange?.(newChecked);
     if (!isControlled) {
       setInternalChecked(newChecked);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!loading && !disabled && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      handleChange();
+    } else {
+      onKeyDown?.(e);
     }
   };
 
@@ -119,7 +107,7 @@ const Switch = ({
         )}
         <div
           role="button"
-          tabIndex={!disabled ? 0 : -1}
+          tabIndex={disabled ? -1 : 0}
           className={cx(
             'w-fit flex items-center gap-2.5 border rounded-md focus:ring-3',
             {
@@ -133,20 +121,20 @@ const Switch = ({
                 !isError && !loading && !disabled,
               'border-danger-main dark:border-danger-main-dark focus:ring-danger-focus dark:focus:ring-danger-focus-dark':
                 isError,
+              'ring-3 ring-primary-focus dark:ring-primary-focus-dark !border-primary-main dark:!border-primary-main-dark':
+                focused,
             },
           )}
           onMouseDown={!loading && !disabled ? handleChange : undefined}
-          onKeyDown={(e) => {
-            if (!loading && !disabled && (e.key === 'Enter' || e.key === ' ')) {
-              e.preventDefault(); // Prevent default scroll on Space key
-              handleChange();
-            }
-          }}
+          onKeyDown={handleKeyDown}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
         >
           <input
             {...props}
-            tabIndex={!disabled ? 0 : -1}
+            tabIndex={disabled ? -1 : 0}
             id={inputId}
+            name={name}
             type="checkbox"
             className="sr-only"
             checked={value}

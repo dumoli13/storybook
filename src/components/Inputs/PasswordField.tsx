@@ -4,43 +4,7 @@ import Icon from '../Icon';
 import InputEndIconWrapper from './InputEndIconWrapper';
 import InputHelper from './InputHelper';
 import InputLabel from './InputLabel';
-
-export interface PasswordFieldRef {
-  element: HTMLInputElement | null;
-  value: string;
-  focus: () => void;
-  reset: () => void;
-  disabled: boolean;
-}
-
-export interface PasswordFieldProps
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    'onChange' | 'size' | 'required' | 'checked'
-  > {
-  value?: string;
-  defaultValue?: string;
-  initialValue?: string;
-  label?: string;
-  labelPosition?: 'top' | 'left';
-  autoHideLabel?: boolean;
-  onChange?: (value: string) => void;
-  helperText?: React.ReactNode;
-  placeholder?: string;
-  disabled?: boolean;
-  fullWidth?: boolean;
-  startIcon?: React.ReactNode;
-  endIcon?: React.ReactNode;
-  inputRef?:
-    | React.RefObject<PasswordFieldRef | null>
-    | React.RefCallback<PasswordFieldRef | null>;
-  size?: 'default' | 'large';
-  error?: boolean | string;
-  success?: boolean;
-  loading?: boolean;
-  width?: number;
-  required?: boolean;
-}
+import { PasswordFieldProps } from '../../types/inputs';
 
 /**
  * The Password Field component is used for collecting sensitive data from users.
@@ -65,6 +29,7 @@ const PasswordField = ({
   endIcon,
   inputRef,
   size = 'default',
+  clearable = false,
   type,
   error: errorProp,
   success: successProp,
@@ -122,6 +87,13 @@ const PasswordField = ({
     }
   };
 
+  const handleClearValue = () => {
+    onChange?.('');
+    if (!isControlled) {
+      setInternalValue('');
+    }
+  };
+
   const inputId = `passwordfield-${id || name}-${React.useId()}`;
 
   return (
@@ -171,8 +143,9 @@ const PasswordField = ({
         )}
         <input
           {...props}
-          tabIndex={!disabled ? 0 : -1}
+          tabIndex={disabled ? -1 : 0}
           id={inputId}
+          name={name}
           value={value}
           onChange={handleChange}
           placeholder={focused ? '' : placeholder}
@@ -194,6 +167,8 @@ const PasswordField = ({
           loading={loading}
           error={isError}
           success={successProp}
+          clearable={clearable && focused && !!value}
+          onClear={handleClearValue}
           endIcon={endIcon}
         >
           <Icon

@@ -4,20 +4,7 @@ import cx from 'classnames';
 import { useMisDesignContext } from '../../context';
 import { COLORS } from '../../libs';
 import Icon from '../Icon';
-
-export interface StepProps {
-  active: number;
-  items: Array<{
-    title: string;
-    description?: string;
-    error?: boolean;
-    success?: boolean;
-    available?: boolean;
-    progress?: number;
-  }>;
-  onChange?: (index: number) => void;
-  disabled?: boolean;
-}
+import { StepProps } from '../../types';
 
 /**
  * A component that renders a multi-step progress tracker. Each step can represent a process or a task.
@@ -79,7 +66,9 @@ function Steps({
                       stroke={COLORS[theme].primary.main}
                       strokeWidth="5"
                       strokeDasharray={`${circumference}`}
-                      strokeDashoffset={`${circumference * (1 - Math.min(progress, 100) / 100)}`}
+                      strokeDashoffset={`${
+                        circumference * (1 - Math.min(progress, 100) / 100)
+                      }`}
                       transform="rotate(-90 50 50)"
                     />
                   </svg>
@@ -114,7 +103,11 @@ function Steps({
             <div
               key={index}
               className={cx(
-                `flex gap-2 relative flex-1 rounded-2xl ${!disabled && available ? 'hover:bg-neutral-20 dark:hover:bg-neutral-20-dark cursor-pointer' : 'cursor-default'}`,
+                `flex gap-2 relative flex-1 rounded-2xl ${
+                  !disabled && available
+                    ? 'hover:bg-neutral-20 dark:hover:bg-neutral-20-dark cursor-pointer'
+                    : 'cursor-default'
+                }`,
                 {
                   'items-start': !!description,
                   'items-center': !description,
@@ -159,7 +152,11 @@ function Steps({
             <div
               key={index}
               className={cx(
-                `flex gap-2 relative flex-1 rounded-2xl ${!disabled && available ? 'hover:bg-neutral-20 dark:hover:bg-neutral-20-dark cursor-pointer' : 'cursor-default'}`,
+                `flex gap-2 relative flex-1 rounded-2xl ${
+                  !disabled && available
+                    ? 'hover:bg-neutral-20 dark:hover:bg-neutral-20-dark cursor-pointer'
+                    : 'cursor-default'
+                }`,
                 {
                   'items-start': !!description,
                   'items-center': !description,

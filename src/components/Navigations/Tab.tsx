@@ -1,22 +1,7 @@
 import React from 'react';
 import cx from 'classnames';
 import Icon from '../Icon';
-
-export interface TabItem {
-  key: string | number;
-  label: React.ReactNode;
-  disabled?: boolean;
-  children: React.ReactNode;
-}
-
-export interface TabProps {
-  items: TabItem[];
-  defaultActiveKey?: string | number;
-  activeKey?: string | number;
-  onChange?: (key: string | number) => void;
-  onTabClick?: (key: string | number) => void;
-  onTabClose?: (key: string | number) => void;
-}
+import { TabProps } from '../../types';
 
 /**
  * Tabs make it easy to explore and switch between different views.

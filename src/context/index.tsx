@@ -1,10 +1,6 @@
 import React from 'react';
 import { NotificationStack } from '../components/Notification';
-
-export enum Theme {
-  DARK = 'dark',
-  LIGHT = 'light',
-}
+import { Theme } from '../const';
 
 interface LibraryContextType {
   theme: Theme;

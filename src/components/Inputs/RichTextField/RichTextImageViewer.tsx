@@ -87,11 +87,11 @@ const RichTextImageViewer = ({
         content={
           <Form
             onSubmit={handleSubmit}
-            rules={{
-              width: ['required'],
-              height: ['required'],
-              title: ['required'],
-            }}
+            rules={() => ({
+              width: [{ required: true }],
+              height: [{ required: true }],
+              title: [{ required: true }],
+            })}
             className="p-4 grid grid-cols-1 gap-2 text-neutral-70 text-14px"
           >
             <NumberTextField

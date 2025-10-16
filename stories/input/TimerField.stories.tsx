@@ -6,7 +6,7 @@ import {
   TimerField,
   TimerFieldProps,
   TimerFieldRef,
-} from '../../src/components';
+} from '../../src';
 import '../../src/output.css';
 import { iconNames } from '../../const/icon';
 
@@ -28,14 +28,6 @@ const meta: Meta<TimerFieldProps> = {
     defaultValue: {
       control: 'text',
       description: 'Uncontrolled initial value',
-      table: {
-        type: { summary: 'number' },
-      },
-    },
-    initialValue: {
-      control: 'text',
-      description:
-        'The initial value of the input when default value or value isnot provided. This is useful when user want to reset field/form and it will return to initial value',
       table: {
         type: { summary: 'number' },
       },

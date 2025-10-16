@@ -103,9 +103,9 @@ const RichTextLinkViewer = ({
       content={
         <Form
           onSubmit={handleSubmit}
-          rules={{
-            hyperlink: ['required'],
-          }}
+          rules={() => ({
+            hyperlink: [{ required: true }],
+          })}
           className="p-4 grid grid-cols-1 gap-2 text-neutral-70 text-14px"
         >
           <TextField

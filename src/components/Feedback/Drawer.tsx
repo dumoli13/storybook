@@ -1,29 +1,7 @@
 import React from 'react';
 import cx from 'classnames';
 import { createPortal } from 'react-dom';
-
-type BaseDrawerProps = {
-  className?: string;
-  open: boolean;
-  onClose?: () => void;
-  children: React.ReactNode;
-  disableBackdropClick?: boolean;
-  disableEscapeKeyDown?: boolean;
-};
-
-type LeftRightDrawerProps = BaseDrawerProps & {
-  position: 'left' | 'right';
-  width?: number | string;
-  height?: never; // Explicitly disallow height
-};
-
-type TopBottomDrawerProps = BaseDrawerProps & {
-  position: 'top' | 'bottom';
-  height?: number | string;
-  width?: never; // Explicitly disallow width
-};
-
-export type DrawerProps = LeftRightDrawerProps | TopBottomDrawerProps;
+import { DrawerProps } from '../../types';
 
 /**
  * The navigation drawers (or "sidebars") provide ergonomic access to destinations

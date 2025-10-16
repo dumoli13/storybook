@@ -4,7 +4,7 @@ import RichTextToolbarButton from './RichTextToolbarButton';
 import Icon, { IconNames } from '../../Icon';
 import { Editor, Element, Transforms } from 'slate';
 import { isListType, isTextTag } from '../../../libs/richTextField';
-import { LIST_TYPES } from '../../../types/richTextField';
+import { LIST_TYPES } from '../../../types/inputs/richTextField';
 import { CustomElement } from '.';
 
 interface RichTextListButtonProps {

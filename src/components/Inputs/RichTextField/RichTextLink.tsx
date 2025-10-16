@@ -65,9 +65,9 @@ const RichTextLink = ({ disabled }: RichTextLinkProps) => {
       content={
         <Form
           onSubmit={handleSubmit}
-          rules={{
-            hyperlink: ['url', 'required'],
-          }}
+          rules={() => ({
+            hyperlink: [{ url: true }, { required: true }],
+          })}
           className="bg-neutral-10 p-2 rounded shadow-md z-50 flex flex-col gap-2 w-64"
           formRef={formRef}
         >

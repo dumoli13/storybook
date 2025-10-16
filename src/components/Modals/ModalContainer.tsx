@@ -1,7 +1,7 @@
 import React from 'react';
 import cx from 'classnames';
 import { createPortal } from 'react-dom';
-import { ModalProps } from '.';
+import { ModalProps } from '../../types';
 
 /**
  *
@@ -75,7 +75,7 @@ const ModalContainer = ({
   React.useEffect(() => {
     if (open && modalRef.current) {
       const timer = setTimeout(() => {
-        modalRef.current.focus();
+        modalRef.current?.focus();
       }, 10);
       return () => clearTimeout(timer);
     }

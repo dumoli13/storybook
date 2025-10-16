@@ -34,7 +34,7 @@ const InputContainer = ({
   success,
   helperText,
   disabled,
-  size,
+  size = 'default',
   width,
   parentRef,
   children,

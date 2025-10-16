@@ -1,18 +1,7 @@
 import React from 'react';
 import cx from 'classnames';
 import { createPortal } from 'react-dom';
-
-export interface TooltipProps {
-  children: React.ReactNode;
-  onOpen?: (open: boolean) => void;
-  verticalAlign?: 'top' | 'bottom';
-  horizontalAlign?: 'left' | 'center' | 'right';
-  arrow?: boolean;
-  mouseEnterDelay?: number;
-  mouseLeaveDelay?: number;
-  title: string;
-  disabled?: boolean;
-}
+import { TooltipProps } from '../../types';
 
 /**
  * Tooltips display informative text when users hover over an element
@@ -149,20 +138,20 @@ const Tooltip = ({
                     verticalAlign === 'top'
                       ? '100%'
                       : verticalAlign === 'bottom'
-                        ? '-0.375rem'
-                        : '50%',
+                      ? '-0.375rem'
+                      : '50%',
                   left:
                     horizontalAlign === 'left'
                       ? '0.75rem'
                       : horizontalAlign === 'right'
-                        ? 'calc(100% - 0.75rem)'
-                        : '50%',
+                      ? 'calc(100% - 0.75rem)'
+                      : '50%',
                   transform:
                     verticalAlign === 'top'
                       ? 'translate(-50%, -50%) rotate(45deg)'
                       : verticalAlign === 'bottom'
-                        ? 'translate(-50%, 50%) rotate(45deg)'
-                        : 'rotate(45deg)',
+                      ? 'translate(-50%, 50%) rotate(45deg)'
+                      : 'rotate(45deg)',
                 }}
               />
             )}

@@ -1,66 +1,28 @@
 import React from 'react';
 import { useDebouncedCallback } from 'use-debounce';
 import { EMAIL_REGEX, URL_REGEX } from '../../const/regex';
-import { InputProps, InputPropsRefType } from '../../types/input';
-import { ButtonProps } from './Button';
-
-export interface FormRef<T> {
-  submit: () => Promise<void>;
-  reset: () => void;
-  validate: () => string[];
-  getValues: () => Partial<T>;
-  getErrors: () => Record<string, string | undefined>;
-  setErrors: (errors: Record<string, string | undefined>) => void;
-}
-
-export type FormRule =
-  | {
-      required?: boolean;
-      email?: boolean;
-      url?: boolean;
-      pattern?: RegExp | string;
-      minLength?: number;
-      maxLength?: number;
-      exactLength?: number;
-      min?: number;
-      max?: number;
-      equal?: any;
-      validate?: (value: any) => string[];
-      message?: string;
-    }
-  | 'required'
-  | 'email'
-  | 'url';
-
-export type FormRules = Record<string, FormRule[]>;
-
-const normalizeRule = (rule: FormRule) => {
-  if (typeof rule === 'string') {
-    switch (rule) {
-      case 'required':
-        return { required: true };
-      case 'email':
-        return { email: true };
-      case 'url':
-        return { url: true };
-      default:
-        return {};
-    }
-  }
-  return rule;
-};
-
-export interface FormProps<T> {
-  onSubmit?: (values: T) => Promise<void> | void;
-  onReset?: () => void;
-  className?: string;
-  children: React.ReactNode;
-  rules?: FormRules;
-  disabled?: boolean;
-  formRef?: React.Ref<FormRef<T>>;
-  submitOnChange?: boolean;
-  focusOnLastFieldEnter?: boolean;
-}
+import { FormProps } from '../../types';
+import { ButtonProps, FormRule } from '../../types/inputs';
+import {
+  FormTemplate,
+  InputProps,
+  InputPropsRefType,
+} from '../../types/inputs/form';
+import AutoComplete from './AutoComplete';
+import AutoCompleteMultiple from './AutoCompleteMultiple';
+import Button from './Button';
+import Checkbox from './Checkbox';
+import DatePicker from './DatePicker';
+import DateRangePicker from './DateRangePicker';
+import MultipleDatePicker from './MultipleDatePicker';
+import NumberTextField from './NumberTextField';
+import PasswordField from './PasswordField';
+import RadioGroup from './RadioGroup';
+import Select from './Select';
+import Switch from './Switch';
+import TextArea from './TextArea';
+import TextField from './TextField';
+import TimerField from './TimerField';
 
 /**
  * List of predefined rule. Other than this, user can add rule in pattern
@@ -76,6 +38,7 @@ const DEFAULT_ERROR_MESSAGES = {
   email: 'Please enter a valid email address',
   url: 'Please enter a valid URL',
   equal: 'Values must match',
+  validate: 'Invalid value',
 };
 
 const isFormInput = (
@@ -96,14 +59,15 @@ const Form = <T,>({
   onSubmit,
   onReset,
   className,
-  children,
-  rules = {},
+  rules,
   disabled = false,
   formRef,
   submitOnChange = false,
   focusOnLastFieldEnter = false,
+  children,
+  template,
 }: FormProps<T>) => {
-  const inputRefsRef = React.useRef<Record<string, InputPropsRefType>>({});
+  const inputRefsRef = React.useRef<Record<string, InputPropsRefType[]>>({});
   const submitButtonRef = React.useRef<HTMLButtonElement>(null);
   const inputOrderRef = React.useRef<string[]>([]);
 
@@ -130,163 +94,129 @@ const Form = <T,>({
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    const isValid = validate();
+    const invalidFields = validate();
 
-    if (isValid.length === 0) {
-      const result = {} as T;
-      for (const key in inputRefsRef.current) {
-        // inputRefsRef.current[key] may be undefined if user remove it in the jsx
-        result[key as keyof T] = inputRefsRef.current[key]?.value as T[keyof T];
-      }
-
+    if (invalidFields.length === 0) {
+      const result = getValues();
       onSubmit?.(result);
-    } else {
-      const firstInvalid = isValid.find(
-        (id) => inputRefsRef.current[id] && !inputRefsRef.current[id]?.disabled,
-      );
-      if (firstInvalid) {
-        inputRefsRef.current[firstInvalid]?.focus?.();
-      }
     }
     setIsSubmitting(false);
   };
 
   const handleReset = React.useCallback(() => {
-    Object.values(inputRefsRef.current).forEach((ref) => {
-      if (ref && typeof ref.reset === 'function') {
-        ref.reset();
+    for (const refs of Object.values(inputRefsRef.current)) {
+      for (const ref of refs) {
+        if (ref && typeof ref.reset === 'function') {
+          ref.reset();
+        }
       }
-    });
+    }
     setErrors({});
     onReset?.();
   }, []);
 
   const validate = React.useCallback(() => {
     const newErrors: Record<string, string> = {};
-    const typedValues = {} as T;
-    Object.entries(inputRefsRef.current).forEach(([key, ref]) => {
-      if (ref?.value !== undefined) {
-        typedValues[key as keyof T] = ref.value as T[keyof T];
-      }
-    });
+    const typedValues: Record<string, any> = {};
 
-    Object.entries(rules).forEach(([fieldName, fieldRules]) => {
-      const value = typedValues[fieldName as keyof T];
+    for (const [key, refs] of Object.entries(inputRefsRef.current)) {
+      const values = refs.map((r) => r?.value).filter((v) => v !== undefined);
+      typedValues[key] = values;
+    }
 
-      for (const rule of fieldRules) {
-        const normalizedRule = normalizeRule(rule);
+    if (!rules) return [];
 
-        if (
-          normalizedRule.required &&
-          (value === undefined || // Check for undefined
-            value === null || // Check for null
-            value === '' || // Check for empty string
-            (Array.isArray(value) && value.length === 0) || // Check for empty array
-            (value instanceof Date && isNaN(value.getTime()))) // Check for invalid Dayjs instance
-        ) {
-          // Do not show required error if submitOnChange is true since user need time to fill all fields
-          if (!submitOnChange) {
-            newErrors[fieldName] = getErrorMessage(rule, 'required');
+    for (const [fieldName, fieldRules] of Object.entries(
+      rules(typedValues as T),
+    )) {
+      const value = typedValues[fieldName];
+      const refs = inputRefsRef.current[fieldName];
+      if (!refs) continue;
+
+      for (const rule of fieldRules as FormRule[]) {
+        const checkValue = (val: any) => {
+          // Handle required rule
+          if (
+            rule.required &&
+            (val === undefined ||
+              val === null ||
+              val === '' ||
+              (Array.isArray(val) && val.length === 0) ||
+              (val instanceof Date && Number.isNaN(val.getTime())))
+          ) {
+            // Do not show required error if submitOnChange is true since user need time to fill all fields
+            if (!submitOnChange) {
+              newErrors[fieldName] = getErrorMessage(rule, 'required');
+            }
+          } else if (rule.pattern) {
+            const pattern =
+              typeof rule.pattern === 'string'
+                ? new RegExp(rule.pattern)
+                : rule.pattern;
+            if (!pattern.test(String(val))) {
+              newErrors[fieldName] = getErrorMessage(rule, 'pattern');
+            }
+          } else if (
+            rule.minLength !== undefined &&
+            (typeof val === 'number' || typeof val === 'string') &&
+            String(val).length < rule.minLength
+          ) {
+            newErrors[fieldName] = getErrorMessage(rule, 'minLength');
+          } else if (
+            rule.maxLength !== undefined &&
+            (typeof val === 'number' || typeof val === 'string') &&
+            String(val).length > rule.maxLength
+          ) {
+            newErrors[fieldName] = getErrorMessage(rule, 'maxLength');
+          } else if (
+            rule.exactLength !== undefined &&
+            (typeof val === 'number' || typeof val === 'string') &&
+            String(val).length !== rule.exactLength
+          ) {
+            newErrors[fieldName] = getErrorMessage(rule, 'exactLength');
+          } else if (
+            rule.min !== undefined &&
+            typeof val === 'number' &&
+            val < rule.min
+          ) {
+            newErrors[fieldName] = getErrorMessage(rule, 'min');
+          } else if (
+            rule.max !== undefined &&
+            typeof val === 'number' &&
+            val > rule.max
+          ) {
+            newErrors[fieldName] = getErrorMessage(rule, 'max');
+          } else if (
+            rule.email &&
+            typeof val === 'string' &&
+            !EMAIL_REGEX.test(val)
+          ) {
+            newErrors[fieldName] = getErrorMessage(rule, 'email');
+          } else if (
+            rule.url &&
+            typeof val === 'string' &&
+            !URL_REGEX.test(val)
+          ) {
+            newErrors[fieldName] = getErrorMessage(rule, 'url');
+          } else if (rule.equal !== undefined && val !== rule.equal) {
+            newErrors[fieldName] = getErrorMessage(rule, 'equal');
+          } else if (rule.validate && !rule.validate(val)) {
+            newErrors[fieldName] = getErrorMessage(rule, 'validate');
           }
-          break;
-        }
+          setErrors(newErrors);
+          return Object.keys(newErrors);
+        };
 
-        if (value === undefined || value === null || value === '') continue;
-
-        if (normalizedRule.pattern) {
-          const pattern =
-            typeof normalizedRule.pattern === 'string'
-              ? new RegExp(normalizedRule.pattern)
-              : normalizedRule.pattern;
-          if (!pattern.test(String(value))) {
-            newErrors[fieldName] = getErrorMessage(rule, 'pattern');
-            break;
-          }
-        }
-
-        if (
-          normalizedRule.minLength !== undefined &&
-          (typeof value === 'number' || typeof value === 'string') &&
-          String(value).length < normalizedRule.minLength
-        ) {
-          newErrors[fieldName] = getErrorMessage(rule, 'minLength');
-          break;
-        }
-
-        if (
-          normalizedRule.maxLength !== undefined &&
-          (typeof value === 'number' || typeof value === 'string') &&
-          String(value).length > normalizedRule.maxLength
-        ) {
-          newErrors[fieldName] = getErrorMessage(rule, 'maxLength');
-          break;
-        }
-
-        if (
-          normalizedRule.exactLength !== undefined &&
-          (typeof value === 'number' || typeof value === 'string') &&
-          String(value).length !== normalizedRule.exactLength
-        ) {
-          newErrors[fieldName] = getErrorMessage(rule, 'exactLength');
-          break;
-        }
-
-        if (
-          normalizedRule.min !== undefined &&
-          typeof value === 'number' &&
-          Number(value) < normalizedRule.min
-        ) {
-          newErrors[fieldName] = getErrorMessage(rule, 'min');
-          break;
-        }
-
-        if (
-          normalizedRule.max &&
-          typeof value === 'number' &&
-          Number(value) > normalizedRule.max
-        ) {
-          newErrors[fieldName] = getErrorMessage(rule, 'max');
-          break;
-        }
-
-        if (normalizedRule.email && !EMAIL_REGEX.test(String(value))) {
-          newErrors[fieldName] = getErrorMessage(rule, 'email');
-          break;
-        }
-
-        if (
-          normalizedRule.url &&
-          typeof value === 'string' &&
-          !URL_REGEX.test(String(value))
-        ) {
-          newErrors[fieldName] = getErrorMessage(rule, 'url');
-          break;
-        }
-
-        if (
-          normalizedRule.equal !== undefined &&
-          value !== normalizedRule.equal
-        ) {
-          newErrors[fieldName] = getErrorMessage(rule, 'equal');
-          break;
-        }
-
-        if (normalizedRule.validate) {
-          const result = normalizedRule.validate(value);
-          if (result.length > 0) {
-            newErrors[fieldName] =
-              typeof result === 'string' ? result : 'Invalid value';
-            break;
-          }
+        for (const v of value) {
+          checkValue(v);
         }
       }
-    });
-
+    }
     setErrors(newErrors);
     return Object.keys(newErrors);
   }, [rules]);
 
-  const handleInputKeyDown = (
+  const handleFormKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
     currentKey: string,
   ) => {
@@ -294,58 +224,82 @@ const Form = <T,>({
       e.preventDefault();
       const order = inputOrderRef.current;
       const currentIndex = order.indexOf(currentKey);
-
       if (currentIndex === -1) return;
 
-      // Find the next enabled input
-      let nextEnabledInputIndex = -1;
-      for (let i = currentIndex + 1; i < order.length; i++) {
-        const nextKey = order[i];
-        const ref = inputRefsRef.current[nextKey];
+      let nextIndex = -1;
 
-        if (ref && typeof ref.focus === 'function' && !ref.disabled) {
-          nextEnabledInputIndex = i;
-          break;
+      if (e.shiftKey && e.key === 'Tab') {
+        // 🔹 Go backward when Shift + Tab
+        for (let i = currentIndex - 1; i >= 0; i--) {
+          const prevKey = order[i];
+          const refs = inputRefsRef.current[prevKey];
+          if (refs?.some((r) => !r.disabled)) {
+            nextIndex = i;
+            break;
+          }
+        }
+      } else {
+        // 🔹 Normal Tab or Enter → go forward
+        for (let i = currentIndex + 1; i < order.length; i++) {
+          const nextKey = order[i];
+          const refs = inputRefsRef.current[nextKey];
+          if (refs?.some((r) => !r.disabled)) {
+            nextIndex = i;
+            break;
+          }
         }
       }
 
-      // If found, focus on the next enabled input
-      if (nextEnabledInputIndex > -1) {
-        const nextKey = order[nextEnabledInputIndex];
-        const ref = inputRefsRef.current[nextKey];
-        ref.focus?.();
+      if (nextIndex > -1) {
+        const targetRefs = inputRefsRef.current[order[nextIndex]];
+        const target = targetRefs.find((r) => !r?.disabled);
+        target?.focus?.();
         return;
       }
 
-      // No more enabled inputs found
-      if (focusOnLastFieldEnter) {
-        if (submitButtonRef.current && !submitButtonRef.current.disabled) {
-          submitButtonRef.current.focus();
+      // 🔹 No more enabled inputs
+      if (!e.shiftKey) {
+        if (focusOnLastFieldEnter) {
+          if (submitButtonRef.current && !submitButtonRef.current.disabled) {
+            submitButtonRef.current.focus();
+          }
+        } else {
+          handleSubmit();
         }
-      } else {
-        handleSubmit();
       }
     }
   };
 
+  const getValue = React.useCallback(<K extends keyof T>(key: K) => {
+    const refs = inputRefsRef.current[key as string];
+    if (!refs || refs.length === 0) return undefined;
+    if (refs.length === 1) return refs[0].value as T[K];
+    return refs.map((r) => r?.value) as unknown as T[K];
+  }, []);
+
   const getValues = React.useCallback(() => {
-    const result = {} as T;
-    for (const key in inputRefsRef.current) {
-      result[key as keyof T] = inputRefsRef.current[key].value as T[keyof T];
+    const result: Record<string, any> = {};
+
+    for (const [key, refs] of Object.entries(inputRefsRef.current)) {
+      const values = refs.map((r) => r?.value).filter((v) => v !== undefined);
+
+      if (values.length === 1) {
+        result[key] = values[0];
+      } else if (values.length > 1) {
+        result[key] = values;
+      }
     }
-    return result;
+
+    return result as T;
   }, []);
 
   const errorsRef = React.useRef(errors);
   errorsRef.current = errors;
 
   const debounceSubmit = useDebouncedCallback(() => {
-    const isValid = validate();
-    if (isValid.length === 0) {
-      const result = {} as T;
-      for (const key in inputRefsRef.current) {
-        result[key as keyof T] = inputRefsRef.current[key].value as T[keyof T];
-      }
+    const invalidFields = validate();
+    if (invalidFields.length === 0) {
+      const result = getValues();
       onSubmit?.(result);
     }
   }, 2000);
@@ -364,21 +318,19 @@ const Form = <T,>({
     if (isFormInput(child)) {
       const {
         name,
-        id,
         onChange: childOnChange,
         defaultValue,
         inputRef: originalInputRef,
       } = childProps;
-      const fieldName = name ?? id;
-      if (!fieldName) return child;
+      if (!name) return child;
 
-      if (!inputOrderRef.current.includes(fieldName)) {
-        inputOrderRef.current.push(fieldName);
+      if (!inputOrderRef.current.includes(name)) {
+        inputOrderRef.current.push(name);
       }
 
       const handleChange = (value: any) => {
-        if (errors[fieldName]) {
-          setErrors((prev) => ({ ...prev, [fieldName]: undefined }));
+        if (errors[name]) {
+          setErrors((prev) => ({ ...prev, [name]: undefined }));
         }
         childOnChange?.(value);
         if (submitOnChange) {
@@ -391,18 +343,24 @@ const Form = <T,>({
         ...child.props,
         defaultValue,
         onChange: handleChange,
-        error: errors[fieldName] ?? undefined,
+        error: errors[name] ?? undefined,
         disabled: childProps.disabled ?? formDisabled,
         onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
           if (childProps.onKeyDown) {
             childProps.onKeyDown(e);
           } else {
-            handleInputKeyDown(e, fieldName);
+            handleFormKeyDown(e, name);
           }
         },
         inputRef: (ref: InputPropsRefType) => {
-          if (fieldName) {
-            inputRefsRef.current[fieldName] = ref;
+          if (name && ref) {
+            if (!inputRefsRef.current[name]) {
+              inputRefsRef.current[name] = [];
+            }
+            const refsArray = inputRefsRef.current[name];
+            if (!refsArray.includes(ref)) {
+              refsArray.push(ref);
+            }
           }
 
           // Call original ref if it exists
@@ -411,6 +369,18 @@ const Form = <T,>({
           } else if (originalInputRef?.current !== undefined) {
             originalInputRef.current = ref;
           }
+
+          // Clean up on unmount
+          return () => {
+            if (inputRefsRef.current[name]) {
+              inputRefsRef.current[name] = inputRefsRef.current[name].filter(
+                (r) => r !== ref,
+              );
+              if (inputRefsRef.current[name].length === 0) {
+                delete inputRefsRef.current[name];
+              }
+            }
+          };
         },
       });
     }
@@ -433,11 +403,202 @@ const Form = <T,>({
       submit: handleSubmit,
       reset: handleReset,
       validate,
+      getValue,
       getValues,
       getErrors: () => errorsRef.current, // Use ref to avoid closure issues
       setErrors,
     }),
     [handleSubmit, handleReset, validate, getValues, setErrors],
+  );
+
+  const renderTemplate = React.useCallback(
+    (template: FormTemplate[]): React.ReactNode => {
+      const registerInputRef = (name?: string) => (ref: any) => {
+        if (!name || !ref) return;
+        if (!inputRefsRef.current[name]) {
+          inputRefsRef.current[name] = [];
+        }
+        const refsArray = inputRefsRef.current[name];
+        if (!refsArray.includes(ref)) {
+          refsArray.push(ref);
+        }
+
+        return () => {
+          if (inputRefsRef.current[name]) {
+            inputRefsRef.current[name] = inputRefsRef.current[name].filter(
+              (r) => r !== ref,
+            );
+            if (inputRefsRef.current[name].length === 0) {
+              delete inputRefsRef.current[name];
+            }
+          }
+        };
+      };
+
+      const renderItem = (
+        item: FormTemplate,
+        index: number,
+      ): React.ReactNode => {
+        const key = item.id ?? index;
+
+        const commonInputProps = (
+          name?: string,
+          childOnChange?: (value: any) => void,
+        ) =>
+          name
+            ? {
+                disabled: formDisabled,
+                error: errors[name],
+                onChange: (value: any) => {
+                  if (errors[name]) {
+                    setErrors((prev) => ({ ...prev, [name]: undefined }));
+                  }
+                  childOnChange?.(value);
+                  if (submitOnChange) {
+                    debounceSubmit();
+                  }
+                },
+                inputRef: registerInputRef(name),
+              }
+            : {};
+
+        switch (item.component) {
+          case 'div':
+            return (
+              <div key={key} className={item.className} style={item.style}>
+                {item.children ? renderTemplate(item.children) : null}
+              </div>
+            );
+
+          case 'Button':
+            return (
+              <Button key={key} {...item}>
+                {item.children}
+              </Button>
+            );
+
+          case 'AutoComplete':
+            return (
+              <AutoComplete
+                key={key}
+                {...item}
+                {...commonInputProps(item.name, item.onChange)}
+              />
+            );
+          case 'AutoCompleteMultiple':
+            return (
+              <AutoCompleteMultiple
+                key={key}
+                {...item}
+                {...commonInputProps(item.name, item.onChange)}
+              />
+            );
+          case 'Checkbox':
+            return (
+              <Checkbox
+                key={key}
+                {...item}
+                {...commonInputProps(item.name, item.onChange)}
+              />
+            );
+          case 'DatePicker':
+            return (
+              <DatePicker
+                key={key}
+                {...item}
+                {...commonInputProps(item.name, item.onChange)}
+              />
+            );
+          case 'DateRangePicker':
+            return (
+              <DateRangePicker
+                key={key}
+                {...item}
+                {...commonInputProps(item.name, item.onChange)}
+              />
+            );
+          case 'MultipleDatePicker':
+            return (
+              <MultipleDatePicker
+                key={key}
+                {...item}
+                {...commonInputProps(item.name, item.onChange)}
+              />
+            );
+          case 'NumberTextField':
+            return (
+              <NumberTextField
+                key={key}
+                {...item}
+                {...commonInputProps(item.name, item.onChange)}
+              />
+            );
+          case 'PasswordField':
+            return (
+              <PasswordField
+                key={key}
+                {...item}
+                {...commonInputProps(item.name, item.onChange)}
+              />
+            );
+          case 'RadioGroup':
+            return (
+              <RadioGroup
+                key={key}
+                {...item}
+                {...commonInputProps(item.name, item.onChange)}
+              />
+            );
+          case 'Select':
+            return (
+              <Select
+                key={key}
+                {...item}
+                {...commonInputProps(item.name, item.onChange)}
+              />
+            );
+          case 'Switch':
+            return (
+              <Switch
+                key={key}
+                {...item}
+                {...commonInputProps(item.name, item.onChange)}
+              />
+            );
+          case 'TextArea':
+            return (
+              <TextArea
+                key={key}
+                {...item}
+                {...commonInputProps(item.name, item.onChange)}
+              />
+            );
+          case 'TextField':
+            return (
+              <TextField
+                key={key}
+                {...item}
+                {...commonInputProps(item.name, item.onChange)}
+              />
+            );
+          case 'TimerField':
+            return (
+              <TimerField
+                key={key}
+                {...item}
+                {...commonInputProps(item.name, item.onChange)}
+              />
+            );
+          default:
+            // eslint-disable-next-line no-console
+            console.warn('Unknown component:', item);
+            return null;
+        }
+      };
+
+      return template.map((item, index) => renderItem(item, index));
+    },
+    [errors, formDisabled, submitOnChange, debounceSubmit],
   );
 
   return (
@@ -452,7 +613,9 @@ const Form = <T,>({
         handleReset();
       }}
     >
-      {React.Children.map(children, enhanceChild)}
+      {template
+        ? renderTemplate(template)
+        : React.Children.map(children, enhanceChild)}
     </form>
   );
 };

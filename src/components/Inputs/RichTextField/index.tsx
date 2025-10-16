@@ -273,17 +273,13 @@ export const RichTextField = ({
 
   const disabled = loading || disabledProp;
 
-  React.useImperativeHandle(
-    inputRef,
-    () => ({
-      element: elementRef.current,
-      value,
-      focus: () => elementRef.current?.focus(),
-      reset: () => setInternalValue(initialValue),
-      disabled,
-    }),
-    [value, disabled],
-  );
+  React.useImperativeHandle(inputRef, () => ({
+    element: elementRef.current,
+    value,
+    focus: () => elementRef.current?.focus(),
+    reset: () => setInternalValue(initialValue),
+    disabled,
+  }));
 
   // const editor = React.useMemo(
   //   () =>
@@ -515,8 +511,6 @@ export const RichTextField = ({
       flushList();
     }
   };
-
-  console.log('internalValue', internalValue);
 
   return (
     <InputContainer

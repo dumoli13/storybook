@@ -1,15 +1,7 @@
 import React from 'react';
 import cx from 'classnames';
 import { createPortal } from 'react-dom';
-
-export interface InputDropdownProps {
-  open: boolean;
-  children: React.ReactNode;
-  elementRef: React.RefObject<HTMLDivElement | null>;
-  dropdownRef: React.RefObject<HTMLDivElement | null>;
-  fullWidth?: boolean;
-  maxHeight?: number;
-}
+import { InputDropdownProps } from '../../types';
 
 /**
  *
@@ -118,7 +110,7 @@ const InputDropdown = ({
         maxHeight,
       }}
       className={cx(
-        'absolute z-[2200] bg-neutral-10 dark:bg-neutral-10-dark shadow-box-2 rounded-lg py-1.5 text-neutral-100 dark:text-neutral-100-dark overflow-y-auto cursor-default',
+        'absolute z-[2300] bg-neutral-10 dark:bg-neutral-10-dark shadow-box-2 rounded-lg py-1.5 text-neutral-100 dark:text-neutral-100-dark overflow-y-auto cursor-default',
         {
           'mt-1': position.direction === 'down',
           'mb-1': position.direction === 'up',

@@ -1,5 +1,3 @@
-export const SUNDAY_DATE = new Date('2023-01-01');
-
 export function isToday(date: Date | null): boolean {
   if (!date) return false;
   const today = new Date();
@@ -31,23 +29,6 @@ export function isDateABeforeDateB(dateA: Date, dateB: Date): boolean {
     (dateA.getFullYear() === dateB.getFullYear() &&
       dateA.getMonth() === dateB.getMonth() &&
       dateA.getDate() < dateB.getDate())
-  );
-}
-
-export function isDateTimeABeforeOrEqualToDateB(
-  dateA: Date,
-  dateB: Date,
-): boolean {
-  const isTimeABeforeOrEqualToTimeB =
-    dateA.getHours() < dateB.getHours() ||
-    (dateA.getHours() === dateB.getHours() &&
-      dateA.getMinutes() < dateB.getMinutes()) ||
-    (dateA.getHours() === dateB.getHours() &&
-      dateA.getMinutes() === dateB.getMinutes() &&
-      dateA.getSeconds() <= dateB.getSeconds());
-  return (
-    isDateABeforeDateB(dateA, dateB) ||
-    (areDatesEqual(dateA, dateB) && isTimeABeforeOrEqualToTimeB)
   );
 }
 

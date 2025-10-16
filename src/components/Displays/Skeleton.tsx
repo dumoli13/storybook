@@ -1,23 +1,11 @@
 /* eslint-disable react/no-array-index-key */
 import React from 'react';
 import cx from 'classnames';
-
-export interface SkeletonProps {
-  width?: number;
-  height?: number;
-  type?: 'circle' | 'rounded' | 'rect';
-}
-
-export interface SkeletonInputProps {
-  size?: 'default' | 'large';
-  height?: number;
-}
-
-export interface SkeletonTableProps {
-  column?: number;
-  row?: number;
-  size?: 'small' | 'default' | 'large';
-}
+import {
+  SkeletonInputProps,
+  SkeletonProps,
+  SkeletonTableProps,
+} from '../../types';
 
 /**
  *

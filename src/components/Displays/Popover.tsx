@@ -1,16 +1,7 @@
 import React from 'react';
 import cx from 'classnames';
 import { createPortal } from 'react-dom';
-
-export interface PopoverProps {
-  children: React.ReactNode;
-  className?: string;
-  open: boolean;
-  elementRef: React.RefObject<HTMLElement | null>;
-  onClose?: () => void;
-  verticalAlign?: 'top' | 'center' | 'bottom';
-  horizontalAlign?: 'left' | 'center' | 'right';
-}
+import { PopoverProps } from '../../types';
 
 const Popover = ({
   children,

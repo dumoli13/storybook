@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Checkbox, CheckboxProps, CheckboxRef } from '../../src/components';
+import { Checkbox, CheckboxProps, CheckboxRef } from '../../src';
 import '../../src/output.css';
 
 const sizeOption = ['default', 'large'];
@@ -19,20 +19,12 @@ const meta: Meta<CheckboxProps> = {
         type: { summary: 'boolean' },
       },
     },
-    defaultChecked: {
+    defaultValue: {
       control: 'text',
       description:
         'The initial value of the input field when the component is uncontrolled.',
       table: {
         defaultValue: { summary: 'false' },
-        type: { summary: 'boolean' },
-      },
-    },
-    initialChecked: {
-      control: 'text',
-      description:
-        'The initial value of the input when default value or value isnot provided. This is useful when user want to reset field/form and it will return to initial value',
-      table: {
         type: { summary: 'boolean' },
       },
     },
@@ -142,7 +134,7 @@ export const DefaultValue: Story = {
   args: {
     label: 'Input Label',
     helperText: 'Input helper text',
-    defaultChecked: true,
+    defaultValue: 'lorem ipsum dolor sit amet',
   },
   render: (args) => {
     const InputRef = useRef<CheckboxRef>(null);
@@ -155,7 +147,7 @@ export const DefaultValue: Story = {
   },
   argTypes: {
     checked: { control: false },
-    defaultChecked: { control: false },
+    defaultValue: { control: false },
   },
   parameters: {
     docs: {
@@ -197,7 +189,7 @@ export const ControlledValue: Story = {
     return <Checkbox {...args} checked={value} onChange={setValue} />;
   },
   argTypes: {
-    defaultChecked: { control: false },
+    defaultValue: { control: false },
   },
   parameters: {
     docs: {

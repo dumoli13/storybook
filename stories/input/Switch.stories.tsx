@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Switch, SwitchProps, SwitchRef } from '../../src/components';
+import { Switch, SwitchProps, SwitchRef } from '../../src';
 import '../../src/output.css';
 
 const sizeOption = ['default', 'large'];
@@ -11,25 +11,17 @@ const meta: Meta<SwitchProps> = {
   component: Switch,
   tags: ['autodocs'],
   argTypes: {
-    checked: {
+    value: {
       control: 'text',
       description: 'Controlled input value',
       table: {
         type: { summary: 'string | number' },
       },
     },
-    defaultChecked: {
+    defaultValue: {
       control: 'text',
       description:
         'The initial value of the input field when the component is uncontrolled.',
-      table: {
-        type: { summary: 'string | number' },
-      },
-    },
-    initialChecked: {
-      control: 'text',
-      description:
-        'The initial value of the input when default value or value isnot provided. This is useful when user want to reset field/form and it will return to initial value',
       table: {
         type: { summary: 'string | number' },
       },
