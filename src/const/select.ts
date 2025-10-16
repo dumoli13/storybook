@@ -1,31 +1,3 @@
-export const options = [
-  { label: "Apple", value: "apple" },
-  { label: "Orange", value: "orange" },
-  { label: "Banana", value: "banana" },
-  { label: "Mango", value: "mango" },
-  { label: "Pineapple", value: "pineapple" },
-  { label: "Watermelon", value: "watermelon" },
-  { label: "Strawberry", value: "strawberry" },
-  { label: "Grape", value: "grape" },
-  { label: "Lemon", value: "lemon" },
-  { label: "Peach", value: "peach" },
-  { label: "Cherry", value: "cherry" },
-  { label: "Fig", value: "fig" },
-  { label: "Kiwi", value: "kiwi" },
-  { label: "Guava", value: "guava" },
-  { label: "Papaya", value: "papaya" },
-  { label: "Tomato", value: "tomato" },
-  { label: "Lime", value: "lime" },
-  { label: "Avocado", value: "avocado" },
-  { label: "Eggplant", value: "eggplant" },
-  { label: "Okra", value: "okra" },
-  { label: "Cucumber", value: "cucumber" },
-  { label: "Broccoli", value: "broccoli" },
-  { label: "Carrot", value: "carrot" },
-  { label: "Radish", value: "radish" },
-  { label: "Celery", value: "celery" },
-  { label: "Cauliflower", value: "cauliflower" },
-  { label: "Potato", value: "potato" },
-];
+import { SelectValue } from '../types';
 
 export const FETCH_LIMIT = 10;

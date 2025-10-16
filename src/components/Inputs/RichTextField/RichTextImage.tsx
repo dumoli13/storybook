@@ -20,7 +20,7 @@ const RichTextImage = ({ disabled }: RichTextImageProps) => {
     input.onchange = () => {
       const files = input.files;
       if (files && files.length > 0) {
-        Array.from(files).forEach((file) => {
+        for (const file of Array.from(files)) {
           const reader = new FileReader();
           reader.onload = () => {
             const url = reader.result as string;
@@ -52,7 +52,7 @@ const RichTextImage = ({ disabled }: RichTextImageProps) => {
             img.src = url;
           };
           reader.readAsDataURL(file);
-        });
+        }
       }
     };
     input.click();

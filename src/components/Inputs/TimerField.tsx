@@ -6,44 +6,7 @@ import InputDropdown from './InputDropdown';
 import InputEndIconWrapper from './InputEndIconWrapper';
 import InputHelper from './InputHelper';
 import InputLabel from './InputLabel';
-
-export interface TimerFieldRef {
-  element: HTMLInputElement | null;
-  value: number | null;
-  focus: () => void;
-  reset: () => void;
-  disabled: boolean;
-}
-export interface TimerFieldProps
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    'value' | 'defaultValue' | 'onChange' | 'size' | 'required' | 'checked'
-  > {
-  value?: number | null;
-  defaultValue?: number | null;
-  initialValue?: number | null;
-  clearable?: boolean;
-  label?: string;
-  labelPosition?: 'top' | 'left';
-  autoHideLabel?: boolean;
-  onChange?: (value: number | null) => void;
-  className?: string;
-  helperText?: React.ReactNode;
-  placeholder?: string;
-  disabled?: boolean;
-  fullWidth?: boolean;
-  startIcon?: React.ReactNode;
-  endIcon?: React.ReactNode;
-  inputRef?:
-    | React.RefObject<TimerFieldRef | null>
-    | React.RefCallback<TimerFieldRef | null>;
-  size?: 'default' | 'large';
-  error?: boolean | string;
-  success?: boolean;
-  loading?: boolean;
-  width?: number;
-  required?: boolean;
-}
+import { TimerFieldProps } from '../../types';
 
 /**
  * The Timer Field component is used for collecting time value from users
@@ -83,7 +46,7 @@ const TimerField = ({
   >(null);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const [internalValue, setInternalValue] = React.useState<number | null>(
-    defaultValue !== undefined ? defaultValue : initialValue,
+    defaultValue === undefined ? initialValue : defaultValue,
   );
 
   const isControlled = valueProp !== undefined;
@@ -198,23 +161,21 @@ const TimerField = ({
 
     // Delay to ensure dropdown is fully rendered before scrolling
     setTimeout(() => {
-      (Object.keys(timeValue) as Array<keyof typeof timeValue>).forEach(
-        (unit) => {
-          const value = timeValue[unit];
-          const container = scrollRefs[unit]?.current;
-          const item = value !== null ? itemRefs[unit].current[value] : null;
-          if (container && item) {
-            const containerTop = container.getBoundingClientRect().top;
-            const itemTop = item.getBoundingClientRect().top;
-            const offset = itemTop - containerTop - 8; // Adjust for 8px padding
+      for (const unit of Object.keys(timeValue)) {
+        const value = timeValue[unit];
+        const container = scrollRefs[unit]?.current;
+        const item = value !== null ? itemRefs[unit].current[value] : null;
+        if (container && item) {
+          const containerTop = container.getBoundingClientRect().top;
+          const itemTop = item.getBoundingClientRect().top;
+          const offset = itemTop - containerTop - 8; // Adjust for 8px padding
 
-            container.scrollTo({
-              top: container.scrollTop + offset,
-              behavior: 'smooth',
-            });
-          }
-        },
-      );
+          container.scrollTo({
+            top: container.scrollTop + offset,
+            behavior: 'smooth',
+          });
+        }
+      }
     }, 50); // Small delay for rendering
   }, [dropdownOpen, timeValue]);
 
@@ -333,8 +294,9 @@ const TimerField = ({
         >
           <input
             {...props}
-            tabIndex={!disabled ? 0 : -1}
+            tabIndex={disabled ? -1 : 0}
             id={inputId}
+            name={name}
             value={
               displayValue
                 ? `${Math.floor(displayValue / 3600)

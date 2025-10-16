@@ -1,63 +1,28 @@
 /* eslint-disable react/no-array-index-key */
-import React from 'react';
+import React, { useMemo } from 'react';
 import cx from 'classnames';
 import dayjs from 'dayjs';
-import { MONTH_LIST, PickerType, TimeUnit } from '../../const/datePicker';
+import { DAYS_OF_WEEK, MONTH_OF_YEAR, TimeUnit } from '../../const/datePicker';
 import {
-  SUNDAY_DATE,
   areDatesEqual,
   getYearRange,
   isDateABeforeDateB,
   isDateBetween,
   isToday,
 } from '../../libs';
-import { isValidDate } from '../../libs/inputDate';
 import Icon from '../Icon';
 import { CancelButton } from './DatePicker';
 import InputDropdown from './InputDropdown';
 import InputEndIconWrapper from './InputEndIconWrapper';
 import InputHelper from './InputHelper';
 import InputLabel from './InputLabel';
-
-export type InputDateRangeValue = [Date, Date] | null;
-export interface InputDateRangePickerRef {
-  element: HTMLDivElement | null;
-  value: InputDateRangeValue;
-  focus: () => void;
-  reset: () => void;
-  disabled: boolean;
-}
-
-export interface DateRangePickerProps
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    'value' | 'defaultValue' | 'onChange' | 'size' | 'required' | 'checked'
-  > {
-  value?: InputDateRangeValue;
-  defaultValue?: InputDateRangeValue;
-  initialValue?: InputDateRangeValue;
-  clearable?: boolean;
-  label?: string;
-  labelPosition?: 'top' | 'left';
-  autoHideLabel?: boolean;
-  onChange?: (value: InputDateRangeValue) => void;
-  helperText?: React.ReactNode;
-  placeholder?: string;
-  fullWidth?: boolean;
-  inputRef?:
-    | React.RefObject<InputDateRangePickerRef | null>
-    | React.RefCallback<InputDateRangePickerRef | null>;
-  size?: 'default' | 'large';
-  error?: boolean | string;
-  success?: boolean;
-  loading?: boolean;
-  disabledDate?: (date: Date, firstSelectedDate: Date | null) => boolean;
-  width?: number;
-  showTime?: boolean;
-  picker?: PickerType;
-  format?: string;
-  required?: boolean;
-}
+import {
+  DateRangePickerProps,
+  DateRangeValue,
+  DateValue,
+  PickerType,
+} from '../../types';
+import { useDebouncedCallback } from 'use-debounce';
 
 /**
  * The Date Range Picker lets the user select a range of dates.
@@ -74,7 +39,7 @@ const DateRangePicker = ({
   onChange,
   className,
   helperText,
-  placeholder = 'Input date',
+  placeholder,
   disabled: disabledProp = false,
   fullWidth,
   inputRef,
@@ -89,9 +54,12 @@ const DateRangePicker = ({
   format: formatProps,
   picker = 'date',
   required,
+  onKeyDown,
   ...props
 }: DateRangePickerProps) => {
   const elementRef = React.useRef<HTMLDivElement>(null);
+  const valueStartRef = React.useRef<HTMLInputElement>(null);
+  const valueEndRef = React.useRef<HTMLInputElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const [focused, setFocused] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
@@ -108,13 +76,18 @@ const DateRangePicker = ({
   const [internalValue, setInternalValue] = React.useState(
     defaultValue || initialValue || null,
   );
-  const isControlled = typeof valueProp !== 'undefined';
+  const isControlled = valueProp !== undefined;
   const value = isControlled ? valueProp : internalValue;
+  const [inputValue, setInputValue] = React.useState<[string, string]>(
+    value
+      ? [dayjs(value[0]).format(format), dayjs(value[1]).format(format)]
+      : ['', ''],
+  );
   const [tempValue, setTempValue] = React.useState<[Date | null, Date | null]>(
     value || [null, null],
   );
   const [timeValue, setTimeValue] = React.useState({
-    hours: (tempValue[0] ? value?.[1] : value?.[0])?.getHours() ?? null, // if
+    hours: (tempValue[0] ? value?.[1] : value?.[0])?.getHours() ?? null,
     minutes: (tempValue[0] ? value?.[1] : value?.[0])?.getMinutes() ?? null,
     seconds: (tempValue[0] ? value?.[1] : value?.[0])?.getSeconds() ?? null,
   });
@@ -136,7 +109,6 @@ const DateRangePicker = ({
     0,
   );
 
-  const dayFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'short' });
   const monthFormatter = new Intl.DateTimeFormat('en-US', { month: 'long' });
 
   const helperMessage = errorProp ?? helperText;
@@ -160,33 +132,29 @@ const DateRangePicker = ({
 
     // Delay to ensure dropdown is fully rendered before scrolling
     setTimeout(() => {
-      (Object.keys(timeValue) as Array<keyof typeof timeValue>).forEach(
-        (unit) => {
-          const value = timeValue[unit];
-          const container = scrollRefs[unit]?.current;
-          const item = value !== null ? itemRefs[unit].current[value] : null;
+      for (const unit of Object.keys(timeValue)) {
+        const value = timeValue[unit];
+        const container = scrollRefs[unit]?.current;
+        const item = value !== null ? itemRefs[unit].current[value] : null;
 
-          if (container && item) {
-            const containerTop = container.getBoundingClientRect().top;
-            const itemTop = item.getBoundingClientRect().top;
-            const offset = itemTop - containerTop - 8; // Adjust for 8px padding
+        if (container && item) {
+          const containerTop = container.getBoundingClientRect().top;
+          const itemTop = item.getBoundingClientRect().top;
+          const offset = itemTop - containerTop - 8; // Adjust for 8px padding
 
-            container.scrollTo({
-              top: container.scrollTop + offset,
-              behavior: 'smooth',
-            });
-          }
-        },
-      );
+          container.scrollTo({
+            top: container.scrollTop + offset,
+            behavior: 'smooth',
+          });
+        }
+      }
     }, 50); // Small delay for rendering
   }, [dropdownOpen, timeValue.hours, timeValue.minutes, timeValue.seconds]);
 
   React.useImperativeHandle(inputRef, () => ({
     element: elementRef.current,
     value,
-    focus: () => {
-      elementRef.current?.focus();
-    },
+    focus: () => valueStartRef.current?.focus(),
     reset: () => {
       setTempValue([null, null]);
       setInternalValue(null);
@@ -236,37 +204,33 @@ const DateRangePicker = ({
     setDropdownOpen(false);
   };
 
-  const days: Array<string> = Array.from({ length: 7 }).map((_, idx) =>
-    dayFormatter.format(
-      new Date(
-        SUNDAY_DATE.getFullYear(),
-        SUNDAY_DATE.getMonth(),
-        SUNDAY_DATE.getDate() + idx,
-      ),
-    ),
-  );
+  const dateMatrix = useMemo(() => {
+    const year = displayedDate.getFullYear();
+    const month = displayedDate.getMonth();
 
-  const dates = Array.from({ length: lastDate.getDate() }).map(
-    (_, idx) =>
-      new Date(
-        firstDate.getFullYear(),
-        firstDate.getMonth(),
-        firstDate.getDate() + idx,
-      ),
-  );
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const totalDays = new Date(year, month + 1, 0).getDate();
 
-  const dateMatrix: Array<Array<Date | null>> = Array(days.length).fill([]);
+    const matrix: DateValue[][] = [];
+    let currentDay = 1 - firstDayIndex;
 
-  while (dates.length > 0) {
-    const dateRow = days.map((_, idx) => {
-      if (dates.length > 0 && dates[0].getDay() === idx) {
-        const currentDate = dates.shift();
-        return currentDate ?? null;
+    for (let week = 0; week < 6; week++) {
+      const weekRow: DateValue[] = [];
+      for (let day = 0; day < 7; day++) {
+        const date = new Date(year, month, currentDay);
+
+        if (currentDay < 1 || currentDay > totalDays) {
+          weekRow.push(null);
+        } else {
+          weekRow.push(date);
+        }
+        currentDay++;
       }
-      return null;
-    });
-    dateMatrix.push(dateRow);
-  }
+      matrix.push(weekRow);
+    }
+
+    return matrix;
+  }, [displayedDate]);
 
   const handleChangeView = (view: 'date' | 'month' | 'year') => {
     setCalendarView(view);
@@ -316,6 +280,39 @@ const DateRangePicker = ({
     );
   };
 
+  const debounceTextToDate = useDebouncedCallback((input: [string, string]) => {
+    const parsed = dayjs(input[pointer], format, true);
+
+    if (parsed.isValid()) {
+      const newDate = parsed.toDate();
+      handleSelectDate(newDate);
+
+      if (showTime) {
+        setTimeValue({
+          hours: newDate.getHours(),
+          minutes: newDate.getMinutes(),
+          seconds: newDate.getSeconds(),
+        });
+      }
+    } else {
+      setTempValue((prev) => {
+        const newInput: [Date, Date] = [...prev];
+        newInput[pointer] = null;
+        return newInput;
+      });
+    }
+  }, 500);
+
+  const handleChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setInputValue((prev) => {
+      const newInput: [string, string] = [...prev];
+      newInput[pointer] = newValue;
+      debounceTextToDate(newInput);
+      return newInput;
+    });
+  };
+
   /**
    * when pointer changed, change selected time based on tempValue[pointer]
    */
@@ -347,7 +344,6 @@ const DateRangePicker = ({
         const endDate = new Date(end);
         endDate.setHours(23, 59, 59, 999);
         newDate = [startDate, endDate];
-        if (pointer === 1) handleBlur();
       } else {
         /**
          * if end < start, swap start and end.
@@ -361,7 +357,7 @@ const DateRangePicker = ({
         endDate.setHours(23, 59, 59, 999);
         newDate = [startDate, endDate];
       }
-      handleChange(newDate as [Date, Date]);
+      handleChangeValue(newDate);
     }
     setTempValue(newDate);
   };
@@ -382,7 +378,7 @@ const DateRangePicker = ({
         newDate[0] = end;
         newDate[1] = start;
       }
-      handleChange(newDate as [Date, Date]);
+      handleChangeValue(newDate);
     }
     setTempValue(newDate);
   };
@@ -416,6 +412,7 @@ const DateRangePicker = ({
     } else if (pointer === 0) {
       convertDateOnly(date, tempValue[1]);
       setPointer(1);
+      valueEndRef.current?.focus();
     } else if (pointer === 1) {
       // Do not close dropdown in here in case end value < start value
       convertDateOnly(tempValue[0], date);
@@ -459,7 +456,7 @@ const DateRangePicker = ({
     }
   };
 
-  const handleChange = (newValue: InputDateRangeValue) => {
+  const handleChangeValue = (newValue: DateRangeValue) => {
     onChange?.(newValue);
     if (!isControlled) {
       setInternalValue(newValue);
@@ -467,16 +464,35 @@ const DateRangePicker = ({
   };
 
   const handleClearValue = () => {
-    handleChange(null);
+    handleChangeValue(null);
     handleBlur();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!e.shiftKey && e.key === 'Tab' && pointer === 0) {
+      e.preventDefault();
+      setPointer(1);
+      valueEndRef.current?.focus();
+    } else if (e.shiftKey && e.key === 'Tab' && pointer === 1) {
+      e.preventDefault();
+      setPointer(0);
+      valueStartRef.current?.focus();
+    } else {
+      onKeyDown?.(e);
+    }
   };
 
   React.useEffect(() => {
     if (value === null) {
       setTempValue([null, null]);
+      setInputValue(['', '']);
       setDisplayedDate(new Date());
     } else {
       setTempValue(value);
+      setInputValue([
+        dayjs(value[0]).format(format),
+        dayjs(value[1]).format(format),
+      ]);
       setDisplayedDate(value[0] || new Date());
     }
   }, [value, dropdownOpen]);
@@ -579,7 +595,7 @@ const DateRangePicker = ({
                 <table className="w-full">
                   <thead>
                     <tr>
-                      {days.map((day) => (
+                      {DAYS_OF_WEEK.map((day) => (
                         <th key={day}>
                           <div className="text-center p-1 font-normal w-8">
                             {day}
@@ -668,7 +684,7 @@ const DateRangePicker = ({
             </div>
             {showTime && (
               <div className="border-l border-neutral-40 dark:border-neutral-40-dark text-14px">
-                <div className="h-[49px] border-b border-neutral-40 dark:border-neutral-40-dark" />
+                <div className="h-[45px] border-b border-neutral-40 dark:border-neutral-40-dark" />
                 <div className="flex">
                   {Object.keys(TimeUnit).map((key) => {
                     const unit = key as TimeUnit;
@@ -792,7 +808,7 @@ const DateRangePicker = ({
             />
           </div>
           <div className="grid grid-cols-3 p-2 gap-y-1 text-14px">
-            {MONTH_LIST.map((item) => {
+            {MONTH_OF_YEAR.map((item) => {
               const currentMonth =
                 displayedDate.getFullYear() * 100 + item.value;
               const isDateDisabled =
@@ -1011,8 +1027,8 @@ const DateRangePicker = ({
             'py-[9px]': size === 'large',
           },
         )}
-        ref={elementRef}
         style={width ? { width } : undefined}
+        ref={elementRef}
       >
         <div
           className={cx(
@@ -1023,44 +1039,42 @@ const DateRangePicker = ({
             },
           )}
         >
-          {value ? (
+          <input
+            {...props}
+            tabIndex={disabled ? -1 : 0}
+            id={inputId}
+            name={name}
+            value={inputValue[0]}
+            placeholder={focused ? '' : placeholder || format}
+            className={cx(
+              'w-full truncate outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed',
+              {
+                'text-primary-main dark:text-primary-main-dark font-medium':
+                  focused && pointer === 0,
+              },
+            )}
+            disabled={disabled}
+            aria-label={label}
+            autoComplete="off"
+            onBlur={handleBlur}
+            onFocus={() => handleFocus(0)}
+            onChange={handleChangeInput}
+            ref={valueStartRef}
+            onKeyDown={handleKeyDown}
+          />
+          {inputValue[0] && (
             <>
-              <input
-                {...props}
-                tabIndex={!disabled ? 0 : -1}
-                id={inputId}
-                value={
-                  isValidDate(value[0]) ? dayjs(value[0]).format(format) : ''
-                }
-                placeholder={focused ? '' : placeholder}
-                className={cx(
-                  'truncate outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed',
-                  {
-                    'text-primary-main dark:text-primary-main-dark':
-                      focused && pointer === 0,
-                  },
-                )}
-                disabled={disabled}
-                aria-label={label}
-                autoComplete="off"
-                onBlur={handleBlur}
-                onFocus={() => handleFocus(0)}
-                onClick={() => handleFocus(0)}
-                onChange={() => {}}
-              />
               <div>-</div>
               <input
                 {...props}
-                tabIndex={!disabled ? 0 : -1}
-                id={inputId}
-                value={
-                  isValidDate(value[1]) ? dayjs(value[1]).format(format) : ''
-                }
-                placeholder={focused ? '' : placeholder}
+                tabIndex={disabled ? -1 : 0}
+                name={name}
+                value={inputValue[1]}
+                placeholder={focused ? '' : placeholder || format}
                 className={cx(
-                  'truncate outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed',
+                  'w-full truncate outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed',
                   {
-                    'text-primary-main dark:text-primary-main-dark':
+                    'text-primary-main dark:text-primary-main-dark font-medium':
                       focused && pointer === 1,
                   },
                 )}
@@ -1069,31 +1083,11 @@ const DateRangePicker = ({
                 autoComplete="off"
                 onBlur={handleBlur}
                 onFocus={() => handleFocus(1)}
-                onClick={() => handleFocus(1)}
-                onChange={() => {}}
+                onChange={handleChangeInput}
+                onKeyDown={handleKeyDown}
+                ref={valueEndRef}
               />
             </>
-          ) : (
-            <input
-              {...props}
-              value={''}
-              tabIndex={!disabled ? 0 : -1}
-              id={inputId}
-              placeholder={focused ? '' : placeholder}
-              className={cx(
-                'truncate outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark disabled:cursor-not-allowed',
-                {
-                  'font-bold': focused && pointer === 1,
-                },
-              )}
-              disabled={disabled}
-              aria-label={label}
-              autoComplete="off"
-              onBlur={handleBlur}
-              onFocus={() => handleFocus(0)}
-              onClick={() => handleFocus(0)}
-              onChange={() => {}}
-            />
           )}
         </div>
         <InputEndIconWrapper

@@ -3,10 +3,9 @@ import type { Meta, StoryObj } from '@storybook/react';
 import {
   MultipleDatePicker,
   MultipleDatePickerProps,
-  InputMultipleDatePickerRef,
-  InputMultipleDateValue,
-} from '../../src/components';
-import '../../src/output.css';
+  MultipleDatePickerRef,
+  MultipleDateValue,
+} from '../../src';
 
 const sizeOption = ['default', 'large'];
 const labelPositionOption = ['top', 'left'];
@@ -21,7 +20,7 @@ const meta: Meta<MultipleDatePickerProps> = {
       control: 'text',
       description: 'Controlled input value',
       table: {
-        type: { summary: 'InputDateValue[]' },
+        type: { summary: 'DateValue' },
       },
     },
     defaultValue: {
@@ -29,22 +28,14 @@ const meta: Meta<MultipleDatePickerProps> = {
       description:
         'The initial value of the input field when the component is uncontrolled.',
       table: {
-        type: { summary: 'InputDateValue[]' },
-      },
-    },
-    initialValue: {
-      control: 'text',
-      description:
-        'The initial value of the input when default value or value isnot provided. This is useful when user want to reset field/form and it will return to initial value',
-      table: {
-        type: { summary: 'InputDateValue[]' },
+        type: { summary: 'DateValue[]' },
       },
     },
     onChange: {
       action: 'changed',
       description: 'Callback function to handle input changes.',
       table: {
-        type: { summary: '(value: InputDateValue) => void' },
+        type: { summary: '(value: DateValue) => void' },
       },
     },
     inputRef: {
@@ -204,7 +195,7 @@ export const DefaultValue: Story = {
     defaultValue: [new Date('2023-12-01')],
   },
   render: (args) => {
-    const InputRef = useRef<InputMultipleDatePickerRef>(null);
+    const InputRef = useRef<MultipleDatePickerRef>(null);
 
     const getValueByRef = () => {
       return InputRef.current?.value; // Date[]
@@ -252,7 +243,7 @@ export const ControlledValue: Story = {
     helperText: 'Input helper text',
   },
   render: (args) => {
-    const [value, setValue] = useState<InputMultipleDateValue>([]);
+    const [value, setValue] = useState<MultipleDateValue>([]);
 
     return <MultipleDatePicker {...args} value={value} onChange={setValue} />;
   },

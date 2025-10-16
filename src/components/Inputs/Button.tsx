@@ -1,17 +1,7 @@
 import React from 'react';
 import cx from 'classnames';
 import Icon from '../Icon';
-
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'contained' | 'secondary' | 'outlined' | 'text';
-  color?: 'primary' | 'success' | 'danger' | 'warning' | 'info';
-  size?: 'small' | 'default' | 'large';
-  fullWidth?: boolean;
-  loading?: boolean;
-  startIcon?: React.ReactNode;
-  endIcon?: React.ReactNode;
-}
+import { ButtonProps } from '../../types';
 
 /**
  * Buttons allow users to take actions, and make choices, with a single tap.

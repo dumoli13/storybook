@@ -1,14 +1,17 @@
 /* eslint-disable react/no-array-index-key */
-import React from 'react';
+import React, { useMemo } from 'react';
 import cx from 'classnames';
 import dayjs from 'dayjs';
-import { MONTH_LIST, PickerType, TimeUnit } from '../../const/datePicker';
-import { SUNDAY_DATE, areDatesEqual, getYearRange, isToday } from '../../libs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+import { DAYS_OF_WEEK, MONTH_OF_YEAR, TimeUnit } from '../../const/datePicker';
+import { areDatesEqual, getYearRange, isToday } from '../../libs';
 import Icon from '../Icon';
 import InputDropdown from './InputDropdown';
 import InputEndIconWrapper from './InputEndIconWrapper';
 import InputHelper from './InputHelper';
 import InputLabel from './InputLabel';
+import { DatePickerProps, DateValue, PickerType } from '../../types';
+import { useDebouncedCallback } from 'use-debounce';
 
 export const CancelButton = ({
   onClick,
@@ -24,45 +27,7 @@ export const CancelButton = ({
   </button>
 );
 
-export type InputDateValue = Date | null;
-
-export interface InputDatePickerRef {
-  element: HTMLDivElement | null;
-  value: InputDateValue;
-  focus: () => void;
-  reset: () => void;
-  disabled: boolean;
-}
-export interface DatePickerProps
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    'value' | 'defaultValue' | 'onChange' | 'size' | 'required' | 'checked'
-  > {
-  value?: InputDateValue;
-  defaultValue?: InputDateValue;
-  initialValue?: InputDateValue;
-  clearable?: boolean;
-  label?: string;
-  labelPosition?: 'top' | 'left';
-  autoHideLabel?: boolean;
-  onChange?: (value: InputDateValue) => void;
-  helperText?: React.ReactNode;
-  placeholder?: string;
-  fullWidth?: boolean;
-  inputRef?:
-    | React.RefObject<InputDatePickerRef | null>
-    | React.RefCallback<InputDatePickerRef | null>;
-  size?: 'default' | 'large';
-  error?: boolean | string;
-  success?: boolean;
-  loading?: boolean;
-  disabledDate?: (date: Date) => boolean;
-  width?: number;
-  showTime?: boolean;
-  picker?: PickerType;
-  format?: string;
-  required?: boolean;
-}
+dayjs.extend(customParseFormat);
 
 /**
  * The Date Picker component lets users select a date. User can also set a time of the date.
@@ -79,7 +44,7 @@ const DatePicker = ({
   onChange,
   className,
   helperText,
-  placeholder = 'Input date',
+  placeholder,
   disabled: disabledProp = false,
   fullWidth,
   inputRef,
@@ -97,6 +62,7 @@ const DatePicker = ({
   ...props
 }: DatePickerProps) => {
   const elementRef = React.useRef<HTMLDivElement>(null);
+  const valueRef = React.useRef<HTMLInputElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const [focused, setFocused] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
@@ -112,38 +78,54 @@ const DatePicker = ({
     if (showTime) format = `${format} HH:mm:ss`;
   }
 
-  const isControlled = typeof valueProp !== 'undefined';
+  const isControlled = valueProp !== undefined;
   const value = isControlled && !dropdownOpen ? valueProp : internalValue;
+  const [inputValue, setInputValue] = React.useState(
+    dayjs(value).format(format),
+  );
   const [timeValue, setTimeValue] = React.useState({
     hours: value?.getHours() ?? null,
     minutes: value?.getMinutes() ?? null,
     seconds: value?.getSeconds() ?? null,
   });
-  const [tempValue, setTempValue] = React.useState<InputDateValue>(
-    value || null,
-  );
 
   const [calendarView, setCalendarView] = React.useState<PickerType>(picker);
   const [displayedDate, setDisplayedDate] = React.useState(value ?? new Date());
   const yearRange = getYearRange(displayedDate.getFullYear());
 
-  const firstDate = new Date(
-    displayedDate.getFullYear(),
-    displayedDate.getMonth(),
-    1,
-  );
-  const lastDate = new Date(
-    displayedDate.getFullYear(),
-    displayedDate.getMonth() + 1,
-    0,
-  );
-
-  const dayFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'short' });
   const monthFormatter = new Intl.DateTimeFormat('en-US', { month: 'long' });
 
   const helperMessage = errorProp ?? helperText;
   const isError = !!errorProp;
   const disabled = loading || disabledProp;
+
+  const dateMatrix = useMemo(() => {
+    const year = displayedDate.getFullYear();
+    const month = displayedDate.getMonth();
+
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const totalDays = new Date(year, month + 1, 0).getDate();
+
+    const matrix: DateValue[][] = [];
+    let currentDay = 1 - firstDayIndex;
+
+    for (let week = 0; week < 6; week++) {
+      const weekRow: DateValue[] = [];
+      for (let day = 0; day < 7; day++) {
+        const date = new Date(year, month, currentDay);
+
+        if (currentDay < 1 || currentDay > totalDays) {
+          weekRow.push(null);
+        } else {
+          weekRow.push(date);
+        }
+        currentDay++;
+      }
+      matrix.push(weekRow);
+    }
+
+    return matrix;
+  }, [displayedDate]);
 
   const scrollRefs = {
     hours: React.useRef<HTMLDivElement>(null),
@@ -162,30 +144,28 @@ const DatePicker = ({
 
     // Delay to ensure dropdown is fully rendered before scrolling
     setTimeout(() => {
-      (Object.keys(timeValue) as Array<keyof typeof timeValue>).forEach(
-        (unit) => {
-          const value = timeValue[unit];
-          const container = scrollRefs[unit]?.current;
-          const item = value !== null ? itemRefs[unit].current[value] : null;
-          if (container && item) {
-            const containerTop = container.getBoundingClientRect().top;
-            const itemTop = item.getBoundingClientRect().top;
-            const offset = itemTop - containerTop - 8; // Adjust for 8px padding
+      for (const unit of Object.keys(timeValue)) {
+        const value = timeValue[unit];
+        const container = scrollRefs[unit]?.current;
+        const item = value === null ? null : itemRefs[unit].current[value];
+        if (container && item) {
+          const containerTop = container.getBoundingClientRect().top;
+          const itemTop = item.getBoundingClientRect().top;
+          const offset = itemTop - containerTop - 8; // Adjust for 8px padding
 
-            container.scrollTo({
-              top: container.scrollTop + offset,
-              behavior: 'smooth',
-            });
-          }
-        },
-      );
+          container.scrollTo({
+            top: container.scrollTop + offset,
+            behavior: 'smooth',
+          });
+        }
+      }
     }, 50); // Small delay for rendering
-  }, [dropdownOpen, timeValue.hours, timeValue.minutes, timeValue.seconds]);
+  }, [dropdownOpen, timeValue]);
 
   React.useImperativeHandle(inputRef, () => ({
     element: elementRef.current,
     value,
-    focus: () => elementRef.current?.focus(),
+    focus: () => valueRef.current?.focus(),
     reset: () => setInternalValue(initialValue),
     disabled,
   }));
@@ -195,6 +175,12 @@ const DatePicker = ({
       const target = event.target as Node;
       const dropdownContainsTarget = dropdownRef.current?.contains(target);
       const selectElementContainsTarget = elementRef.current?.contains(target);
+
+      console.log(
+        'handleClickOutside',
+        dropdownContainsTarget,
+        selectElementContainsTarget,
+      );
 
       if (dropdownContainsTarget || selectElementContainsTarget) {
         elementRef.current?.focus();
@@ -227,6 +213,7 @@ const DatePicker = ({
     if (dropdownContainsTarget || selectElementContainsTarget) {
       return;
     }
+
     setFocused(false);
     setDropdownOpen(false);
   };
@@ -238,38 +225,6 @@ const DatePicker = ({
       return !prev;
     });
   };
-
-  const days: Array<string> = Array.from({ length: 7 }).map((_, idx) =>
-    dayFormatter.format(
-      new Date(
-        SUNDAY_DATE.getFullYear(),
-        SUNDAY_DATE.getMonth(),
-        SUNDAY_DATE.getDate() + idx,
-      ),
-    ),
-  );
-
-  const dates = Array.from({ length: lastDate.getDate() }).map(
-    (_, idx) =>
-      new Date(
-        firstDate.getFullYear(),
-        firstDate.getMonth(),
-        firstDate.getDate() + idx,
-      ),
-  );
-
-  const dateMatrix: Array<Array<InputDateValue>> = Array(days.length).fill([]);
-
-  while (dates.length > 0) {
-    const dateRow = days.map((_, idx) => {
-      if (dates.length > 0 && dates[0].getDay() === idx) {
-        const currentDate = dates.shift();
-        return currentDate ?? null;
-      }
-      return null;
-    });
-    dateMatrix.push(dateRow);
-  }
 
   const handleChangeView = (view: PickerType) => {
     setCalendarView(view);
@@ -319,7 +274,30 @@ const DatePicker = ({
     );
   };
 
-  const handleChange = (newValue: InputDateValue) => {
+  const debounceTextToDate = useDebouncedCallback((input: string) => {
+    const parsed = dayjs(input, format, true);
+
+    if (parsed.isValid()) {
+      const newDate = parsed.toDate();
+      handleChangeValue(newDate);
+
+      if (showTime) {
+        setTimeValue({
+          hours: newDate.getHours(),
+          minutes: newDate.getMinutes(),
+          seconds: newDate.getSeconds(),
+        });
+      }
+    }
+  }, 500);
+
+  const handleChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setInputValue(newValue);
+    debounceTextToDate(newValue);
+  };
+
+  const handleChangeValue = (newValue: DateValue) => {
     onChange?.(newValue);
     if (!isControlled) {
       setInternalValue(newValue);
@@ -330,7 +308,7 @@ const DatePicker = ({
   };
 
   const handleConfirmDateTime = () => {
-    handleChange(internalValue);
+    handleChangeValue(internalValue);
   };
 
   const handleSelectDate = (selectedDate: Date) => {
@@ -352,7 +330,7 @@ const DatePicker = ({
     if (showTime) {
       setInternalValue(newDate);
     } else {
-      handleChange(newDate);
+      handleChangeValue(newDate);
     }
   };
 
@@ -385,7 +363,7 @@ const DatePicker = ({
       seconds: showTime ? today.getSeconds() : 0,
     };
     setTimeValue(selectedTime);
-    handleChange(
+    handleChangeValue(
       new Date(
         today.getFullYear(),
         today.getMonth(),
@@ -398,7 +376,7 @@ const DatePicker = ({
   };
 
   const handleClearValue = () => {
-    handleChange(null);
+    handleChangeValue(null);
     setTimeValue({
       hours: null,
       minutes: null,
@@ -407,7 +385,7 @@ const DatePicker = ({
   };
 
   React.useEffect(() => {
-    setTempValue(value);
+    setInputValue(value ? dayjs(value).format(format) : '');
     setDisplayedDate(value || new Date());
     if (isControlled) setInternalValue(value);
   }, [value, dropdownOpen]);
@@ -425,14 +403,14 @@ const DatePicker = ({
                     size={20}
                     strokeWidth={2}
                     onClick={() => handleChangeYear(-1)}
-                    className="p-1 flex items-center justify-center rounded-full hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100/25 dark:text-neutral-100-dark/25"
+                    className="p-1 rounded-full hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100/25 dark:text-neutral-100-dark/25"
                   />
                   <Icon
                     name="chevron-left"
                     size={20}
                     strokeWidth={2}
                     onClick={handlePrevMonth}
-                    className="p-1 flex items-center justify-center rounded-full hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100/25 dark:text-neutral-100-dark/25"
+                    className="p-1 rounded-full hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100/25 dark:text-neutral-100-dark/25"
                   />
                 </div>
                 <div className="flex items-center gap-4 text-16px font-semibold text-neutral-100 dark:text-neutral-100-dark">
@@ -457,14 +435,14 @@ const DatePicker = ({
                     size={20}
                     strokeWidth={2}
                     onClick={handleNextMonth}
-                    className="p-1 flex items-center justify-center rounded-full hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100/25 dark:text-neutral-100-dark/25"
+                    className="p-1 rounded-full hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100/25 dark:text-neutral-100-dark/25"
                   />
                   <Icon
                     name="chevron-double-right"
                     size={20}
                     strokeWidth={2}
                     onClick={() => handleChangeYear(1)}
-                    className="p-1 flex items-center justify-center rounded-full hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100/25 dark:text-neutral-100-dark/25"
+                    className="p-1 rounded-full hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100/25 dark:text-neutral-100-dark/25"
                   />
                 </div>
               </div>
@@ -472,7 +450,7 @@ const DatePicker = ({
                 <table className="w-full">
                   <thead>
                     <tr>
-                      {days.map((day) => (
+                      {DAYS_OF_WEEK.map((day) => (
                         <th key={day}>
                           <div className="text-center p-1 font-normal w-8">
                             {day}
@@ -483,14 +461,12 @@ const DatePicker = ({
                   </thead>
                   <tbody>
                     {dateMatrix.map((row, rowIdx) => (
-                      <tr key={rowIdx}>
+                      <tr key={rowIdx} className="h-8">
                         {row.map((date, dateIdx) => {
                           const isDateDisabled =
                             date === null || disabledDate?.(date);
-                          const isDateSelected = date
-                            ? tempValue !== null &&
-                              areDatesEqual(date, tempValue)
-                            : false;
+                          const isDateSelected =
+                            !!date && !!value && areDatesEqual(date, value);
 
                           return (
                             <td
@@ -537,7 +513,7 @@ const DatePicker = ({
             </div>
             {showTime && (
               <div className="border-l border-neutral-40 dark:border-neutral-40-dark text-14px">
-                <div className="h-[49px] border-b border-neutral-40 dark:border-neutral-40-dark" />
+                <div className="h-[45px] border-b border-neutral-40 dark:border-neutral-40-dark" />
                 <div className="flex">
                   {Object.keys(TimeUnit).map((key) => {
                     const unit = key as TimeUnit;
@@ -614,7 +590,7 @@ const DatePicker = ({
               size={20}
               strokeWidth={2}
               onClick={() => handleChangeYear(-1)}
-              className="p-1 flex items-center justify-center rounded-full hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100/25 dark:text-neutral-100-dark/25"
+              className="p-1 rounded-full hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100/25 dark:text-neutral-100-dark/25"
             />
             <button
               type="button"
@@ -628,11 +604,11 @@ const DatePicker = ({
               size={20}
               strokeWidth={2}
               onClick={() => handleChangeYear(1)}
-              className="p-1 flex items-center justify-center rounded-full hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100/25 dark:text-neutral-100-dark/25"
+              className="p-1 rounded-full hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100/25 dark:text-neutral-100-dark/25"
             />
           </div>
           <div className="grid grid-cols-3 p-2 gap-y-1 text-14px">
-            {MONTH_LIST.map((item) => {
+            {MONTH_OF_YEAR.map((item) => {
               const isDateSelected =
                 value &&
                 value.getFullYear() === displayedDate.getFullYear() &&
@@ -676,7 +652,7 @@ const DatePicker = ({
               size={20}
               strokeWidth={2}
               onClick={() => handleChangeYear(-12)}
-              className="p-1 flex items-center justify-center rounded-full hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100/25 dark:text-neutral-100-dark/25"
+              className="p-1 rounded-full hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100/25 dark:text-neutral-100-dark/25"
             />
             <div className="text-16px font-medium text-neutral-100 dark:text-neutral-100-dark">
               {`${yearRange[0]} - ${yearRange[yearRange.length - 1]}`}
@@ -686,7 +662,7 @@ const DatePicker = ({
               size={20}
               strokeWidth={2}
               onClick={() => handleChangeYear(12)}
-              className="p-1 flex items-center justify-center rounded-full hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100/25 dark:text-neutral-100-dark/25"
+              className="p-1 rounded-full hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100/25 dark:text-neutral-100-dark/25"
             />
           </div>
           <div className="grid grid-cols-3 p-2 gap-y-1 text-14px">
@@ -765,15 +741,16 @@ const DatePicker = ({
             'py-[9px]': size === 'large',
           },
         )}
-        ref={elementRef}
         style={width ? { width } : undefined}
+        ref={elementRef}
       >
         <input
           {...props}
-          tabIndex={!disabled ? 0 : -1}
+          tabIndex={disabled ? -1 : 0}
           id={inputId}
-          value={value ? dayjs(value).format(format) : ''}
-          placeholder={focused ? '' : placeholder}
+          name={name}
+          value={inputValue}
+          placeholder={focused ? '' : placeholder || format}
           className={cx(
             'w-full outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark text-neutral-90 dark:text-neutral-90-dark disabled:cursor-not-allowed',
             {
@@ -787,7 +764,8 @@ const DatePicker = ({
           onFocus={handleFocus}
           onBlur={handleBlur}
           onClick={handleFocus}
-          onChange={() => {}}
+          onChange={handleChangeInput}
+          ref={valueRef}
         />
         <InputEndIconWrapper
           loading={loading}

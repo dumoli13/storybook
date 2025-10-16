@@ -6,10 +6,10 @@ import {
   AutoCompleteMultipleRef,
   Icon,
   IconNames,
-} from '../../src/components';
+} from '../../src';
 import '../../src/output.css';
 import { iconNames } from '../../const/icon';
-import { options } from '../../src/const/select';
+import { options } from '../const/select';
 import { SelectValue } from '../../src';
 import cx from 'classnames';
 
@@ -34,14 +34,6 @@ const meta: Meta<AutoCompleteMultipleProps<any>> = {
         'The initial value of the input when the component is uncontrolled. only need to provide the key of the option',
       table: {
         type: { summary: 'T' },
-      },
-    },
-    initialValue: {
-      control: 'text',
-      description:
-        'The initial value of the input when default value or value isnot provided. This is useful when user want to reset field/form and it will return to initial value',
-      table: {
-        type: { summary: '{ value: T,  label: string, detail?: D }' },
       },
     },
     onChange: {
@@ -438,6 +430,69 @@ const DefaultValue = () => {
 };
 
 export default DefaultValue;
+          `.trim(),
+      },
+    },
+  },
+};
+
+export const AsyncFetch: Story = {
+  args: {
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
+  },
+  render: (args) => {
+    const fetchData = async (keyword: string, page: number, limit: number) => {
+      const response = await fetch(
+        `https://jsonplaceholder.typicode.com/posts?_limit=${limit}&_page=${page}${
+          keyword ? `&title_like=${keyword}` : ''
+        }`,
+      );
+      const data = await response.json();
+      return data.map((item) => ({
+        label: item.title,
+        value: item.id,
+        detail: item,
+      }));
+    };
+
+    return <AutoCompleteMultiple {...args} async fetchOptions={fetchData} />;
+  },
+  argTypes: {
+    value: { control: false },
+    defaultValue: { control: false },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'This story demonstrates a uncontrolled AutoComplete. to access the input field and its value, use the inputRef.',
+      },
+      source: {
+        code: ` 
+const AsyncFetch = () => {
+    const fetchData = async (keyword: string, page: number, limit: number) => {
+      const response = await fetch("https://jsonplaceholder.typicode.com/posts");
+      const data = await response.json();
+      return data.map((item) => ({
+        label: item.title,
+        value: item.id,
+        detail: item,
+      }));
+    };
+    
+    return (
+      <AutoCompleteMultiple
+        {...args}
+        async
+        fetchOptions={fetchData}
+        renderOption={handleRenderOption}
+      />
+    );
+};
+
+export default AsyncFetch;
           `.trim(),
       },
     },

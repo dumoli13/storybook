@@ -3,10 +3,9 @@ import type { Meta, StoryObj } from '@storybook/react';
 import {
   DatePicker,
   DatePickerProps,
-  InputDatePickerRef,
-  InputDateValue,
-} from '../../src/components';
-import '../../src/output.css';
+  DatePickerRef,
+  DateValue,
+} from '../../src';
 
 const sizeOption = ['default', 'large'];
 const labelPositionOption = ['top', 'left'];
@@ -21,7 +20,7 @@ const meta: Meta<DatePickerProps> = {
       control: 'text',
       description: 'Controlled input value',
       table: {
-        type: { summary: 'InputDateValue' },
+        type: { summary: 'DateValue' },
       },
     },
     defaultValue: {
@@ -29,22 +28,14 @@ const meta: Meta<DatePickerProps> = {
       description:
         'The initial value of the input field when the component is uncontrolled.',
       table: {
-        type: { summary: 'InputDateValue' },
-      },
-    },
-    initialValue: {
-      control: 'text',
-      description:
-        'The initial value of the input when default value or value isnot provided. This is useful when user want to reset field/form and it will return to initial value',
-      table: {
-        type: { summary: 'InputDateValue' },
+        type: { summary: 'DateValue' },
       },
     },
     onChange: {
       action: 'changed',
       description: 'Callback function to handle input changes.',
       table: {
-        type: { summary: '(value: InputDateValue) => void' },
+        type: { summary: '(value: DateValue) => void' },
       },
     },
     inputRef: {
@@ -223,7 +214,7 @@ export const DefaultValue: Story = {
     defaultValue: new Date('2023-12-01'),
   },
   render: (args) => {
-    const InputRef = useRef<InputDatePickerRef>(null);
+    const InputRef = useRef<DatePickerRef>(null);
 
     const getValueByRef = () => {
       return InputRef.current?.value; // Date | null
@@ -271,7 +262,7 @@ export const ControlledValue: Story = {
     helperText: 'Input helper text',
   },
   render: (args) => {
-    const [value, setValue] = useState<InputDateValue>(null);
+    const [value, setValue] = useState<DateValue>(null);
 
     return <DatePicker {...args} value={value} onChange={setValue} />;
   },
@@ -290,7 +281,7 @@ export const ControlledValue: Story = {
 import { useState } from 'react';
 
 const ControlledValue = () => {
-    const [value, setValue] = useState<InputDateValue>(null);
+    const [value, setValue] = useState<DateValue>(null);
 
     return (
         <DatePicker

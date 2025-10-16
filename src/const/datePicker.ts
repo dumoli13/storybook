@@ -1,4 +1,12 @@
-export const MONTH_LIST = [
+export enum TimeUnit {
+  hours = 'hours',
+  minutes = 'minutes',
+  seconds = 'seconds',
+}
+
+export const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+export const MONTH_OF_YEAR = [
   { value: 0, label: 'Jan' },
   { value: 1, label: 'Feb' },
   { value: 2, label: 'Mar' },
@@ -12,11 +20,3 @@ export const MONTH_LIST = [
   { value: 10, label: 'Nov' },
   { value: 11, label: 'Dec' },
 ];
-
-export enum TimeUnit {
-  hours = 'hours',
-  minutes = 'minutes',
-  seconds = 'seconds',
-}
-
-export type PickerType = 'date' | 'month' | 'year';

@@ -1,7 +1,17 @@
+import React, { useMemo, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { AutoComplete, AutoCompleteProps } from '../../src/components';
+import {
+  AutoComplete,
+  AutoCompleteProps,
+  AutoCompleteRef,
+  Icon,
+  IconNames,
+  SelectValue,
+} from '../../src';
 import '../../src/output.css';
-import { options } from '../../src/const/select';
+import { iconNames } from '../../const/icon';
+import cx from 'classnames';
+import { options } from '../const/select';
 
 const sizeOption = ['default', 'large'];
 const labelPositionOption = ['top', 'left'];
@@ -24,14 +34,6 @@ const meta: Meta<AutoCompleteProps<any>> = {
         'The initial value of the input when the component is uncontrolled. only need to provide the key of the option',
       table: {
         type: { summary: 'T' },
-      },
-    },
-    initialValue: {
-      control: 'text',
-      description:
-        'The initial value of the input when default value or value isnot provided. This is useful when user want to reset field/form and it will return to initial value',
-      table: {
-        type: { summary: '{ value: T,  label: string, detail?: D }' },
       },
     },
     onChange: {
@@ -189,7 +191,7 @@ const meta: Meta<AutoCompleteProps<any>> = {
       description:
         'An array of option objects, each containing a value and a label. Component re-renders every time options change, so make sure manage options in the state or outside the component to prevent unnecessary re-renders.',
       table: {
-        type: { summary: '{ label: string, value: T }[]' },
+        type: { summary: '{ label: string, value: T , detail?: D}[]' },
       },
     },
     appendIfNotFound: {
@@ -266,5 +268,525 @@ export const Playground: Story = {
           'The autocomplete is a normal text input enhanced by a panel of suggested options.',
       },
     },
+  },
+};
+
+export const AppendableOption: Story = {
+  args: {
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
+    size: 'default',
+    clearable: false,
+    fullWidth: false,
+    loading: false,
+    success: false,
+    labelPosition: 'top',
+    options,
+    appendIfNotFound: true,
+  },
+  render: (args) => {
+    const InputRef = useRef<AutoCompleteRef<string> | null>(null);
+    const [options, setOptions] = useState<SelectValue<string>[]>(args.options);
+
+    const getValueByRef = () => {
+      return InputRef.current?.value; // {value: T, label: string, detail?: D}
+    };
+
+    const handleAppend = (input: SelectValue<string>) => {
+      console.log('handleAppend', input);
+    };
+
+    return (
+      <AutoComplete
+        {...args}
+        options={options}
+        inputRef={InputRef}
+        onAppend={handleAppend}
+      />
+    );
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The autocomplete is a normal text input enhanced by a panel of suggested options.',
+      },
+      source: {
+        code: `
+import { useState } from 'react';
+
+const options: SelectValue<string>[] = [
+    { label: 'Apple', value: 'apple' },
+    { label: 'Orange', value: 'orange' },
+    { label: 'Banana', value: 'banana' },
+];
+
+const AppendableOption = () => {
+    const InputRef = useRef<AutoCompleteRef<string> | null>(null);
+
+    const getValueByRef = () => {
+        return InputRef.current?.value; // {value: T, label: string, detail?: D}
+    }
+
+    const handleAppend = (input: SelectValue<string>) => {
+        console.log("handleAppend", input);
+    }
+
+    return (
+        <AutoComplete
+            label="This is label"
+            placeholder="Input Placeholder..."
+            value={value}
+            onChange={setValue}
+            options={options}
+            onAppend={handleAppend}
+        />
+    );
+};
+
+export default AppendableOption;
+          `.trim(),
+      },
+    },
+  },
+};
+
+export const DefaultValue: Story = {
+  args: {
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
+    defaultValue: 'apple',
+    options,
+  },
+  render: (args) => {
+    const InputRef = useRef<AutoCompleteRef<string> | null>(null);
+
+    const getValueByRef = () => {
+      return InputRef.current?.value; // {value: T, label: string, detail?: D}
+    };
+
+    return <AutoComplete {...args} options={options} inputRef={InputRef} />;
+  },
+  argTypes: {
+    value: { control: false },
+    defaultValue: { control: false },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'This story demonstrates a uncontrolled AutoComplete. to access the input field and its value, use the inputRef.',
+      },
+      source: {
+        code: `
+import { useState } from 'react';
+
+const options: SelectValue<string>[] = [
+  { label: 'Apple', value: 'apple' },
+  { label: 'Orange', value: 'orange' },
+  { label: 'Banana', value: 'banana' },
+];
+
+const DefaultValue = () => {
+    const InputRef = useRef<AutoCompleteRef<string> | null>(null);
+
+    const getValueByRef = () => {
+        return InputRef.current?.value; // {value: T, label: string, detail?: D}
+    }
+
+    return (
+        <AutoComplete
+            label="This is label"
+            placeholder="Input Placeholder..."
+            value={value}
+            onChange={setValue}
+            options={options}
+        />
+    );
+};
+
+export default DefaultValue;
+          `.trim(),
+      },
+    },
+  },
+};
+
+export const AsyncFetch: Story = {
+  args: {
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
+  },
+  render: (args) => {
+    const fetchData = async (keyword: string, page: number, limit: number) => {
+      const response = await fetch(
+        `https://jsonplaceholder.typicode.com/posts?_limit=${limit}&_page=${page}${
+          keyword ? `&title_like=${keyword}` : ''
+        }`,
+      );
+      const data = await response.json();
+      return data.map((item) => ({
+        label: item.title,
+        value: item.id,
+        detail: item,
+      }));
+    };
+
+    return <AutoComplete {...args} async fetchOptions={fetchData} />;
+  },
+  argTypes: {
+    value: { control: false },
+    defaultValue: { control: false },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'This story demonstrates an async fetch Autocomplete. This allow option that has pagination and filter by query',
+      },
+      source: {
+        code: `
+const AsyncFetch = () => {
+    const fetchData = async (keyword: string, page: number, limit: number) => {
+      const response = await fetch("https://jsonplaceholder.typicode.com/posts");
+      const data = await response.json();
+      return data.map((item) => ({
+        label: item.title,
+        value: item.id,
+        detail: item,
+      }));
+    }; 
+    
+    return (
+      <AutoComplete async  fetchOptions={fetchData} />
+    );
+};
+
+export default AsyncFetch;
+          `.trim(),
+      },
+    },
+  },
+};
+
+export const CustomRender: Story = {
+  args: {
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
+  },
+  render: (args) => {
+    const handleRenderOption = (
+      option: Array<SelectValue<number, any>>,
+      onClick: (value: SelectValue<number, any>) => void,
+      value: SelectValue<number, any> | null,
+      highlightedIndex: number,
+    ) => (
+      <table>
+        <thead>
+          <tr>
+            <th className="px-4 py-2">Fruit</th>
+            <th className="px-4 py-2">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {option.map((item, index) => (
+            <tr
+              key={item.value}
+              onClick={() => onClick(item)}
+              data-highlighted={index === highlightedIndex}
+              className={cx('', {
+                'bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark':
+                  item.value === value?.value,
+                'cursor-pointer hover:bg-neutral-20 dark:hover:bg-neutral-20-dark ':
+                  item.value !== value?.value,
+                'bg-neutral-20 dark:bg-neutral-20-dark':
+                  highlightedIndex === index,
+              })}
+            >
+              <td className="px-4 py-1">{item.label ?? '-'}</td>
+              <td className="px-4 py-1">{item.detail?.description ?? '-'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+
+    return (
+      <AutoComplete
+        {...args}
+        options={options}
+        renderOption={handleRenderOption}
+        appendIfNotFound
+      />
+    );
+  },
+  argTypes: {
+    value: { control: false },
+    defaultValue: { control: false },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'This story demonstrates a custom render Autocomplete. Make sure option has detail property if you want to show additional information',
+      },
+      source: {
+        code: ` 
+const CustomRender = () => {
+    const options: SelectValue<string>[] = [
+      { label: "Apple", value: "apple", detail: { fruit: "Apple", description: "A sweet, crisp fruit that comes in red, green, or yellow varieties." } },
+      { label: "Orange", value: "orange", detail: { fruit: "Orange", description: "A juicy citrus fruit rich in vitamin C with a tangy-sweet flavor." } },
+      { label: "Banana", value: "banana", detail: { fruit: "Banana", description: "A soft, sweet tropical fruit with a yellow peel and creamy texture." } },
+    ];
+ 
+    const handleRenderOption = (
+      option: Array<SelectValue<number, any>>,
+      onClick: (value: SelectValue<number, any>) => void,
+      value: SelectValue<number, any> | null
+    ) => (
+      <table>
+        <thead>
+          <tr>
+            <th>Fruit</th>
+            <th>Description</th>
+           </tr>
+        </thead>
+        <tbody>
+          {option.map((item) =>
+            item.detail ? (
+              <tr key={item.value} onClick={() => onClick(item)}>
+                <td>{item.detail?.fruit ?? "-"}</td>
+                <td>{item.detail?.description ?? "-"}</td>
+               </tr>
+            ) : (
+              "-"
+            )
+          )}
+        </tbody>
+      </table>
+    ) 
+
+    return (
+      <AutoComplete 
+        async
+        options={options}
+        renderOption={handleRenderOption}
+      />
+    );
+};
+
+export default CustomRender;
+          `.trim(),
+      },
+    },
+  },
+};
+
+export const ControlledValue: Story = {
+  args: {
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
+  },
+  render: (args) => {
+    const [value, setValue] = useState<SelectValue<string> | null>({
+      label: 'Orange',
+      value: 'orange',
+    });
+
+    return (
+      <AutoComplete
+        {...args}
+        value={value}
+        onChange={setValue}
+        options={options}
+      />
+    );
+  },
+  argTypes: {
+    value: { control: false },
+    defaultValue: { control: false },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'This story demonstrates a controlled AutoComplete with internal state using useState.',
+      },
+      source: {
+        code: `
+import { useState } from 'react';
+
+const options: SelectValue<string>[] = [
+    { label: 'Apple', value: 'apple' },
+    { label: 'Orange', value: 'orange' },
+    { label: 'Banana', value: 'banana' },
+];
+
+const ControlledValue = () => {
+    const [value, setValue] = useState<SelectValue<string> | null>({ label: 'Orange', value: 'orange' });
+
+    return (
+        <AutoComplete
+            label="This is label"
+            placeholder="Input Placeholder..."
+            value={value}
+            onChange={setValue}
+            options={options}
+        />
+    );
+};
+
+export default ControlledValue;
+          `.trim(),
+      },
+    },
+  },
+};
+
+export const Sizes: Story = {
+  render: (args) => (
+    <div className="flex gap-10 flex-wrap">
+      {sizeOption.map((size) => (
+        <AutoComplete
+          key={size}
+          {...args}
+          size={size as AutoCompleteProps<any>['size']}
+          label={`Size ${size}`}
+          options={options}
+        />
+      ))}
+    </div>
+  ),
+  args: {
+    placeholder: 'Input Placeholder...',
+  },
+  argTypes: {
+    size: { control: false },
+    label: { control: false },
+  },
+};
+
+export const LabelPosition: Story = {
+  render: (args) => (
+    <div className="flex flex-col w-full gap-4">
+      {labelPositionOption.map((position) => (
+        <AutoComplete
+          key={position}
+          {...args}
+          labelPosition={position as AutoCompleteProps<any>['labelPosition']}
+          label={`Position ${position}`}
+          options={options}
+          width={500}
+        />
+      ))}
+    </div>
+  ),
+  args: {
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
+  },
+  argTypes: {
+    size: { control: false },
+    label: { control: false },
+  },
+};
+
+export const SuccessAndError: Story = {
+  render: (args) => (
+    <div className="flex flex-col gap-10">
+      <AutoComplete
+        {...args}
+        label="Neutral AutoComplete size"
+        className="flex-1"
+        options={options}
+      />
+      <AutoComplete
+        {...args}
+        label="Success AutoComplete size"
+        className="flex-1"
+        success
+        options={options}
+      />
+      <AutoComplete
+        {...args}
+        label="Success AutoComplete size"
+        className="flex-1"
+        error
+        options={options}
+      />
+      <AutoComplete
+        {...args}
+        label="Success AutoComplete size"
+        className="flex-1"
+        error="Error with message"
+        options={options}
+      />
+    </div>
+  ),
+  args: {
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
+  },
+  argTypes: {
+    success: { control: false },
+    error: { control: false },
+  },
+};
+
+type WithIconControls = AutoCompleteProps<any> & {
+  startIconName: IconNames;
+  endIconName: IconNames;
+};
+export const WithIcon: StoryObj<WithIconControls> = {
+  args: {
+    startIconName: 'arrow-up',
+    endIconName: 'arrow-down',
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
+  },
+  argTypes: {
+    startIconName: {
+      control: { type: 'select' },
+      options: iconNames,
+      description: 'Name of the start icon',
+      table: {
+        category: 'Icons',
+      },
+    },
+    endIconName: {
+      control: { type: 'select' },
+      options: iconNames,
+      description: 'Name of the end icon',
+      table: {
+        category: 'Icons',
+      },
+    },
+  },
+  render: (args) => {
+    const { startIconName, endIconName, ...rest } = args;
+
+    const start = useMemo(
+      () => <Icon name={startIconName} color="currentColor" />,
+      [startIconName],
+    );
+    const end = useMemo(
+      () => <Icon name={endIconName} color="currentColor" />,
+      [endIconName],
+    );
+
+    return (
+      <AutoComplete
+        {...rest}
+        startIcon={start}
+        endIcon={end}
+        options={options}
+      />
+    );
   },
 };

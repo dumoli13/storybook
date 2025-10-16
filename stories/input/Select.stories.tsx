@@ -1,224 +1,224 @@
-import React, { useMemo, useRef, useState } from "react";
-import type { Meta, StoryObj } from "@storybook/react";
+import React, { useMemo, useRef, useState } from 'react';
+import type { Meta, StoryObj } from '@storybook/react';
 import {
+  SelectProps,
+  SelectValue,
   Icon,
   IconNames,
   Select,
-  SelectProps,
   SelectRef,
-} from "../../src/components";
-import "../../src/output.css";
-import { iconNames } from "../../const/icon";
-import { options } from "../../src/const/select";
-import { SelectValue } from "../../src";
-import cx from "classnames";
+} from '../../src';
+import { iconNames } from '../../const/icon';
+import { options } from '../const/select';
+import cx from 'classnames';
+import '../../src/output.css';
 
-const sizeOption = ["default", "large"];
-const labelPositionOption = ["top", "left"];
+const sizeOption = ['default', 'large'];
+const labelPositionOption = ['top', 'left'];
 
 const meta: Meta<SelectProps<any>> = {
-  title: "Input/Select",
+  title: 'Input/Select',
   component: Select,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {
     value: {
-      control: "object",
-      description: "Controlled input value",
+      control: 'object',
+      description: 'Controlled input value',
       table: {
-        type: { summary: "{ value: T,  label: string, detail?: D }" },
+        type: { summary: '{ value: T,  label: string, detail?: D }' },
       },
     },
     defaultValue: {
-      control: "text",
+      control: 'text',
       description:
-        "The initial value of the input when the component is uncontrolled. only need to provide the key of the option",
+        'The initial value of the input when the component is uncontrolled. only need to provide the key of the option',
       table: {
-        type: { summary: "T" },
+        type: { summary: 'T' },
       },
     },
     onChange: {
-      action: "false",
-      description: "Callback function to handle input changes.",
+      action: 'false',
+      description: 'Callback function to handle input changes.',
       table: {
         type: {
-          summary: "(value: { value: T,  label: string, detail?: D }) => void",
+          summary: '(value: { value: T,  label: string, detail?: D }) => void',
         },
       },
     },
     inputRef: {
       control: false,
       description:
-        "A reference to access the input field and its value programmatically.",
+        'A reference to access the input field and its value programmatically.',
       table: { disable: true },
     },
     label: {
-      control: "text",
-      description: "The label text displayed above or beside the input field",
+      control: 'text',
+      description: 'The label text displayed above or beside the input field',
       table: {
-        type: { summary: "string" },
+        type: { summary: 'string' },
       },
     },
     labelPosition: {
-      control: "select",
+      control: 'select',
       options: labelPositionOption,
-      description: "The position of the label relative to the field",
+      description: 'The position of the label relative to the field',
       table: {
-        defaultValue: { summary: "top" },
-        type: { summary: "top | left" },
+        defaultValue: { summary: 'top' },
+        type: { summary: 'top | left' },
       },
     },
     autoHideLabel: {
-      control: "boolean",
+      control: 'boolean',
       description:
-        "A flag to set if label should automatically hide when the input is focused.",
+        'A flag to set if label should automatically hide when the input is focused.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     required: {
-      control: "boolean",
-      description: "A flag to set if input is required.",
+      control: 'boolean',
+      description: 'A flag to set if input is required.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     placeholder: {
-      control: "text",
+      control: 'text',
       description:
-        "Placeholder text displayed inside the input field when it is empty.",
+        'Placeholder text displayed inside the input field when it is empty.',
       table: {
-        type: { summary: "string" },
+        type: { summary: 'string' },
       },
     },
     helperText: {
-      control: "text",
-      description: "A helper message displayed below the input field.",
+      control: 'text',
+      description: 'A helper message displayed below the input field.',
       table: {
-        type: { summary: "ReactNode" },
+        type: { summary: 'ReactNode' },
       },
     },
     className: {
       control: false,
-      description: "Additional class names to customize the component style.",
+      description: 'Additional class names to customize the component style.',
       table: {
-        type: { summary: "string" },
+        type: { summary: 'string' },
       },
     },
     error: {
-      control: "text",
+      control: 'text',
       description:
-        "A flag to display error of input field. If set to string, it will be displayed as error message.",
+        'A flag to display error of input field. If set to string, it will be displayed as error message.',
       table: {
-        type: { summary: "boolean | string" },
+        type: { summary: 'boolean | string' },
       },
     },
     success: {
-      control: "boolean",
-      description: "A flag to display success of input field if set to true.",
+      control: 'boolean',
+      description: 'A flag to display success of input field if set to true.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     loading: {
-      control: "boolean",
-      description: "A flag to display loading state if set to true.",
+      control: 'boolean',
+      description: 'A flag to display loading state if set to true.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     disabled: {
-      control: "boolean",
-      description: "A flag that disables input field if set to true.",
+      control: 'boolean',
+      description: 'A flag that disables input field if set to true.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     startIcon: {
       control: false,
       description:
-        "An optional icon to display at the start of the input field.",
+        'An optional icon to display at the start of the input field.',
       table: {
-        type: { summary: "ReactNode" },
+        type: { summary: 'ReactNode' },
       },
     },
     endIcon: {
       control: false,
-      description: "An optional icon to display at the end of the input field.",
+      description: 'An optional icon to display at the end of the input field.',
       table: {
-        type: { summary: "ReactNode" },
+        type: { summary: 'ReactNode' },
       },
     },
     size: {
-      control: "select",
+      control: 'select',
       options: sizeOption,
-      description: "The size of the input field.",
+      description: 'The size of the input field.',
       table: {
-        defaultValue: { summary: "default" },
-        type: { summary: "default | large" },
+        defaultValue: { summary: 'default' },
+        type: { summary: 'default | large' },
       },
     },
     fullWidth: {
-      control: "boolean",
-      description: "A flag that expand to full container width if set to true.",
+      control: 'boolean',
+      description: 'A flag that expand to full container width if set to true.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     width: {
-      control: "number",
-      description: "Optional custom width for the input field (in px).",
+      control: 'number',
+      description: 'Optional custom width for the input field (in px).',
       table: {
-        type: { summary: "number" },
+        type: { summary: 'number' },
       },
     },
     clearable: {
-      control: "boolean",
+      control: 'boolean',
       description:
-        "A flag that show clear button of input field if set to true",
+        'A flag that show clear button of input field if set to true',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     options: {
-      control: "object",
+      control: 'object',
       description:
-        "An array of option objects, each containing a value and a label. Component re-renders every time options change, so make sure manage options in the state or outside the component to prevent unnecessary re-renders.",
+        'An array of option objects, each containing a value and a label. Component re-renders every time options change, so make sure manage options in the state or outside the component to prevent unnecessary re-renders.',
       table: {
-        type: { summary: "{ label: string, value: T }[]" },
+        type: { summary: '{ label: string, value: T }[]' },
       },
     },
     renderOption: {
-      control: "object",
-      description: "Render function for each option.",
+      control: 'object',
+      description: 'Render function for each option.',
       table: {
         type: {
           summary:
-            "(option: Array<SelectValue<T, D>>, onClick: (value: SelectValue<T, D>) => void) => ReactNode",
+            '(option: Array<SelectValue<T, D>>, onClick: (value: SelectValue<T, D>) => void) => ReactNode',
         },
       },
     },
     async: {
-      control: "boolean",
-      description: "Flag to enable asynchronous loading of options.",
+      control: 'boolean',
+      description: 'Flag to enable asynchronous loading of options.',
       table: {
-        defaultValue: { summary: "false" },
-        type: { summary: "boolean" },
+        defaultValue: { summary: 'false' },
+        type: { summary: 'boolean' },
       },
     },
     fetchOptions: {
-      control: "object",
-      description: "Function to fetch options asynchronously.",
+      control: 'object',
+      description: 'Function to fetch options asynchronously.',
       table: {
         type: {
           summary:
-            "(keyword: string, page: number, limit: number) => SelectValue<T, D>",
+            '(keyword: string, page: number, limit: number) => SelectValue<T, D>',
         },
       },
     },
@@ -234,23 +234,23 @@ type Story = StoryObj<SelectProps<any>>;
 
 export const Playground: Story = {
   args: {
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
-    size: "default",
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
+    size: 'default',
     clearable: false,
     fullWidth: false,
     loading: false,
     success: false,
-    labelPosition: "top",
-    value: { label: "Orange", value: "orange" },
+    labelPosition: 'top',
+    value: { label: 'Orange', value: 'orange' },
     options,
   },
   parameters: {
     docs: {
       description: {
         story:
-          "Select components are used for collecting user provided information from a list of options.",
+          'Select components are used for collecting user provided information from a list of options.',
       },
     },
   },
@@ -258,10 +258,10 @@ export const Playground: Story = {
 
 export const DefaultValue: Story = {
   args: {
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
-    defaultValue: "apple",
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
+    defaultValue: 'apple',
     options,
   },
   render: (args) => {
@@ -281,7 +281,7 @@ export const DefaultValue: Story = {
     docs: {
       description: {
         story:
-          "This story demonstrates a uncontrolled Select. to access the input field and its value, use the inputRef.",
+          'This story demonstrates a uncontrolled Select. to access the input field and its value, use the inputRef.',
       },
       source: {
         code: `
@@ -320,14 +320,14 @@ export default UncontrolledValue;
 
 export const AsyncAndCustomRender: Story = {
   args: {
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
   },
   render: (args) => {
     const fetchData = async (page: number, limit: number) => {
       const response = await fetch(
-        `https://jsonplaceholder.typicode.com/posts?_limit=${limit}&_page=${page}`
+        `https://jsonplaceholder.typicode.com/posts?_limit=${limit}&_page=${page}`,
       );
       const data = await response.json();
       return data.map((item) => ({
@@ -340,7 +340,7 @@ export const AsyncAndCustomRender: Story = {
     const handleRenderOption = (
       option: Array<SelectValue<number, any>>,
       onClick: (value: SelectValue<number, any>) => void,
-      value: SelectValue<number, any> | null
+      value: SelectValue<number, any> | null,
     ) => {
       return (
         <table>
@@ -358,21 +358,21 @@ export const AsyncAndCustomRender: Story = {
                 <tr
                   key={item.value}
                   onClick={() => onClick(item)}
-                  className={cx("", {
-                    "bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark":
+                  className={cx('', {
+                    'bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark':
                       item.value === value?.value,
-                    "cursor-pointer hover:bg-neutral-20 dark:hover:bg-neutral-20-dark ":
+                    'cursor-pointer hover:bg-neutral-20 dark:hover:bg-neutral-20-dark ':
                       item.value !== value?.value,
                   })}
                 >
-                  <td className="px-4 py-2">{item.detail?.id ?? "-"}</td>
-                  <td className="px-4 py-2">{item.detail?.title ?? "-"}</td>
-                  <td className="px-4 py-2">{item.detail?.userId ?? "-"}</td>
-                  <td className="px-4 py-2">{item.detail?.body ?? "-"}</td>
+                  <td className="px-4 py-2">{item.detail?.id ?? '-'}</td>
+                  <td className="px-4 py-2">{item.detail?.title ?? '-'}</td>
+                  <td className="px-4 py-2">{item.detail?.userId ?? '-'}</td>
+                  <td className="px-4 py-2">{item.detail?.body ?? '-'}</td>
                 </tr>
               ) : (
-                "-"
-              )
+                '-'
+              ),
             )}
           </tbody>
         </table>
@@ -396,7 +396,7 @@ export const AsyncAndCustomRender: Story = {
     docs: {
       description: {
         story:
-          "This story demonstrates a uncontrolled AutoComplete. to access the input field and its value, use the inputRef.",
+          'This story demonstrates a uncontrolled AutoComplete. to access the input field and its value, use the inputRef.',
       },
       source: {
         code: ` 
@@ -463,14 +463,14 @@ export default AsyncAndCustomRender;
 
 export const ControlledValue: Story = {
   args: {
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
   },
   render: (args) => {
     const [value, setValue] = useState<SelectValue<string> | null>({
-      label: "Orange",
-      value: "orange",
+      label: 'Orange',
+      value: 'orange',
     });
 
     return (
@@ -485,7 +485,7 @@ export const ControlledValue: Story = {
     docs: {
       description: {
         story:
-          "This story demonstrates a controlled Select with internal state using useState.",
+          'This story demonstrates a controlled Select with internal state using useState.',
       },
       source: {
         code: `
@@ -525,7 +525,7 @@ export const Sizes: Story = {
         <Select
           key={size}
           {...args}
-          size={size as SelectProps<any>["size"]}
+          size={size as SelectProps<any>['size']}
           label={`Size ${size}`}
           options={options}
         />
@@ -533,7 +533,7 @@ export const Sizes: Story = {
     </div>
   ),
   args: {
-    placeholder: "Input Placeholder...",
+    placeholder: 'Input Placeholder...',
   },
   argTypes: {
     size: { control: false },
@@ -548,7 +548,7 @@ export const LabelPosition: Story = {
         <Select
           key={position}
           {...args}
-          labelPosition={position as SelectProps<any>["labelPosition"]}
+          labelPosition={position as SelectProps<any>['labelPosition']}
           label={`Position ${position}`}
           options={options}
           width={500}
@@ -557,8 +557,8 @@ export const LabelPosition: Story = {
     </div>
   ),
   args: {
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
   },
   argTypes: {
     size: { control: false },
@@ -599,8 +599,8 @@ export const SuccessAndError: Story = {
     </div>
   ),
   args: {
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
   },
   argTypes: {
     success: { control: false },
@@ -614,27 +614,27 @@ type WithIconControls = SelectProps<any> & {
 };
 export const WithIcon: StoryObj<WithIconControls> = {
   args: {
-    startIconName: "arrow-up",
-    endIconName: "arrow-down",
-    label: "Input Label",
-    placeholder: "Input Placeholder...",
-    helperText: "Input helper text",
+    startIconName: 'arrow-up',
+    endIconName: 'arrow-down',
+    label: 'Input Label',
+    placeholder: 'Input Placeholder...',
+    helperText: 'Input helper text',
   },
   argTypes: {
     startIconName: {
-      control: { type: "select" },
+      control: { type: 'select' },
       options: iconNames,
-      description: "Name of the start icon",
+      description: 'Name of the start icon',
       table: {
-        category: "Icons",
+        category: 'Icons',
       },
     },
     endIconName: {
-      control: { type: "select" },
+      control: { type: 'select' },
       options: iconNames,
-      description: "Name of the end icon",
+      description: 'Name of the end icon',
       table: {
-        category: "Icons",
+        category: 'Icons',
       },
     },
   },
@@ -643,11 +643,11 @@ export const WithIcon: StoryObj<WithIconControls> = {
 
     const start = useMemo(
       () => <Icon name={startIconName} color="currentColor" />,
-      [startIconName]
+      [startIconName],
     );
     const end = useMemo(
       () => <Icon name={endIconName} color="currentColor" />,
-      [endIconName]
+      [endIconName],
     );
 
     return (

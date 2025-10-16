@@ -1,6 +1,5 @@
 import React from 'react';
 import cx from 'classnames';
-import { SelectValue } from '../../types/input';
 import Icon from '../Icon';
 import InputDropdown from './InputDropdown';
 import InputEndIconWrapper from './InputEndIconWrapper';
@@ -8,66 +7,7 @@ import InputHelper from './InputHelper';
 import InputLabel from './InputLabel';
 import { useInView } from 'react-intersection-observer';
 import { FETCH_LIMIT } from '../../const/select';
-
-export interface SelectRef<T, D = undefined> {
-  element: HTMLDivElement | null;
-  value: SelectValue<T, D> | null;
-  focus: () => void;
-  reset: () => void;
-  disabled: boolean;
-}
-
-interface BaseProps<T, D = undefined>
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    'onChange' | 'value' | 'defaultValue' | 'size' | 'required' | 'checked'
-  > {
-  value?: SelectValue<T, D> | null;
-  defaultValue?: T | null;
-  initialValue?: SelectValue<T, D> | null;
-  label?: string;
-  labelPosition?: 'top' | 'left';
-  autoHideLabel?: boolean;
-  placeholder?: string;
-  onChange?: (value: SelectValue<T, D> | null) => void;
-  helperText?: React.ReactNode;
-  disabled?: boolean;
-  fullWidth?: boolean;
-  startIcon?: React.ReactNode;
-  endIcon?: React.ReactNode;
-  inputRef?:
-    | React.RefObject<SelectRef<T> | null>
-    | React.RefCallback<SelectRef<T> | null>;
-  size?: 'default' | 'large';
-  error?: boolean | string;
-  success?: boolean;
-  clearable?: boolean;
-  width?: number;
-  required?: boolean;
-  renderOption?: (
-    option: Array<SelectValue<T, D>>,
-    onClick: (value: SelectValue<T, D>) => void,
-    selected: SelectValue<T, D> | null,
-  ) => React.ReactNode;
-}
-
-interface AsyncProps<T, D> {
-  async: true;
-  fetchOptions: (page: number, limit: number) => Promise<SelectValue<T, D>[]>;
-  options?: never;
-  loading?: never;
-}
-
-interface NonAsyncProps<T, D> {
-  async?: false;
-  fetchOptions?: never;
-  options: SelectValue<T, D>[];
-  loading?: boolean;
-}
-
-export type SelectProps<T, D = undefined> =
-  | (BaseProps<T, D> & AsyncProps<T, D>)
-  | (BaseProps<T, D> & NonAsyncProps<T, D>);
+import { SelectProps, SelectValue } from '../../types/inputs';
 
 /**
  * Select components are used for collecting user provided information from a list of options.
@@ -101,15 +41,16 @@ const Select = <T, D = undefined>({
   renderOption,
   async,
   fetchOptions,
+  ...props
 }: SelectProps<T, D>) => {
   const elementRef = React.useRef<HTMLDivElement>(null);
   const valueRef = React.useRef<HTMLDivElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const { ref: refInView, inView } = useInView({ threshold: 0.1 });
 
   const [focused, setFocused] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
-
-  const { ref: refInView, inView } = useInView({ threshold: 0.1 });
+  const [highlightedIndex, setHighlightedIndex] = React.useState<number>(-1);
   const [loadingFetchOptions, setLoadingFetchOptions] = React.useState(!!async);
   const [stopAsyncFetch, setStopAsyncFetch] = React.useState(false);
   const [inheritOptions, setInheritOptions] = React.useState<
@@ -147,7 +88,7 @@ const Select = <T, D = undefined>({
 
   React.useImperativeHandle(inputRef, () => ({
     element: elementRef.current,
-    value: value as SelectValue<T, undefined>,
+    value,
     focus: () => valueRef.current?.focus(),
     reset: () => setInternalValue(initialValue),
     disabled,
@@ -208,6 +149,7 @@ const Select = <T, D = undefined>({
 
     setFocused(false);
     setDropdownOpen(false);
+    setHighlightedIndex(-1);
   };
 
   const handleDropdown = () => {
@@ -221,7 +163,7 @@ const Select = <T, D = undefined>({
     if (!isControlled) setInternalValue(null);
   };
 
-  const handleOptionSelect = (option: SelectValue<T, D>) => {
+  const handleSelectOption = (option: SelectValue<T, D>) => {
     if (value?.value === option.value) return;
 
     if (!isControlled) setInternalValue(option);
@@ -231,22 +173,60 @@ const Select = <T, D = undefined>({
     setDropdownOpen(false);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const maxIndex = options.length - 1;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        if (!focused) handleFocus();
+        setHighlightedIndex((prev) => (prev < maxIndex ? prev + 1 : 0));
+        break;
+
+      case 'ArrowUp':
+        e.preventDefault();
+        if (!focused) handleFocus();
+        setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : maxIndex));
+        break;
+
+      case 'Enter':
+        e.preventDefault();
+        if (highlightedIndex >= 0 && options[highlightedIndex]) {
+          handleSelectOption(options[highlightedIndex]);
+        }
+        break;
+
+      case 'Escape':
+        e.preventDefault();
+        setDropdownOpen(false);
+        setHighlightedIndex(-1);
+        break;
+
+      default:
+        break;
+    }
+  };
+
   const dropdownContent = (
     <>
       {renderOption
-        ? renderOption(options, handleOptionSelect, value)
-        : options.map((option) => (
+        ? renderOption(options, handleSelectOption, value, highlightedIndex)
+        : options.map((option, index) => (
             <div
               role="button"
               key={String(option.value)}
-              onClick={() => handleOptionSelect(option)}
+              onClick={() => handleSelectOption(option)}
+              onMouseOver={() => setHighlightedIndex(index)}
+              data-highlighted={index === highlightedIndex}
               className={cx('py-1.5 px-4 text-left break-words', {
+                'text-14px': size === 'default',
+                'text-18px': size === 'large',
                 'bg-primary-surface dark:bg-primary-surface-dark text-primary-main dark:text-primary-main-dark':
                   option.value === value?.value,
                 'cursor-pointer hover:bg-neutral-20 dark:hover:bg-neutral-20-dark text-neutral-100 dark:text-neutral-100-dark':
                   option.value !== value?.value,
-                'text-14px': size === 'default',
-                'text-18px': size === 'large',
+                '!bg-neutral-20 !dark:bg-neutral-20-dark':
+                  index === highlightedIndex,
               })}
             >
               {option.label}
@@ -273,6 +253,21 @@ const Select = <T, D = undefined>({
     </>
   );
 
+  React.useEffect(() => {
+    if (!dropdownRef.current || highlightedIndex < 0) return;
+
+    // Find any element that is marked as the highlighted one
+    const activeItem = dropdownRef.current.querySelector(
+      '[data-highlighted="true"]',
+    ) as HTMLElement | null;
+
+    if (activeItem) {
+      activeItem.scrollIntoView({
+        block: 'nearest',
+      });
+    }
+  }, [highlightedIndex, dropdownContent]);
+
   const inputId = `select-${id || name}-${React.useId()}`;
 
   return (
@@ -285,6 +280,7 @@ const Select = <T, D = undefined>({
         },
         className,
       )}
+      onKeyDown={handleKeyDown}
     >
       {((autoHideLabel && focused) || !autoHideLabel) && label && (
         <InputLabel id={inputId} size={size} required={required}>
@@ -322,7 +318,7 @@ const Select = <T, D = undefined>({
         )}
         <div
           role="button"
-          tabIndex={!disabled ? 0 : -1}
+          tabIndex={disabled ? -1 : 0}
           aria-pressed="true"
           className={cx('w-full outline-none truncate', {
             'text-14px py-0.5': size === 'default',

@@ -2,7 +2,7 @@
 import React from 'react';
 import cx from 'classnames';
 import dayjs from 'dayjs';
-import { MONTH_LIST, PickerType } from '../../const/datePicker';
+import { MONTH_OF_YEAR } from '../../const/datePicker';
 import { SUNDAY_DATE, areDatesEqual, getYearRange, isToday } from '../../libs';
 import { Tag } from '../Displays';
 import Icon from '../Icon';
@@ -11,46 +11,11 @@ import InputDropdown from './InputDropdown';
 import InputEndIconWrapper from './InputEndIconWrapper';
 import InputHelper from './InputHelper';
 import InputLabel from './InputLabel';
-
-export type InputMultipleDateValue = Date[];
-export interface InputMultipleDatePickerRef {
-  element: HTMLDivElement | null;
-  value: InputMultipleDateValue;
-  focus: () => void;
-  reset: () => void;
-  disabled: boolean;
-}
-export interface MultipleDatePickerProps
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    'value' | 'defaultValue' | 'onChange' | 'size' | 'required'
-  > {
-  value?: InputMultipleDateValue;
-  defaultValue?: InputMultipleDateValue;
-  initialValue?: InputMultipleDateValue;
-  label?: string;
-  labelPosition?: 'top' | 'left';
-  autoHideLabel?: boolean;
-  onChange?: (value: InputMultipleDateValue) => void;
-  helperText?: React.ReactNode;
-  placeholder?: string;
-  fullWidth?: boolean;
-  inputRef?:
-    | React.RefObject<InputMultipleDatePickerRef | null>
-    | React.RefCallback<InputMultipleDatePickerRef | null>;
-  size?: 'default' | 'large';
-  error?: boolean | string;
-  success?: boolean;
-  loading?: boolean;
-  disabledDate?: (
-    date: Date,
-    firstSelectedDate: InputMultipleDateValue,
-  ) => boolean;
-  width?: number;
-  picker?: PickerType;
-  format?: string;
-  required?: boolean;
-}
+import {
+  MultipleDateValue,
+  MultipleDatePickerProps,
+  PickerType,
+} from '../../types/inputs';
 
 /**
  * The Multiple Date Picker component lets users select multiple date.
@@ -82,8 +47,10 @@ const MultipleDatePicker = ({
   format = 'D/M/YYYY',
   picker = 'date',
   required,
+  ...props
 }: MultipleDatePickerProps) => {
   const elementRef = React.useRef<HTMLDivElement>(null);
+  const valueRef = React.useRef<HTMLInputElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const [focused, setFocused] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
@@ -91,9 +58,10 @@ const MultipleDatePicker = ({
   const [internalValue, setInternalValue] = React.useState(
     defaultValue || initialValue,
   );
-  const isControlled = typeof valueProp !== 'undefined';
+  const isControlled = valueProp !== undefined;
   const value = isControlled ? valueProp : internalValue;
-  const [tempValue, setTempValue] = React.useState<InputMultipleDateValue>([]);
+  const [inputValue, setInputValue] = React.useState('');
+  const [tempValue, setTempValue] = React.useState<MultipleDateValue>([]);
 
   const [calendarView, setCalendarView] = React.useState<PickerType>(picker);
   const [displayedDate, setDisplayedDate] = React.useState(
@@ -122,7 +90,7 @@ const MultipleDatePicker = ({
   React.useImperativeHandle(inputRef, () => ({
     element: elementRef.current,
     value,
-    focus: () => elementRef.current?.focus(),
+    focus: () => valueRef.current?.focus(),
     reset: () => setInternalValue(initialValue),
     disabled,
   }));
@@ -256,7 +224,7 @@ const MultipleDatePicker = ({
     );
   };
 
-  const handleChange = (newValue: InputMultipleDateValue) => {
+  const handleChange = (newValue: MultipleDateValue) => {
     onChange?.(newValue);
     if (!isControlled) {
       setInternalValue(newValue);
@@ -270,12 +238,15 @@ const MultipleDatePicker = ({
       ? value.filter((date) => date.getTime() !== timestamp)
       : [...value, selectedDate];
 
-    // newValue.sort((a, b) => a.getTime() - b.getTime());
     handleChange(newValue);
   };
 
   const handleClearValue = () => {
     handleChange([]);
+  };
+
+  const handleChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
   };
 
   React.useEffect(() => {
@@ -436,7 +407,7 @@ const MultipleDatePicker = ({
             </button>
           </div>
           <div className="grid grid-cols-3 p-2 gap-1 text-14px">
-            {MONTH_LIST.map((item) => {
+            {MONTH_OF_YEAR.map((item) => {
               const isDateDisabled =
                 picker === 'month' &&
                 disabledDate(
@@ -601,7 +572,7 @@ const MultipleDatePicker = ({
       >
         <div
           role="button"
-          tabIndex={!disabled ? 0 : -1}
+          tabIndex={disabled ? -1 : 0}
           aria-pressed="true"
           className={cx('flex flex-1 gap-x-2 gap-y-1 items-center flex-wrap', {
             'w-full': fullWidth,
@@ -612,6 +583,29 @@ const MultipleDatePicker = ({
           onBlur={handleBlur}
           onClick={handleFocus}
         >
+          <input
+            {...props}
+            tabIndex={disabled ? -1 : 0}
+            id={inputId}
+            name={name}
+            value={inputValue}
+            placeholder={focused ? '' : placeholder || format}
+            className={cx(
+              'w-full outline-none bg-neutral-10 dark:bg-neutral-10-dark disabled:bg-neutral-20 dark:disabled:bg-neutral-30-dark text-neutral-90 dark:text-neutral-90-dark disabled:cursor-not-allowed',
+              {
+                'text-14px py-0.5': size === 'default',
+                'text-18px py-0.5': size === 'large',
+              },
+            )}
+            disabled={disabled}
+            aria-label={label}
+            autoComplete="off"
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onClick={handleFocus}
+            onChange={handleChangeInput}
+            ref={valueRef}
+          />
           {value?.map((selected, index) => {
             const tagValue = dayjs(selected).format(format);
             return (
@@ -670,7 +664,7 @@ const MultipleDatePicker = ({
       <InputHelper message={helperMessage} error={isError} size={size} />
       <InputDropdown
         open={dropdownOpen}
-        elementRef={elementRef}
+        elementRef={valueRef}
         dropdownRef={dropdownRef}
         maxHeight={320}
       >

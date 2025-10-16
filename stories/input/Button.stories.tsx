@@ -1,10 +1,9 @@
 import React, { useMemo } from 'react';
 import { fn } from '@storybook/test';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Button, type ButtonProps, Icon, type IconNames } from '../../src/components';
+import { Button, type ButtonProps, Icon, type IconNames } from '../../src';
 import '../../src/output.css';
 import { iconNames } from '../../const/icon';
-
 
 const variantOption = ['contained', 'secondary', 'outlined', 'text'];
 const colorOption = ['primary', 'success', 'danger', 'warning', 'info'];
@@ -48,7 +47,8 @@ const meta: Meta<ButtonProps> = {
     },
     fullWidth: {
       type: 'boolean',
-      description: 'If true, the button will span the full width of the parent element.',
+      description:
+        'If true, the button will span the full width of the parent element.',
     },
     onClick: {
       action: 'clicked',
@@ -79,9 +79,8 @@ const meta: Meta<ButtonProps> = {
   },
   args: {
     onClick: fn(),
-  }
+  },
 };
-
 
 export default meta;
 type Story = StoryObj<ButtonProps>;
@@ -109,13 +108,18 @@ export const VariantContained: Story = {
   render: (args) => (
     <div className="flex gap-2">
       {colorOption.map((color) => (
-        <Button key={color} {...args} variant="contained" color={color as ButtonProps['color']}>
+        <Button
+          key={color}
+          {...args}
+          variant="contained"
+          color={color as ButtonProps['color']}
+        >
           {color} Secondary
         </Button>
       ))}
     </div>
-  )
-}
+  ),
+};
 
 export const VariantSecondary: Story = {
   args: {
@@ -131,13 +135,18 @@ export const VariantSecondary: Story = {
   render: (args) => (
     <div className="flex gap-2">
       {colorOption.map((color) => (
-        <Button key={color} {...args} variant="secondary" color={color as ButtonProps['color']}>
+        <Button
+          key={color}
+          {...args}
+          variant="secondary"
+          color={color as ButtonProps['color']}
+        >
           {color} Secondary
         </Button>
       ))}
     </div>
-  )
-}
+  ),
+};
 
 export const VariantOutlined: Story = {
   args: {
@@ -153,13 +162,18 @@ export const VariantOutlined: Story = {
   render: (args) => (
     <div className="flex gap-2">
       {colorOption.map((color) => (
-        <Button key={color} {...args} variant="outlined" color={color as ButtonProps['color']}>
+        <Button
+          key={color}
+          {...args}
+          variant="outlined"
+          color={color as ButtonProps['color']}
+        >
           {color} Secondary
         </Button>
       ))}
     </div>
-  )
-}
+  ),
+};
 
 export const VariantText: Story = {
   args: {
@@ -175,22 +189,32 @@ export const VariantText: Story = {
   render: (args) => (
     <div className="flex gap-2">
       {colorOption.map((color) => (
-        <Button key={color} {...args} variant="text" color={color as ButtonProps['color']}>
+        <Button
+          key={color}
+          {...args}
+          variant="text"
+          color={color as ButtonProps['color']}
+        >
           {color} Secondary
         </Button>
       ))}
     </div>
-  )
-}
+  ),
+};
 
 export const Sizes: Story = {
-  render: (args) =>
-  (
+  render: (args) => (
     <div className="flex gap-2">
-      <Button {...args} size='small' >small</Button>
-      <Button {...args} size='default'>default</Button>
-      <Button {...args} size='large'>large</Button>
-    </div >
+      <Button {...args} size="small">
+        small
+      </Button>
+      <Button {...args} size="default">
+        default
+      </Button>
+      <Button {...args} size="large">
+        large
+      </Button>
+    </div>
   ),
   args: {
     children: 'Button',
@@ -205,7 +229,7 @@ export const Sizes: Story = {
       control: false,
     },
   },
-}
+};
 
 type WithIconControls = ButtonProps & {
   startIconName: IconNames;
@@ -244,8 +268,14 @@ export const WithIcon: StoryObj<WithIconControls> = {
   },
   render: (args) => {
     const { startIconName, endIconName, ...rest } = args;
-    const start = useMemo(() => <Icon name={startIconName} color="currentColor" />, [startIconName]);
-    const end = useMemo(() => <Icon name={endIconName} color="currentColor" />, [endIconName]);
+    const start = useMemo(
+      () => <Icon name={startIconName} color="currentColor" />,
+      [startIconName],
+    );
+    const end = useMemo(
+      () => <Icon name={endIconName} color="currentColor" />,
+      [endIconName],
+    );
 
     return <Button {...rest} startIcon={start} endIcon={end} />;
   },

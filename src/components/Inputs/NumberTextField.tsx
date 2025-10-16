@@ -3,6 +3,7 @@ import cx from 'classnames';
 import InputEndIconWrapper from './InputEndIconWrapper';
 import InputHelper from './InputHelper';
 import InputLabel from './InputLabel';
+import { NumberTextFieldProps } from '../../types/inputs';
 
 const formatValue = (value: string | number | null | undefined) => {
   if (value === '' || value === null || value === undefined) {
@@ -15,55 +16,6 @@ const formatValue = (value: string | number | null | undefined) => {
   // Format number with thousand separators
   return numberValue.toLocaleString('en-US');
 };
-
-export interface NumberTextfieldRef {
-  element: HTMLInputElement | null;
-  value: number | null;
-  focus: () => void;
-  reset: () => void;
-  disabled: boolean;
-}
-
-export interface NumberTextFieldProps
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    | 'value'
-    | 'defaultValue'
-    | 'onChange'
-    | 'size'
-    | 'required'
-    | 'checked'
-    | 'max'
-    | 'min'
-  > {
-  id?: string;
-  value?: number | null;
-  defaultValue?: number | null;
-  initialValue?: number | null;
-  max?: number;
-  min?: number;
-  label?: string;
-  labelPosition?: 'top' | 'left';
-  autoHideLabel?: boolean;
-  onChange?: (value: number | null) => void;
-  className?: string;
-  helperText?: React.ReactNode;
-  placeholder?: string;
-  disabled?: boolean;
-  fullWidth?: boolean;
-  startIcon?: React.ReactNode;
-  endIcon?: React.ReactNode;
-  clearable?: boolean;
-  inputRef?:
-    | React.RefObject<NumberTextfieldRef | null>
-    | React.RefCallback<NumberTextfieldRef | null>;
-  size?: 'default' | 'large';
-  error?: boolean | string;
-  success?: boolean;
-  loading?: boolean;
-  width?: number;
-  required?: boolean;
-}
 
 /**
  * The Number Text Field component is used for collecting numeric data from users. This component will format thousand separator on blur.
@@ -227,16 +179,16 @@ const NumberTextField = ({
       if (newValue !== null && typeof newValue === 'number') {
         if (min !== undefined && newValue < min) {
           constrainedValue = min;
-          setInternalError(`Must be at least asdfasf${min}`);
+          setInternalError(`Must be at least ${min}`);
         } else if (max !== undefined && newValue > max) {
           constrainedValue = max;
-          setInternalError(`Must be no more than asfasf${max}`);
+          setInternalError(`Must be no more than ${max}`);
         } else if (internalError) {
           setInternalError('');
         }
       }
 
-      setInternalStringValue(newValue.toString());
+      setInternalStringValue(newValue?.toString() ?? '');
       if (!isControlled) setInternalValue(newValue);
       onChange?.(constrainedValue);
     }
@@ -299,8 +251,9 @@ const NumberTextField = ({
         )}
         <input
           {...props}
-          tabIndex={!disabled ? 0 : -1}
+          tabIndex={disabled ? -1 : 0}
           id={inputId}
+          name={name}
           value={displayValue}
           onChange={handleChange}
           placeholder={focused ? '' : placeholder}

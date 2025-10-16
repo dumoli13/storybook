@@ -1,5 +1,6 @@
 export { default as Modal } from './Modal';
 export type { ModalProps } from './Modal';
+export type { ConfirmModalProps } from './ConfirmModal';
 
 export { default as ModalBody } from './ModalBody';
 
