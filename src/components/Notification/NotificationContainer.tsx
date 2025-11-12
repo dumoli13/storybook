@@ -108,10 +108,10 @@ const NotificationContainer = ({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="relative px-6 py-5 bg-neutral-10 dark:bg-neutral-10-dark text-neutral-90 dark:text-neutral-90-dark flex gap-4 rounded-md shadow-box-notification max-w-[448px] overflow-hidden">
+      <div className="relative px-6 py-5 bg-neutral-10 dark:bg-neutral-10-dark text-neutral-90 dark:text-neutral-90-dark flex gap-4 rounded-md shadow-box-notification min-w-[200px] max-w-[448px] overflow-hidden">
         <div className="shrink-0">{icon}</div>
         <div>
-          <div className="text-24px mb-2 break-words">{title}</div>
+          <div className="min-h-[28px] text-24px mb-2 break-words">{title}</div>
           <p className="text-20px break-words">{description}</p>
         </div>
         <div className="absolute right-4 top-4">

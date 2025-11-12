@@ -1,16 +1,15 @@
 import React from 'react';
 import cx from 'classnames';
+import { useInView } from 'react-intersection-observer';
+import { useDebouncedCallback } from 'use-debounce';
+import { FETCH_LIMIT } from '../../const/select';
+import { AutoCompleteMultipleProps, SelectValue } from '../../types';
 import Tag from '../Displays/Tag';
 import Icon from '../Icon';
 import InputDropdown from './InputDropdown';
 import InputEndIconWrapper from './InputEndIconWrapper';
 import InputHelper from './InputHelper';
 import InputLabel from './InputLabel';
-import { useInView } from 'react-intersection-observer';
-import { FETCH_LIMIT } from '../../const/select';
-import { useDebouncedCallback } from 'use-debounce';
-import { AutoCompleteMultipleProps, SelectValue } from '../../types';
-import { P } from 'storybook/internal/components';
 
 /**
  * An autocomplete where multiple options can be selected
@@ -227,7 +226,7 @@ const AutoCompleteMultiple = <T, D>({
   };
 
   const handleSelectOption = (option: SelectValue<T, D>) => {
-    const selected = value?.some((v) => v.value === option.value);
+    const selected = value.some((v) => v.value === option.value);
 
     let newValue: SelectValue<T, D>[];
     if (selected) {
@@ -236,7 +235,16 @@ const AutoCompleteMultiple = <T, D>({
       newValue = [...(value || []), option];
     }
 
-    if (!isControlled) setInternalValue(newValue); // Update internal state if uncontrolled
+    if (!isControlled) {
+      // filter again inside setInternalValue to avoid React concurrency issue.
+      setInternalValue((prev) => {
+        if (selected) {
+          return prev.filter((v) => v.value !== option.value);
+        } else {
+          return [...prev, option];
+        }
+      });
+    }
     onChange?.(newValue);
   };
 
@@ -252,8 +260,6 @@ const AutoCompleteMultiple = <T, D>({
     setInputValue('');
     onAppend?.(newValue);
   };
-
-  console.log('value', value);
 
   const isCreateNew =
     appendIfNotFound &&
@@ -303,14 +309,14 @@ const AutoCompleteMultiple = <T, D>({
     const rows = e.clipboardData.getData('text').trim().split(/\r?\n/);
     if (rows.length > 1) {
       e.preventDefault();
-      rows.forEach((row) => {
+      for (const row of rows) {
         const rowValue = options.find((option) => option.label === row);
-        if (!rowValue) {
-          handleAppend(row);
-        } else {
+        if (rowValue) {
           handleSelectOption(rowValue);
+        } else {
+          handleAppend(row);
         }
-      });
+      }
     } else {
       onPaste?.(e);
     }

@@ -660,7 +660,7 @@ const IconCard = (props: IconProps) => {
 
 export const Playground: Story = {
   args: {
-    variant: 'solid',
+    variant: 'outline',
     size: 24,
     strokeWidth: 0,
     onClick: fn(),
